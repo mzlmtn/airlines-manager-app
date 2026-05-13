@@ -1,12 +1,13 @@
 import streamlit as st
 import math
 
-st.set_page_config(page_title="AM Finans & Filo Yöneticisi", layout="wide")
+# Arayüzü daha derli toplu yapmak için 'centered' kullanıyoruz
+st.set_page_config(page_title="AM Finans & Filo Yöneticisi", layout="centered")
 
 st.title("✈️ AM Finansal Filo ve Rota Yöneticisi")
 st.markdown("Demand aşımını önleyen **%100 Doluluk Algoritması** ve Oyun İçi Formüllerle **Otomatik Bilet Hesaplayıcı**.")
 
-# Çok Daha Geniş Uçak Veritabanı
+# Geniş Uçak Veritabanı
 AIRCRAFT_DB = {
     "Airbus A380-800": {"range": 15556, "speed": 903, "seats": 853, "cargo": 84, "price": 403000000},
     "Boeing 747-8I": {"range": 14815, "speed": 911, "seats": 605, "cargo": 76, "price": 379100000},
@@ -26,45 +27,43 @@ AIRCRAFT_DB = {
     "Boeing 737 MAX 9": {"range": 6574, "speed": 839, "seats": 220, "cargo": 6, "price": 116600000}
 }
 
-col_main1, col_main2 = st.columns([1, 1])
+st.divider()
 
-with col_main1:
-    st.subheader("1. Rota ve Demand Bilgileri")
-    distance = st.number_input("Rota Uzaklığı (km)", value=8000, step=100)
-    
-    st.markdown("**Günlük Brüt Demand**")
-    c1, c2, c3, c4 = st.columns(4)
-    with c1: demand_e = st.number_input("Eco Dmd", value=0, step=10)
-    with c2: demand_b = st.number_input("Bus Dmd", value=0, step=10)
-    with c3: demand_f = st.number_input("First Dmd", value=0, step=10)
-    with c4: demand_c = st.number_input("Cargo Dmd", value=0, step=1)
+# UI: 1. Kısım - Rota ve Fiyat Hesaplama
+st.subheader("📍 Rota ve Bilet Fiyatları")
+distance = st.number_input("Rota Uzaklığı (km)", value=8000, step=100)
 
-with col_main2:
-    st.subheader("2. Finansal Veriler (Otomatik)")
-    st.markdown("Havayolunuzun **Comfort (Konfor)** istatistiğini girin. Bilet fiyatları uzaklığa göre otomatik hesaplanacaktır.")
-    comfort_stat = st.number_input("Comfort İstatistiği (Araştırmalardan gelen)", value=0, step=50)
+with st.expander("Bilet Fiyatlarını Otomatik Hesapla", expanded=True):
+    st.markdown("Havayolunuzun **Comfort (Konfor)** istatistiğini girin. Fiyatlarda ufak sapmalar olursa hücrelere tıklayıp manuel düzeltebilirsiniz.")
+    comfort_stat = st.number_input("Comfort İstatistiği", value=0, step=50)
     
-    # Tersine Mühendislik Tycoon İdeal (Audit) Fiyat Formülleri
+    # Formül Hesaplamaları
     comfort_multiplier = 1 + (comfort_stat / 3000)
     auto_price_e = math.floor(120 + (distance * 0.2639) * comfort_multiplier)
     auto_price_b = math.floor(160 + (distance * 0.3509) * comfort_multiplier)
     auto_price_f = math.floor(276 + (distance * 0.6068) * comfort_multiplier)
-    
-    # Cargo katsayısı uzaklığa göre değişir. LH (Long Haul > 5000km) için 0.47
     cargo_coef = 0.47 if distance > 5000 else (0.52 if distance > 2000 else 0.56)
     auto_price_c = math.floor(200 + (distance * cargo_coef))
     
-    st.info("💡 **Tersine Mühendislik ile Bulunan İdeal (Audit) Fiyatlar:**")
-    c5, c6, c7, c8 = st.columns(4)
-    with c5: price_e = st.number_input("Eco ($)", value=auto_price_e)
-    with c6: price_b = st.number_input("Bus ($)", value=auto_price_b)
-    with c7: price_f = st.number_input("First ($)", value=auto_price_f)
-    with c8: price_c = st.number_input("Cargo ($)", value=auto_price_c)
+    c1, c2, c3, c4 = st.columns(4)
+    with c1: price_e = st.number_input("Eco ($)", value=auto_price_e)
+    with c2: price_b = st.number_input("Bus ($)", value=auto_price_b)
+    with c3: price_f = st.number_input("First ($)", value=auto_price_f)
+    with c4: price_c = st.number_input("Cargo ($)", value=auto_price_c)
+
+# UI: 2. Kısım - Demand
+st.subheader("👥 Günlük Brüt Demand")
+c5, c6, c7, c8 = st.columns(4)
+with c5: demand_e = st.number_input("Eco Dmd", value=0, step=10)
+with c6: demand_b = st.number_input("Bus Dmd", value=0, step=10)
+with c7: demand_f = st.number_input("First Dmd", value=0, step=10)
+with c8: demand_c = st.number_input("Cargo Dmd", value=0, step=1)
 
 available_planes = [(n, s) for n, s in AIRCRAFT_DB.items() if s["range"] >= distance]
 available_planes.sort(key=lambda x: x[1]["seats"], reverse=True)
 
-if st.button("Filoyu Optimize Et ve Kârı Hesapla", use_container_width=True):
+st.write("") # Boşluk
+if st.button("Filoyu Optimize Et ve Kârı Hesapla", use_container_width=True, type="primary"):
     if not available_planes:
         st.error(f"Hata: {distance} km menzile uçabilecek uçak bulunamadı!")
     else:
@@ -168,41 +167,39 @@ if st.button("Filoyu Optimize Et ve Kârı Hesapla", use_container_width=True):
         else:
             st.divider()
             
-            col_sum1, col_sum2, col_sum3 = st.columns(3)
-            with col_sum1:
-                st.markdown(f"### 💸 Filo Maliyeti\n:red[**$ {total_fleet_cost:,.0f}**]")
-            with col_sum2:
-                st.markdown(f"### 📈 Brüt Hft. Gelir\n:green[**$ {total_weekly_revenue:,.0f}**]")
-            with col_sum3:
-                if total_weekly_revenue > 0:
-                    st.markdown(f"### ⏱️ Ortalama Amortisman\n**{total_fleet_cost/total_weekly_revenue:.1f} Hafta**")
-                else:
-                    st.markdown("### ⏱️ Ortalama Amortisman\n**Bilet fiyatı girilmedi**")
+            # Finansal Özet Kartı
+            st.markdown("""
+            <div style="background-color: #1e1e1e; padding: 20px; border-radius: 10px; text-align: center;">
+                <h3 style="margin-bottom: 5px;">💸 Toplam Filo Maliyeti</h3>
+                <h2 style="color: #ff4b4b; margin-top: 0;">$ {:,.0f}</h2>
+                <h3 style="margin-bottom: 5px; mt-3">📈 Brüt Haftalık Gelir</h3>
+                <h2 style="color: #00d26a; margin-top: 0;">$ {:,.0f}</h2>
+            </div>
+            """.format(total_fleet_cost, total_weekly_revenue), unsafe_allow_html=True)
             
-            st.divider()
+            if total_weekly_revenue > 0:
+                st.caption(f"⏱️ **Ortalama Amortisman:** Tüm filo yaklaşık **{total_fleet_cost/total_weekly_revenue:.1f} oyun haftasında** kendi maliyetini çıkarır.")
+            
+            st.write("")
             
             for f in fleet:
                 price_str = f"$ {f['Stats']['price']:,.0f}"
-                rev_str = f"$ {f['Weekly_Rev']:,.0f}" if f['Weekly_Rev'] > 0 else "Bilet Fiyatı Gerekli"
-                roi_str = f"{f['ROI_Weeks']:.1f} Oyun Haftası" if f['ROI_Weeks'] > 0 else "-"
+                rev_str = f"$ {f['Weekly_Rev']:,.0f}" if f['Weekly_Rev'] > 0 else "N/A"
+                roi_str = f"{f['ROI_Weeks']:.1f} Hafta" if f['ROI_Weeks'] > 0 else "-"
                 
                 with st.expander(f"✈️ {f['Plane_Num']}. Uçak: {f['Name']} | Doluluk: %{f['Fill_Rate']:.1f}", expanded=True):
-                    c1, c2, c3 = st.columns(3)
-                    with c1:
-                        st.write("**Konfigürasyon**")
+                    st.write(f"**Uçak Fiyatı:** {price_str} | **Hft. Gelir:** :green[{rev_str}] | **Amortisman:** {roi_str}")
+                    c_in1, c_in2 = st.columns(2)
+                    with c_in1:
+                        st.markdown("**Konfigürasyon**")
                         st.write(f"- Eco: **{f['E']}**")
                         st.write(f"- Bus: **{f['B']}**")
                         st.write(f"- First: **{f['F']}**")
-                        st.write(f"- Cargo: **{f['Cargo']}** ton")
-                    with c2:
-                        st.write("**Operasyon**")
-                        st.write(f"- Hft. Sefer: **{f['Wk_Flights']}**")
-                        st.write(f"- Uçak Fiyatı: **{price_str}**")
-                        st.write(f"- Hft. Gelir: **:green[{rev_str}]**")
-                    with c3:
-                        st.write("**Verimlilik**")
-                        st.write(f"- Kullanım: **%{f['Use_Rate']:.1f}**")
-                        st.write(f"- Gidiş-Dönüş: **{((distance * 2) / f['Stats']['speed']):.1f}s**")
-                        st.write(f"- **Amortisman:** **{roi_str}**")
+                        st.write(f"- Cargo: **{f['Cargo']}**")
+                    with c_in2:
+                        st.markdown("**Operasyon**")
+                        st.write(f"🔄 Hft. Sefer: **{f['Wk_Flights']}**")
+                        st.write(f"📈 Kullanım: **%{f['Use_Rate']:.1f}**")
+                        st.write(f"⏱️ Süre: **{((distance * 2) / f['Stats']['speed']):.1f}s**")
 
-            st.info(f"**Atanmayan Kalan Haftalık Demand:** {curr_e_wk} Eco, {curr_b_wk} Bus, {curr_f_wk} First, {curr_c_wk} Kargo")
+            st.info(f"**Kalan (Atanmayan) Haftalık Demand:** {curr_e_wk} Eco, {curr_b_wk} Bus, {curr_f_wk} First, {curr_c_wk} Kargo")
