@@ -4,9 +4,9 @@ import math
 st.set_page_config(page_title="AM Finans & Filo Yöneticisi", layout="wide")
 
 st.title("✈️ AM Finansal Filo ve Rota Yöneticisi")
-st.markdown("Demand aşımını önleyen **%100 Doluluk Algoritması** ve **Amortisman (ROI)** hesaplayıcısı.")
+st.markdown("Demand aşımını önleyen **%100 Doluluk Algoritması** ve Oyun İçi Formüllerle **Otomatik Bilet Hesaplayıcı**.")
 
-# Çok Daha Geniş Uçak Veritabanı (Liste Fiyatlarıyla)
+# Çok Daha Geniş Uçak Veritabanı
 AIRCRAFT_DB = {
     "Airbus A380-800": {"range": 15556, "speed": 903, "seats": 853, "cargo": 84, "price": 403000000},
     "Boeing 747-8I": {"range": 14815, "speed": 911, "seats": 605, "cargo": 76, "price": 379100000},
@@ -40,13 +40,26 @@ with col_main1:
     with c4: demand_c = st.number_input("Cargo Dmd", value=0, step=1)
 
 with col_main2:
-    st.subheader("2. Finansal Veriler (Bilet Fiyatları)")
-    st.markdown("Audit sonuçlarındaki **Bilet Fiyatlarını ($)** girin:")
+    st.subheader("2. Finansal Veriler (Otomatik)")
+    st.markdown("Havayolunuzun **Comfort (Konfor)** istatistiğini girin. Bilet fiyatları uzaklığa göre otomatik hesaplanacaktır.")
+    comfort_stat = st.number_input("Comfort İstatistiği (Araştırmalardan gelen)", value=0, step=50)
+    
+    # Tersine Mühendislik Tycoon İdeal (Audit) Fiyat Formülleri
+    comfort_multiplier = 1 + (comfort_stat / 3000)
+    auto_price_e = math.floor(120 + (distance * 0.2639) * comfort_multiplier)
+    auto_price_b = math.floor(160 + (distance * 0.3509) * comfort_multiplier)
+    auto_price_f = math.floor(276 + (distance * 0.6068) * comfort_multiplier)
+    
+    # Cargo katsayısı uzaklığa göre değişir. LH (Long Haul > 5000km) için 0.47
+    cargo_coef = 0.47 if distance > 5000 else (0.52 if distance > 2000 else 0.56)
+    auto_price_c = math.floor(200 + (distance * cargo_coef))
+    
+    st.info("💡 **Tersine Mühendislik ile Bulunan İdeal (Audit) Fiyatlar:**")
     c5, c6, c7, c8 = st.columns(4)
-    with c5: price_e = st.number_input("Eco ($)", value=0)
-    with c6: price_b = st.number_input("Bus ($)", value=0)
-    with c7: price_f = st.number_input("First ($)", value=0)
-    with c8: price_c = st.number_input("Cargo ($)", value=0)
+    with c5: price_e = st.number_input("Eco ($)", value=auto_price_e)
+    with c6: price_b = st.number_input("Bus ($)", value=auto_price_b)
+    with c7: price_f = st.number_input("First ($)", value=auto_price_f)
+    with c8: price_c = st.number_input("Cargo ($)", value=auto_price_c)
 
 available_planes = [(n, s) for n, s in AIRCRAFT_DB.items() if s["range"] >= distance]
 available_planes.sort(key=lambda x: x[1]["seats"], reverse=True)
@@ -74,7 +87,6 @@ if st.button("Filoyu Optimize Et ve Kârı Hesapla", use_container_width=True):
                 
             chosen_name, chosen_stats, chosen_wk_flights = None, None, 1
             
-            # YENİ ALGORİTMA: Kapasitesi demand'den KÜÇÜK veya EŞİT olan en büyük uçağı bul
             for name, stats in available_planes:
                 round_trip_time = (distance * 2) / stats["speed"] if stats["speed"] > 0 else 1
                 wk_flights = math.floor(168 / round_trip_time) if round_trip_time > 0 else 1
@@ -86,21 +98,17 @@ if st.button("Filoyu Optimize Et ve Kârı Hesapla", use_container_width=True):
                     chosen_name, chosen_stats, chosen_wk_flights = name, stats, wk_flights
                     break
             
-            # Eğer tüm uçaklar demand'den büyükse, yani demand artık uçağı dolduramayacak kadar azaldıysa
             if chosen_name is None:
-                # En küçük uçağı seçip doluluk oranına bakarız
                 smallest_name, smallest_stats = available_planes[-1]
                 round_trip_time = (distance * 2) / smallest_stats["speed"] if smallest_stats["speed"] > 0 else 1
                 sm_wk_flights = math.floor(168 / round_trip_time) if round_trip_time > 0 else 1
                 if sm_wk_flights < 1: sm_wk_flights = 1
                 sm_plane_weekly_cap = smallest_stats["seats"] * sm_wk_flights
                 
-                # Eğer kalan demand, en küçük uçağın bile %70'ini DOLDURAMIYORSA zararı önlemek için işlemi bitir
                 if total_eco_demand_wk < sm_plane_weekly_cap * 0.70:
                     st.warning("⚠️ Kalan demand bir uçağı kârlı şekilde dolduramayacak kadar düşük. Negatif demand/zarar oluşmaması için uçak ataması durduruldu.")
                     break
                 else:
-                    # %70'ten fazlası doluyorsa o uçağı son kez seç
                     chosen_name, chosen_stats, chosen_wk_flights = smallest_name, smallest_stats, sm_wk_flights
 
             config = {'Plane_Num': plane_counter, 'Name': chosen_name, 'E': 0, 'B': 0, 'F': 0, 'Cargo': 0, 'Wk_Flights': chosen_wk_flights, 'Stats': chosen_stats}
@@ -124,7 +132,6 @@ if st.button("Filoyu Optimize Et ve Kârı Hesapla", use_container_width=True):
             curr_e_wk = max(0, curr_e_wk - (take_e * chosen_wk_flights))
             remaining_space -= take_e
             
-            # Kalan boşluğu mecburen Economy'ye yaz (Yeni algoritmada bu sayı çok düşük olacaktır)
             if remaining_space > 0:
                 config['E'] += remaining_space
                 curr_e_wk = max(0, curr_e_wk - (remaining_space * chosen_wk_flights))
@@ -134,20 +141,17 @@ if st.button("Filoyu Optimize Et ve Kârı Hesapla", use_container_width=True):
             config['Cargo'] = take_c
             curr_c_wk = max(0, curr_c_wk - (take_c * chosen_wk_flights))
             
-            # Oran Hesaplamaları
             used_seats = (config['F'] * 4) + (config['B'] * 2) + config['E']
             config['Fill_Rate'] = (used_seats / chosen_stats["seats"]) * 100
             
             rt_time = (distance * 2) / chosen_stats["speed"]
             config['Use_Rate'] = ((chosen_wk_flights * rt_time) / 168) * 100
             
-            # Finansal Hesaplamalar
             flight_revenue = (config['E'] * price_e) + (config['B'] * price_b) + (config['F'] * price_f) + (config['Cargo'] * price_c)
             weekly_plane_rev = flight_revenue * chosen_wk_flights
             
             config['Weekly_Rev'] = weekly_plane_rev
             
-            # ROI: Uçağın parasını kaç haftada çıkaracağı (Oyun içi hafta)
             if weekly_plane_rev > 0:
                 config['ROI_Weeks'] = chosen_stats["price"] / weekly_plane_rev
             else:
