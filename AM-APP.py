@@ -6,7 +6,7 @@ st.set_page_config(page_title="AM Akıllı Filo Yöneticisi", layout="centered")
 st.title("Airlines Manager: Akıllı Filo Yöneticisi")
 st.markdown("Bu araç **A380-800'ü önceliklendirerek** demand'i eritmeye başlar. Kalan demand azaldığında, zarar etmeni engellemek için veritabanındaki **diğer uygun uçaklara** otomatik geçiş yapar.")
 
-# Oyun içi popüler Long Haul (ve Medium) Uçak Veritabanı
+# Oyun içi popüler Long Haul Uçak Veritabanı
 AIRCRAFT_DB = {
     "Airbus A380-800": {"range": 15556, "speed": 903, "seats": 853, "cargo": 84},
     "Boeing 747-400": {"range": 13450, "speed": 903, "seats": 660, "cargo": 65},
@@ -68,13 +68,14 @@ if st.button("Akıllı Konfigürasyonu Hesapla"):
             
             # En uygun uçağı seçme mantığı
             for name, stats in available_planes:
-                flight_time = distance / stats["speed"] if stats["speed"] > 0 else 1
-                df = math.floor(24 / flight_time) if flight_time > 0 else 1
+                # DÜZELTME: Uçuş süresi gidiş-dönüş (round-trip) olarak hesaplanıyor
+                round_trip_time = (distance * 2) / stats["speed"] if stats["speed"] > 0 else 1
+                df = math.floor(24 / round_trip_time) if round_trip_time > 0 else 1
                 if df < 1: df = 1
                 
                 plane_daily_cap = stats["seats"] * df
                 
-                # Eğer kalan demand, bu uçağın kapasitesinin en az %85'ini dolduruyorsa (yani max %15 eksiye düşeceksek) uçağı seç!
+                # Eğer kalan demand, bu uçağın kapasitesinin en az %85'ini dolduruyorsa (yani max %15 eksiye düşeceksek) uçağı seç
                 if total_eco_demand >= plane_daily_cap * 0.85:
                     chosen_name = name
                     chosen_stats = stats
@@ -84,8 +85,8 @@ if st.button("Akıllı Konfigürasyonu Hesapla"):
             # Eğer hiçbir uçak %85 dolmuyorsa (demand çok azalmışsa), mecburen en küçük uçağı seç
             if chosen_name is None:
                 chosen_name, chosen_stats = available_planes[-1]
-                flight_time = distance / chosen_stats["speed"] if chosen_stats["speed"] > 0 else 1
-                chosen_df = math.floor(24 / flight_time) if flight_time > 0 else 1
+                round_trip_time = (distance * 2) / chosen_stats["speed"] if chosen_stats["speed"] > 0 else 1
+                chosen_df = math.floor(24 / round_trip_time) if round_trip_time > 0 else 1
                 if chosen_df < 1: chosen_df = 1
                 
                 # Ekstra Kontrol: Eğer en küçük uçak bile %40'tan az doluyorsa (çok büyük zarar yazacaksa), döngüyü kır.
