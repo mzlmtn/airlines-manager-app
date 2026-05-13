@@ -1,156 +1,148 @@
 import streamlit as st
 import math
 
+# Sayfa düzenini mobile uyumlu ve kompakt ayarlıyoruz
 st.set_page_config(page_title="AM Akıllı Filo Yöneticisi", layout="centered")
 
-st.title("Airlines Manager: Akıllı Filo Yöneticisi")
-st.markdown("Bu araç **A380-800'ü önceliklendirerek** demand'i eritmeye başlar. Kalan demand azaldığında, zarar etmeni engellemek için veritabanındaki **diğer uygun uçaklara** otomatik geçiş yapar.")
+st.title("✈️ AM Akıllı Filo & Rota Yöneticisi")
+st.markdown("Haftalık (168 saat) bazda hesaplama yaparak en uygun uçakları seçer, kullanım ve doluluk oranlarını analiz eder.")
 
-# Oyun içi popüler Long Haul Uçak Veritabanı
+# Genişletilmiş Long-Haul Uçak Veritabanı
 AIRCRAFT_DB = {
     "Airbus A380-800": {"range": 15556, "speed": 903, "seats": 853, "cargo": 84},
+    "Boeing 747-8I": {"range": 14815, "speed": 911, "seats": 605, "cargo": 76},
     "Boeing 747-400": {"range": 13450, "speed": 903, "seats": 660, "cargo": 65},
     "Boeing 777-300ER": {"range": 14685, "speed": 898, "seats": 550, "cargo": 71},
+    "Boeing 777-200ER": {"range": 14305, "speed": 898, "seats": 440, "cargo": 59},
+    "Airbus A350-1000": {"range": 14750, "speed": 903, "seats": 475, "cargo": 54},
+    "Airbus A350-900XWB": {"range": 15000, "speed": 903, "seats": 440, "cargo": 45},
+    "Boeing 787-9": {"range": 14140, "speed": 911, "seats": 420, "cargo": 34},
     "Boeing 787-8": {"range": 13620, "speed": 911, "seats": 381, "cargo": 28},
+    "Airbus A330-300": {"range": 11750, "speed": 880, "seats": 440, "cargo": 45},
+    "Boeing 767-300ER": {"range": 11070, "speed": 850, "seats": 350, "cargo": 38},
     "Boeing 767-200ER": {"range": 12220, "speed": 850, "seats": 290, "cargo": 35},
     "Airbus A321-200neo-LR": {"range": 7408, "speed": 840, "seats": 244, "cargo": 5}
 }
 
-st.header("1. Rota Bilgileri")
+# 1. Rota Bilgileri (Kompakt)
+st.subheader("1. Rota Bilgileri")
 distance = st.number_input("Rota Uzaklığı (km)", value=8000, step=100)
 
-st.header("2. Brüt Rota Demand'i")
-st.caption("Oyunda gördüğünüz ham sayıları girin (Sistem otomatik 2'ye bölecektir).")
+# 2. Demand Bilgileri (Kompakt)
+st.subheader("2. Günlük Brüt Demand")
 col1, col2, col3, col4 = st.columns(4)
-with col1:
-    demand_e = st.number_input("Economy", value=0, step=10)
-with col2:
-    demand_b = st.number_input("Business", value=0, step=10)
-with col3:
-    demand_f = st.number_input("First", value=0, step=10)
-with col4:
-    demand_c = st.number_input("Cargo", value=0, step=1)
+with col1: demand_e = st.number_input("Eco", value=0, step=10)
+with col2: demand_b = st.number_input("Bus", value=0, step=10)
+with col3: demand_f = st.number_input("First", value=0, step=10)
+with col4: demand_c = st.number_input("Cargo", value=0, step=1)
 
 # Filtrelenmiş Uçakları Bulma
-available_planes = []
-for name, stats in AIRCRAFT_DB.items():
-    if stats["range"] >= distance:
-        available_planes.append((name, stats))
-
-# Uçakları kapasitelerine (seats) göre büyükten küçüğe sırala
+available_planes = [(n, s) for n, s in AIRCRAFT_DB.items() if s["range"] >= distance]
 available_planes.sort(key=lambda x: x[1]["seats"], reverse=True)
 
-if st.button("Akıllı Konfigürasyonu Hesapla"):
+if st.button("Filoyu Optimize Et", use_container_width=True):
     if not available_planes:
-        st.error(f"Hata: {distance} km menzile uçabilecek bir uçak veritabanında bulunamadı!")
+        st.error(f"Hata: {distance} km menzile uçabilecek uçak bulunamadı!")
     else:
-        # Demand'in yarısını alıyoruz (Gidiş-Dönüş hesaplaması için)
-        curr_e = math.ceil(demand_e / 2)
-        curr_b = math.ceil(demand_b / 2)
-        curr_f = math.ceil(demand_f / 2)
-        curr_c = math.ceil(demand_c / 2)
+        # Gidiş-Dönüş ve Haftalık Demand Hesaplaması
+        # Günlük brut sayıyı 2'ye bölüp, haftalık toplam ihtiyacı bulmak için 7 ile çarpıyoruz
+        curr_e_wk = math.ceil(demand_e / 2) * 7
+        curr_b_wk = math.ceil(demand_b / 2) * 7
+        curr_f_wk = math.ceil(demand_f / 2) * 7
+        curr_c_wk = math.ceil(demand_c / 2) * 7
         
-        st.write(f"📊 **İşleme Alınan Net Demand (1/2):** {curr_e} Eco, {curr_b} Bus, {curr_f} First, {curr_c} Kargo")
-        st.divider()
-
+        st.success(f"📊 **Haftalık İşlenen Net Demand:** {curr_e_wk} Eco | {curr_b_wk} Bus | {curr_f_wk} First | {curr_c_wk} Kargo")
+        
         fleet = []
         plane_counter = 1
         
-        # Algoritma: Tüm demand eriyene kadar devam et
         while True:
-            total_eco_demand = curr_e + (curr_b * 2) + (curr_f * 4)
-            if total_eco_demand <= 0 and curr_c <= 0:
+            total_eco_demand_wk = curr_e_wk + (curr_b_wk * 2) + (curr_f_wk * 4)
+            if total_eco_demand_wk <= 0 and curr_c_wk <= 0:
                 break
                 
-            chosen_name = None
-            chosen_stats = None
-            chosen_df = 1
+            chosen_name, chosen_stats, chosen_wk_flights = None, None, 1
             
-            # En uygun uçağı seçme mantığı
             for name, stats in available_planes:
-                # DÜZELTME: Uçuş süresi gidiş-dönüş (round-trip) olarak hesaplanıyor
                 round_trip_time = (distance * 2) / stats["speed"] if stats["speed"] > 0 else 1
-                df = math.floor(24 / round_trip_time) if round_trip_time > 0 else 1
-                if df < 1: df = 1
+                wk_flights = math.floor(168 / round_trip_time) if round_trip_time > 0 else 1
+                if wk_flights < 1: continue
                 
-                plane_daily_cap = stats["seats"] * df
+                plane_weekly_cap = stats["seats"] * wk_flights
                 
-                # Eğer kalan demand, bu uçağın kapasitesinin en az %85'ini dolduruyorsa (yani max %15 eksiye düşeceksek) uçağı seç
-                if total_eco_demand >= plane_daily_cap * 0.85:
-                    chosen_name = name
-                    chosen_stats = stats
-                    chosen_df = df
+                # Uçak kapasitesinin en az %80'ini dolduruyorsa seç
+                if total_eco_demand_wk >= plane_weekly_cap * 0.80:
+                    chosen_name, chosen_stats, chosen_wk_flights = name, stats, wk_flights
                     break
             
-            # Eğer hiçbir uçak %85 dolmuyorsa (demand çok azalmışsa), mecburen en küçük uçağı seç
             if chosen_name is None:
                 chosen_name, chosen_stats = available_planes[-1]
                 round_trip_time = (distance * 2) / chosen_stats["speed"] if chosen_stats["speed"] > 0 else 1
-                chosen_df = math.floor(24 / round_trip_time) if round_trip_time > 0 else 1
-                if chosen_df < 1: chosen_df = 1
+                chosen_wk_flights = math.floor(168 / round_trip_time) if round_trip_time > 0 else 1
+                if chosen_wk_flights < 1: chosen_wk_flights = 1
                 
-                # Ekstra Kontrol: Eğer en küçük uçak bile %40'tan az doluyorsa (çok büyük zarar yazacaksa), döngüyü kır.
-                if total_eco_demand < (chosen_stats["seats"] * chosen_df) * 0.40:
-                    st.warning(f"⚠️ Kalan demand çok düşük ({total_eco_demand} alan). Yeni bir uçak kaldırmak zarar yazdıracağı için algoritma durduruldu.")
+                if total_eco_demand_wk < (chosen_stats["seats"] * chosen_wk_flights) * 0.35:
+                    st.warning(f"⚠️ Kalan demand çok düşük. Uçak kaldırmak zarar yazdıracağı için durduruldu.")
                     break
 
-            # --- UÇAK İÇİ KOLTUK YERLEŞTİRME ---
-            config = {'Plane_Num': plane_counter, 'Name': chosen_name, 'E': 0, 'B': 0, 'F': 0, 'Cargo': 0, 'Flights': chosen_df}
+            # Konfigürasyon Hesaplama (Haftalık Sefer Sayısına Bölerek)
+            config = {'Plane_Num': plane_counter, 'Name': chosen_name, 'E': 0, 'B': 0, 'F': 0, 'Cargo': 0, 'Wk_Flights': chosen_wk_flights, 'Stats': chosen_stats}
             remaining_space = chosen_stats["seats"]
             
-            # 1. First Class
-            needed_f = math.ceil(curr_f / chosen_df)
+            needed_f = math.ceil(curr_f_wk / chosen_wk_flights)
             take_f = min(needed_f, remaining_space // 4)
             config['F'] = take_f
-            curr_f -= take_f * chosen_df
+            curr_f_wk = max(0, curr_f_wk - (take_f * chosen_wk_flights))
             remaining_space -= take_f * 4
-            if curr_f < 0: curr_f = 0
             
-            # 2. Business Class
-            needed_b = math.ceil(curr_b / chosen_df)
+            needed_b = math.ceil(curr_b_wk / chosen_wk_flights)
             take_b = min(needed_b, remaining_space // 2)
             config['B'] = take_b
-            curr_b -= take_b * chosen_df
+            curr_b_wk = max(0, curr_b_wk - (take_b * chosen_wk_flights))
             remaining_space -= take_b * 2
-            if curr_b < 0: curr_b = 0
             
-            # 3. Economy Class
-            needed_e = math.ceil(curr_e / chosen_df)
+            needed_e = math.ceil(curr_e_wk / chosen_wk_flights)
             take_e = min(needed_e, remaining_space)
             config['E'] = take_e
-            curr_e -= take_e * chosen_df
+            curr_e_wk = max(0, curr_e_wk - (take_e * chosen_wk_flights))
             remaining_space -= take_e
             
-            # Kural: Oyunda uçakta boşluk bırakılamaz. Eğer yerleştirme sonrası uçağın alanında boşluk kaldıysa, bunu eksiye düşme pahasına Economy'ye bas.
+            # Kalan boşluğu Economy ile doldur (Zararı önlemek için)
             if remaining_space > 0:
                 config['E'] += remaining_space
-                curr_e -= remaining_space * chosen_df
-                
-            if curr_e < 0: curr_e = 0
+                curr_e_wk = max(0, curr_e_wk - (remaining_space * chosen_wk_flights))
             
-            # 4. Kargo
-            needed_c = math.ceil(curr_c / chosen_df)
+            needed_c = math.ceil(curr_c_wk / chosen_wk_flights)
             take_c = min(needed_c, chosen_stats["cargo"])
             config['Cargo'] = take_c
-            curr_c -= take_c * chosen_df
-            if curr_c < 0: curr_c = 0
+            curr_c_wk = max(0, curr_c_wk - (take_c * chosen_wk_flights))
+            
+            # Oran Hesaplamaları
+            used_seats = (config['F'] * 4) + (config['B'] * 2) + config['E']
+            config['Fill_Rate'] = (used_seats / chosen_stats["seats"]) * 100
+            
+            rt_time = (distance * 2) / chosen_stats["speed"]
+            config['Use_Rate'] = ((chosen_wk_flights * rt_time) / 168) * 100
             
             fleet.append(config)
             plane_counter += 1
 
-        # Sonuçları Yazdırma
-        if len(fleet) == 0:
-            st.warning("Yerleştirilecek yeterli demand bulunamadı.")
+        if not fleet:
+            st.info("Yerleştirilecek yeterli demand bulunamadı.")
         else:
-            st.success(f"Optimum filo oluşturuldu! Toplam **{len(fleet)} adet** uçak kullanılacak.")
-            
+            st.divider()
             for f in fleet:
-                st.subheader(f"✈️ Uçak {f['Plane_Num']}: {f['Name']}")
-                st.write(f"⏱️ **Günlük Sefer Sayısı:** {f['Flights']}")
-                st.write(f"- **Economy:** {f['E']} koltuk")
-                st.write(f"- **Business:** {f['B']} koltuk")
-                st.write(f"- **First Class:** {f['F']} koltuk")
-                st.write(f"- **Cargo:** {f['Cargo']} ton")
-                st.divider()
-                
-            st.info(f"**Karşılanamayan / Kalan Demand:** {curr_e} Eco, {curr_b} Bus, {curr_f} First, {curr_c} Kargo")
+                # Kompakt Expander Görünümü
+                with st.expander(f"✈️ {f['Plane_Num']}. Uçak: {f['Name']} | Doluluk: %{f['Fill_Rate']:.1f}", expanded=True):
+                    c1, c2 = st.columns(2)
+                    with c1:
+                        st.write(f"**Economy:** {f['E']}")
+                        st.write(f"**Business:** {f['B']}")
+                        st.write(f"**First Class:** {f['F']}")
+                        st.write(f"**Cargo:** {f['Cargo']} ton")
+                    with c2:
+                        st.write(f"🔄 **Haftalık Sefer:** {f['Wk_Flights']}")
+                        st.write(f"📈 **Kullanım Oranı:** %{f['Use_Rate']:.1f}")
+                        st.write(f"⏱️ **Gidiş-Dönüş:** {((distance * 2) / f['Stats']['speed']):.1f} saat")
+
+            st.info(f"**Kalan Haftalık Demand:** {curr_e_wk} Eco, {curr_b_wk} Bus, {curr_f_wk} First, {curr_c_wk} Kargo")
