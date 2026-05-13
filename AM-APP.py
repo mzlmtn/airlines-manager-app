@@ -1,40 +1,46 @@
 import streamlit as st
 import math
 
-# Arayüzü daha derli toplu yapmak için 'centered' kullanıyoruz
 st.set_page_config(page_title="AM Finans & Filo Yöneticisi", layout="centered")
 
 st.title("✈️ AM Finansal Filo ve Rota Yöneticisi")
-st.markdown("Demand aşımını önleyen **%100 Doluluk Algoritması** ve Oyun İçi Formüllerle **Otomatik Bilet Hesaplayıcı**.")
+st.markdown("Demand aşımını önleyen **%100 Doluluk Algoritması**, Otomatik Bilet Hesaplayıcı ve **Net Kâr** Analizi.")
 
-# Geniş Uçak Veritabanı
+# Genişletilmiş Uçak Veritabanı (Yakıt: L/100pax/km, Yıpranma: %/100h)
 AIRCRAFT_DB = {
-    "Airbus A380-800": {"range": 15556, "speed": 903, "seats": 853, "cargo": 84, "price": 403000000},
-    "Boeing 747-8I": {"range": 14815, "speed": 911, "seats": 605, "cargo": 76, "price": 379100000},
-    "Boeing 747-400": {"range": 13450, "speed": 903, "seats": 660, "cargo": 65, "price": 260000000},
-    "Boeing 777-300ER": {"range": 14685, "speed": 898, "seats": 550, "cargo": 71, "price": 330000000},
-    "Boeing 777-200ER": {"range": 14305, "speed": 898, "seats": 440, "cargo": 59, "price": 261500000},
-    "Airbus A350-1000": {"range": 14750, "speed": 903, "seats": 475, "cargo": 54, "price": 366500000},
-    "Airbus A350-900XWB": {"range": 15000, "speed": 903, "seats": 440, "cargo": 45, "price": 317400000},
-    "Boeing 787-9": {"range": 14140, "speed": 911, "seats": 420, "cargo": 34, "price": 264600000},
-    "Boeing 787-8": {"range": 13620, "speed": 911, "seats": 381, "cargo": 28, "price": 224600000},
-    "Airbus A330-900neo": {"range": 13334, "speed": 880, "seats": 440, "cargo": 45, "price": 296400000},
-    "Airbus A330-300": {"range": 11750, "speed": 880, "seats": 440, "cargo": 45, "price": 264200000},
-    "Boeing 767-300ER": {"range": 11070, "speed": 850, "seats": 350, "cargo": 38, "price": 197100000},
-    "Airbus A310-300": {"range": 9540, "speed": 850, "seats": 275, "cargo": 33, "price": 105000000},
-    "Boeing 757-200": {"range": 7222, "speed": 850, "seats": 239, "cargo": 25, "price": 85000000},
-    "Airbus A321-200neo-LR": {"range": 7408, "speed": 840, "seats": 244, "cargo": 5, "price": 114500000},
-    "Boeing 737 MAX 9": {"range": 6574, "speed": 839, "seats": 220, "cargo": 6, "price": 116600000}
+    "Airbus A380-800": {"range": 15556, "speed": 903, "seats": 853, "cargo": 84, "price": 403000000, "fuel": 2.05, "wear": 1.2},
+    "Boeing 747-8I": {"range": 14815, "speed": 911, "seats": 605, "cargo": 76, "price": 379100000, "fuel": 2.11, "wear": 1.4},
+    "Boeing 747-400": {"range": 13450, "speed": 903, "seats": 660, "cargo": 65, "price": 260000000, "fuel": 2.65, "wear": 2.1},
+    "Boeing 777-300ER": {"range": 14685, "speed": 898, "seats": 550, "cargo": 71, "price": 330000000, "fuel": 2.10, "wear": 1.5},
+    "Boeing 777-200ER": {"range": 14305, "speed": 898, "seats": 440, "cargo": 59, "price": 261500000, "fuel": 2.40, "wear": 1.8},
+    "Airbus A350-1000": {"range": 14750, "speed": 903, "seats": 475, "cargo": 54, "price": 366500000, "fuel": 1.65, "wear": 1.1},
+    "Airbus A350-900XWB": {"range": 15000, "speed": 903, "seats": 440, "cargo": 45, "price": 317400000, "fuel": 1.70, "wear": 1.1},
+    "Boeing 787-9": {"range": 14140, "speed": 911, "seats": 420, "cargo": 34, "price": 264600000, "fuel": 1.80, "wear": 1.1},
+    "Boeing 787-8": {"range": 13620, "speed": 911, "seats": 381, "cargo": 28, "price": 224600000, "fuel": 1.85, "wear": 1.1},
+    "Airbus A330-900neo": {"range": 13334, "speed": 880, "seats": 440, "cargo": 45, "price": 296400000, "fuel": 1.95, "wear": 1.3},
+    "Airbus A330-300": {"range": 11750, "speed": 880, "seats": 440, "cargo": 45, "price": 264200000, "fuel": 2.30, "wear": 1.8},
+    "Boeing 767-300ER": {"range": 11070, "speed": 850, "seats": 350, "cargo": 38, "price": 197100000, "fuel": 2.50, "wear": 2.0},
+    "Boeing 737-700ER": {"range": 10200, "speed": 850, "seats": 149, "cargo": 15, "price": 81000000, "fuel": 2.60, "wear": 1.7}, # Uzun menzil kırıntı toplayıcı
+    "Airbus A310-300": {"range": 9540, "speed": 850, "seats": 275, "cargo": 33, "price": 105000000, "fuel": 2.70, "wear": 2.2},
+    "Boeing 757-200": {"range": 7222, "speed": 850, "seats": 239, "cargo": 25, "price": 85000000, "fuel": 2.55, "wear": 1.9},
+    "Airbus A321-200neo-LR": {"range": 7408, "speed": 840, "seats": 244, "cargo": 5, "price": 114500000, "fuel": 1.90, "wear": 1.2},
+    "Boeing 737 MAX 9": {"range": 6574, "speed": 839, "seats": 220, "cargo": 6, "price": 116600000, "fuel": 1.95, "wear": 1.2}
 }
 
 st.divider()
 
-# UI: 1. Kısım - Rota ve Fiyat Hesaplama
-st.subheader("📍 Rota ve Bilet Fiyatları")
-distance = st.number_input("Rota Uzaklığı (km)", value=8000, step=100)
+# UI: 1. Kısım - Rota, Fiyatlar ve Giderler
+st.subheader("📍 Rota ve Operasyon Giderleri")
+col_dist, col_fuel, col_tax = st.columns(3)
+with col_dist:
+    distance = st.number_input("Rota Uzaklığı (km)", value=8000, step=100)
+with col_fuel:
+    fuel_price = st.number_input("Yakıt Fiyatı ($/1000L)", value=800, step=10)
+with col_tax:
+    tax_other_pct = st.slider("Vergi ve Diğer Giderler (%)", min_value=0, max_value=50, value=15)
 
 with st.expander("Bilet Fiyatlarını Otomatik Hesapla", expanded=True):
-    st.markdown("Havayolunuzun **Comfort (Konfor)** istatistiğini girin. Fiyatlarda ufak sapmalar olursa hücrelere tıklayıp manuel düzeltebilirsiniz.")
+    st.markdown("Havayolunuzun **Comfort (Konfor)** istatistiğini girin.")
     comfort_stat = st.number_input("Comfort İstatistiği", value=0, step=50)
     
     # Formül Hesaplamaları
@@ -63,7 +69,7 @@ available_planes = [(n, s) for n, s in AIRCRAFT_DB.items() if s["range"] >= dist
 available_planes.sort(key=lambda x: x[1]["seats"], reverse=True)
 
 st.write("") # Boşluk
-if st.button("Filoyu Optimize Et ve Kârı Hesapla", use_container_width=True, type="primary"):
+if st.button("Filoyu Optimize Et ve Net Kârı Hesapla", use_container_width=True, type="primary"):
     if not available_planes:
         st.error(f"Hata: {distance} km menzile uçabilecek uçak bulunamadı!")
     else:
@@ -77,7 +83,8 @@ if st.button("Filoyu Optimize Et ve Kârı Hesapla", use_container_width=True, t
         fleet = []
         plane_counter = 1
         total_fleet_cost = 0
-        total_weekly_revenue = 0
+        total_weekly_gross = 0
+        total_weekly_net = 0
         
         while True:
             total_eco_demand_wk = curr_e_wk + (curr_b_wk * 2) + (curr_f_wk * 4)
@@ -104,8 +111,8 @@ if st.button("Filoyu Optimize Et ve Kârı Hesapla", use_container_width=True, t
                 if sm_wk_flights < 1: sm_wk_flights = 1
                 sm_plane_weekly_cap = smallest_stats["seats"] * sm_wk_flights
                 
-                if total_eco_demand_wk < sm_plane_weekly_cap * 0.70:
-                    st.warning("⚠️ Kalan demand bir uçağı kârlı şekilde dolduramayacak kadar düşük. Negatif demand/zarar oluşmaması için uçak ataması durduruldu.")
+                if total_eco_demand_wk < sm_plane_weekly_cap * 0.65:
+                    st.warning("⚠️ Kalan demand bir uçağı kârlı şekilde dolduramayacak kadar düşük. Zarar oluşmaması için uçak ataması durduruldu.")
                     break
                 else:
                     chosen_name, chosen_stats, chosen_wk_flights = smallest_name, smallest_stats, sm_wk_flights
@@ -140,24 +147,41 @@ if st.button("Filoyu Optimize Et ve Kârı Hesapla", use_container_width=True, t
             config['Cargo'] = take_c
             curr_c_wk = max(0, curr_c_wk - (take_c * chosen_wk_flights))
             
+            # Operasyon Verileri
             used_seats = (config['F'] * 4) + (config['B'] * 2) + config['E']
+            total_pax = config['F'] + config['B'] + config['E']
             config['Fill_Rate'] = (used_seats / chosen_stats["seats"]) * 100
             
             rt_time = (distance * 2) / chosen_stats["speed"]
             config['Use_Rate'] = ((chosen_wk_flights * rt_time) / 168) * 100
+            config['Wk_Hours_Flown'] = chosen_wk_flights * rt_time
             
-            flight_revenue = (config['E'] * price_e) + (config['B'] * price_b) + (config['F'] * price_f) + (config['Cargo'] * price_c)
-            weekly_plane_rev = flight_revenue * chosen_wk_flights
+            # Finansal Hesaplamalar
+            flight_gross_rev = (config['E'] * price_e) + (config['B'] * price_b) + (config['F'] * price_f) + (config['Cargo'] * price_c)
+            weekly_gross = flight_gross_rev * chosen_wk_flights
             
-            config['Weekly_Rev'] = weekly_plane_rev
+            # Yakıt Gideri: (Mesafe * (FuelRate / 100) * Yolcu) * SeferSayisi * (BirimFiyat/1000)
+            # Gidiş-Dönüş mesafesi kullanıyoruz
+            weekly_fuel_cost = ((distance * 2) * (chosen_stats["fuel"] / 100) * total_pax) * chosen_wk_flights * (fuel_price / 1000)
             
-            if weekly_plane_rev > 0:
-                config['ROI_Weeks'] = chosen_stats["price"] / weekly_plane_rev
+            # Diğer Giderler (Vergi vb.)
+            weekly_other_costs = weekly_gross * (tax_other_pct / 100)
+            
+            weekly_net = weekly_gross - weekly_fuel_cost - weekly_other_costs
+            
+            config['Weekly_Gross'] = weekly_gross
+            config['Weekly_Net'] = weekly_net
+            config['Fuel_Cost'] = weekly_fuel_cost
+            config['Other_Cost'] = weekly_other_costs
+            
+            if weekly_net > 0:
+                config['ROI_Weeks'] = chosen_stats["price"] / weekly_net
             else:
                 config['ROI_Weeks'] = 0
             
             total_fleet_cost += chosen_stats["price"]
-            total_weekly_revenue += weekly_plane_rev
+            total_weekly_gross += weekly_gross
+            total_weekly_net += weekly_net
             
             fleet.append(config)
             plane_counter += 1
@@ -172,24 +196,33 @@ if st.button("Filoyu Optimize Et ve Kârı Hesapla", use_container_width=True, t
             <div style="background-color: #1e1e1e; padding: 20px; border-radius: 10px; text-align: center;">
                 <h3 style="margin-bottom: 5px;">💸 Toplam Filo Maliyeti</h3>
                 <h2 style="color: #ff4b4b; margin-top: 0;">$ {:,.0f}</h2>
-                <h3 style="margin-bottom: 5px; mt-3">📈 Brüt Haftalık Gelir</h3>
-                <h2 style="color: #00d26a; margin-top: 0;">$ {:,.0f}</h2>
+                <div style="display: flex; justify-content: space-around; margin-top: 15px;">
+                    <div>
+                        <h4 style="margin-bottom: 5px; color: #a0a0a0;">Brüt Haftalık Gelir</h4>
+                        <h3 style="color: #ffffff; margin-top: 0;">$ {:,.0f}</h3>
+                    </div>
+                    <div>
+                        <h4 style="margin-bottom: 5px; color: #a0a0a0;">Tahmini Net Kâr</h4>
+                        <h3 style="color: #00d26a; margin-top: 0;">$ {:,.0f}</h3>
+                    </div>
+                </div>
             </div>
-            """.format(total_fleet_cost, total_weekly_revenue), unsafe_allow_html=True)
+            """.format(total_fleet_cost, total_weekly_gross, total_weekly_net), unsafe_allow_html=True)
             
-            if total_weekly_revenue > 0:
-                st.caption(f"⏱️ **Ortalama Amortisman:** Tüm filo yaklaşık **{total_fleet_cost/total_weekly_revenue:.1f} oyun haftasında** kendi maliyetini çıkarır.")
+            if total_weekly_net > 0:
+                st.caption(f"⏱️ **Gerçekçi Amortisman:** Tüm filo yaklaşık **{total_fleet_cost/total_weekly_net:.1f} oyun haftasında** maliyetini çıkarır (Net Kâr üzerinden).")
             
             st.write("")
             
             for f in fleet:
                 price_str = f"$ {f['Stats']['price']:,.0f}"
-                rev_str = f"$ {f['Weekly_Rev']:,.0f}" if f['Weekly_Rev'] > 0 else "N/A"
+                net_str = f"$ {f['Weekly_Net']:,.0f}" if f['Weekly_Net'] > 0 else "Zarar"
                 roi_str = f"{f['ROI_Weeks']:.1f} Hafta" if f['ROI_Weeks'] > 0 else "-"
                 
-                with st.expander(f"✈️ {f['Plane_Num']}. Uçak: {f['Name']} | Doluluk: %{f['Fill_Rate']:.1f}", expanded=True):
-                    st.write(f"**Uçak Fiyatı:** {price_str} | **Hft. Gelir:** :green[{rev_str}] | **Amortisman:** {roi_str}")
-                    c_in1, c_in2 = st.columns(2)
+                with st.expander(f"✈️ {f['Plane_Num']}. Uçak: {f['Name']} | Net Kâr: ${f['Weekly_Net']:,.0f}", expanded=True):
+                    st.markdown(f"**Fiyat:** {price_str} | **Hft. Brüt:** ${f['Weekly_Gross']:,.0f} | **Hft. Net:** <span style='color:#00d26a; font-weight:bold'>${f['Weekly_Net']:,.0f}</span> | **Amortisman:** {roi_str}", unsafe_allow_html=True)
+                    
+                    c_in1, c_in2, c_in3 = st.columns(3)
                     with c_in1:
                         st.markdown("**Konfigürasyon**")
                         st.write(f"- Eco: **{f['E']}**")
@@ -197,9 +230,14 @@ if st.button("Filoyu Optimize Et ve Kârı Hesapla", use_container_width=True, t
                         st.write(f"- First: **{f['F']}**")
                         st.write(f"- Cargo: **{f['Cargo']}**")
                     with c_in2:
+                        st.markdown("**Giderler (Haftalık)**")
+                        st.write(f"- Yakıt: **${f['Fuel_Cost']:,.0f}**")
+                        st.write(f"- Vergi/Diğer: **${f['Other_Cost']:,.0f}**")
+                        st.write(f"- Yıpranma Hızı: **%{f['Stats']['wear']}/100h**")
+                    with c_in3:
                         st.markdown("**Operasyon**")
-                        st.write(f"🔄 Hft. Sefer: **{f['Wk_Flights']}**")
-                        st.write(f"📈 Kullanım: **%{f['Use_Rate']:.1f}**")
+                        st.write(f"🔄 Sefer: **{f['Wk_Flights']}**")
                         st.write(f"⏱️ Süre: **{((distance * 2) / f['Stats']['speed']):.1f}s**")
+                        st.write(f"🛫 Uçuş Hacmi: **{f['Wk_Hours_Flown']:.1f} saat**")
 
             st.info(f"**Kalan (Atanmayan) Haftalık Demand:** {curr_e_wk} Eco, {curr_b_wk} Bus, {curr_f_wk} First, {curr_c_wk} Kargo")
