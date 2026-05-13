@@ -6,30 +6,26 @@ st.set_page_config(page_title="AM Finans & Filo Yöneticisi", layout="centered")
 st.title("✈️ AM Finansal Filo ve Rota Yöneticisi")
 st.markdown("Demand aşımını önleyen **%100 Doluluk Algoritması**, Otomatik Bilet Hesaplayıcı ve İleri Düzey **Net Kâr** Analizi.")
 
-# Genişletilmiş Uçak Veritabanı (Yakıt: L/100pax/km, Yıpranma: %/100h)
+# Fiyatları güncellenmiş ve NGAF (Other Costs) mekaniği eklenmiş Uçak Veritabanı
 AIRCRAFT_DB = {
-    "Airbus A380-800": {"range": 15556, "speed": 903, "seats": 853, "cargo": 84, "price": 403000000, "fuel": 2.05, "wear": 1.2},
-    "Boeing 747-8I": {"range": 14815, "speed": 911, "seats": 605, "cargo": 76, "price": 379100000, "fuel": 2.11, "wear": 1.4},
-    "Boeing 747-400": {"range": 13450, "speed": 903, "seats": 660, "cargo": 65, "price": 260000000, "fuel": 2.65, "wear": 2.1},
-    "Boeing 777-300ER": {"range": 14685, "speed": 898, "seats": 550, "cargo": 71, "price": 330000000, "fuel": 2.10, "wear": 1.5},
-    "Boeing 777-200ER": {"range": 14305, "speed": 898, "seats": 440, "cargo": 59, "price": 261500000, "fuel": 2.40, "wear": 1.8},
-    "Airbus A350-1000": {"range": 14750, "speed": 903, "seats": 475, "cargo": 54, "price": 366500000, "fuel": 1.65, "wear": 1.1},
-    "Airbus A350-900XWB": {"range": 15000, "speed": 903, "seats": 440, "cargo": 45, "price": 317400000, "fuel": 1.70, "wear": 1.1},
-    "Boeing 787-9": {"range": 14140, "speed": 911, "seats": 420, "cargo": 34, "price": 264600000, "fuel": 1.80, "wear": 1.1},
-    "Boeing 787-8": {"range": 13620, "speed": 911, "seats": 381, "cargo": 28, "price": 224600000, "fuel": 1.85, "wear": 1.1},
-    "Airbus A330-900neo": {"range": 13334, "speed": 880, "seats": 440, "cargo": 45, "price": 296400000, "fuel": 1.95, "wear": 1.3},
-    "Airbus A330-300": {"range": 11750, "speed": 880, "seats": 440, "cargo": 45, "price": 264200000, "fuel": 2.30, "wear": 1.8},
-    "Boeing 767-300ER": {"range": 11070, "speed": 850, "seats": 350, "cargo": 38, "price": 197100000, "fuel": 2.50, "wear": 2.0},
-    "Boeing 737-700ER": {"range": 10200, "speed": 850, "seats": 149, "cargo": 15, "price": 81000000, "fuel": 2.60, "wear": 1.7}, 
-    "Airbus A310-300": {"range": 9540, "speed": 850, "seats": 275, "cargo": 33, "price": 105000000, "fuel": 2.70, "wear": 2.2},
-    "Boeing 757-200": {"range": 7222, "speed": 850, "seats": 239, "cargo": 25, "price": 85000000, "fuel": 2.55, "wear": 1.9},
-    "Airbus A321-200neo-LR": {"range": 7408, "speed": 840, "seats": 244, "cargo": 5, "price": 114500000, "fuel": 1.90, "wear": 1.2},
-    "Boeing 737 MAX 9": {"range": 6574, "speed": 839, "seats": 220, "cargo": 6, "price": 116600000, "fuel": 1.95, "wear": 1.2}
+    "Airbus A380-800": {"range": 15556, "speed": 903, "seats": 853, "cargo": 84, "price": 403000000, "fuel": 2.05, "wear": 1.2, "other_pct": 0.10},
+    "Boeing 747-8I": {"range": 14815, "speed": 911, "seats": 605, "cargo": 76, "price": 379100000, "fuel": 2.11, "wear": 1.4, "other_pct": 0.12},
+    "Boeing 747-400": {"range": 13450, "speed": 903, "seats": 660, "cargo": 65, "price": 296300000, "fuel": 2.65, "wear": 2.1, "other_pct": 0.02},
+    "Boeing 777-300ER": {"range": 14685, "speed": 898, "seats": 550, "cargo": 71, "price": 330000000, "fuel": 2.10, "wear": 1.5, "other_pct": 0.08},
+    "Boeing 777-200ER": {"range": 14305, "speed": 898, "seats": 440, "cargo": 59, "price": 261500000, "fuel": 2.40, "wear": 1.8, "other_pct": 0.05},
+    "Airbus A350-1000": {"range": 14750, "speed": 903, "seats": 475, "cargo": 54, "price": 335000000, "fuel": 1.65, "wear": 1.1, "other_pct": 0.18},
+    "Airbus A350-900XWB": {"range": 15000, "speed": 903, "seats": 440, "cargo": 45, "price": 295200000, "fuel": 1.70, "wear": 1.1, "other_pct": 0.18},
+    "Boeing 787-9": {"range": 14140, "speed": 911, "seats": 420, "cargo": 34, "price": 264600000, "fuel": 1.80, "wear": 1.1, "other_pct": 0.18},
+    "Boeing 787-8": {"range": 13620, "speed": 911, "seats": 381, "cargo": 28, "price": 206800000, "fuel": 1.85, "wear": 1.1, "other_pct": 0.18},
+    "Airbus A330-900neo": {"range": 13334, "speed": 880, "seats": 440, "cargo": 45, "price": 272000000, "fuel": 1.95, "wear": 1.3, "other_pct": 0.15},
+    "Airbus A330-300": {"range": 11750, "speed": 880, "seats": 440, "cargo": 45, "price": 239400000, "fuel": 2.30, "wear": 1.8, "other_pct": 0.04},
+    "Boeing 767-300ER": {"range": 11070, "speed": 850, "seats": 350, "cargo": 38, "price": 182800000, "fuel": 2.50, "wear": 2.0, "other_pct": 0.01},
+    "Boeing 737-700ER": {"range": 10200, "speed": 850, "seats": 149, "cargo": 15, "price": 81000000, "fuel": 2.60, "wear": 1.7, "other_pct": 0.02}, 
+    "Airbus A310-300": {"range": 9540, "speed": 850, "seats": 275, "cargo": 33, "price": 157300000, "fuel": 2.70, "wear": 2.2, "other_pct": 0.01},
+    "Boeing 757-200": {"range": 7222, "speed": 850, "seats": 239, "cargo": 25, "price": 85000000, "fuel": 2.55, "wear": 1.9, "other_pct": 0.02},
+    "Airbus A321-200neo-LR": {"range": 7408, "speed": 840, "seats": 244, "cargo": 5, "price": 131500000, "fuel": 1.90, "wear": 1.2, "other_pct": 0.15},
+    "Boeing 737 MAX 9": {"range": 6574, "speed": 839, "seats": 220, "cargo": 6, "price": 116600000, "fuel": 1.95, "wear": 1.2, "other_pct": 0.15}
 }
-
-# Arka Plan Sabit Gider Değerleri
-AVG_FUEL_PRICE = 750 # $/1000L
-ESTIMATED_TAX_RATE = 0.12 # Brüt gelirin %12'si vergi/diğer giderler
 
 st.divider()
 
@@ -41,7 +37,6 @@ with st.expander("Bilet Fiyatlarını Otomatik Hesapla", expanded=True):
     st.markdown("Havayolunuzun **Comfort (Konfor)** istatistiğini girin.")
     comfort_stat = st.number_input("Comfort İstatistiği", value=0, step=50)
     
-    # Formül Hesaplamaları
     comfort_multiplier = 1 + (comfort_stat / 3000)
     auto_price_e = math.floor(120 + (distance * 0.2639) * comfort_multiplier)
     auto_price_b = math.floor(160 + (distance * 0.3509) * comfort_multiplier)
@@ -71,7 +66,6 @@ if st.button("Filoyu Optimize Et ve Net Kârı Hesapla", use_container_width=Tru
     if not available_planes:
         st.error(f"Hata: {distance} km menzile uçabilecek uçak bulunamadı!")
     else:
-        # Arka planda hesaplama için Haftalık Net Demand'e çevrilir
         curr_e_wk = math.ceil(demand_e / 2) * 7
         curr_b_wk = math.ceil(demand_b / 2) * 7
         curr_f_wk = math.ceil(demand_f / 2) * 7
@@ -109,7 +103,6 @@ if st.button("Filoyu Optimize Et ve Net Kârı Hesapla", use_container_width=Tru
                 sm_plane_weekly_cap = smallest_stats["seats"] * sm_wk_flights
                 
                 if total_eco_demand_wk < sm_plane_weekly_cap * 0.65:
-                    st.warning("⚠️ Kalan demand bir uçağı kârlı şekilde dolduramayacak kadar düşük. Zarar oluşmaması için uçak ataması durduruldu.")
                     break
                 else:
                     chosen_name, chosen_stats, chosen_wk_flights = smallest_name, smallest_stats, sm_wk_flights
@@ -144,7 +137,6 @@ if st.button("Filoyu Optimize Et ve Net Kârı Hesapla", use_container_width=Tru
             config['Cargo'] = take_c
             curr_c_wk = max(0, curr_c_wk - (take_c * chosen_wk_flights))
             
-            # Operasyon ve Verimlilik Verileri
             used_seats = (config['F'] * 4) + (config['B'] * 2) + config['E']
             total_pax = config['F'] + config['B'] + config['E']
             config['Fill_Rate'] = (used_seats / chosen_stats["seats"]) * 100
@@ -153,26 +145,34 @@ if st.button("Filoyu Optimize Et ve Net Kârı Hesapla", use_container_width=Tru
             config['Use_Rate'] = ((chosen_wk_flights * rt_time) / 168) * 100
             config['Wk_Hours_Flown'] = chosen_wk_flights * rt_time
             
-            # Finansal Hesaplamalar
+            # --- FİNANSAL HESAPLAMALAR ---
             flight_gross_rev = (config['E'] * price_e) + (config['B'] * price_b) + (config['F'] * price_f) + (config['Cargo'] * price_c)
             weekly_gross = flight_gross_rev * chosen_wk_flights
             
-            weekly_fuel_cost = ((distance * 2) * (chosen_stats["fuel"] / 100) * total_pax) * chosen_wk_flights * (AVG_FUEL_PRICE / 1000)
-            weekly_other_costs = weekly_gross * ESTIMATED_TAX_RATE
+            # AM Gerçek Yakıt Formülü: (Mesafe / 100) * Tüketim * Toplam Yolcu * Sefer * Ortalama Yakıt Fiyatı Katsayısı
+            weekly_fuel_cost = ((distance * 2) / 100) * chosen_stats["fuel"] * total_pax * chosen_wk_flights * 0.85
             
-            # Tahmini Bakım Gideri (Wear Expense)
-            # Formül: (% Wear / 100) * (Haftalık Uçuş Saati / 100) * Uçak Fiyatı * Bakım Çarpanı
-            weekly_maint_cost = (chosen_stats["wear"] / 100) * (config['Wk_Hours_Flown'] / 100) * (chosen_stats["price"] * 0.015)
+            # Havalimanı Vergisi (LH rotalar için ~70k, MH rotalar için ~40k)
+            flight_tax = 70000 if distance >= 5000 else 40000
+            weekly_airport_tax = chosen_wk_flights * flight_tax
             
-            weekly_net = weekly_gross - weekly_fuel_cost - weekly_other_costs - weekly_maint_cost
+            # Other Costs (Yeni nesil NGAF masrafları)
+            weekly_other_costs = weekly_gross * chosen_stats["other_pct"]
+            
+            # Net Uçuş Kârı (AM Flight Result Ekranındaki Değer)
+            weekly_flight_costs = weekly_fuel_cost + weekly_airport_tax + weekly_other_costs
+            weekly_net = weekly_gross - weekly_flight_costs
+            
+            # Bakım Amortismanı (Wear tabanlı, uçuştan ayrı tutulur)
+            weekly_maint_cost = (chosen_stats["wear"] / 100) * (config['Wk_Hours_Flown'] / 100) * (chosen_stats["price"] * 0.01)
             
             config['Weekly_Gross'] = weekly_gross
             config['Weekly_Net'] = weekly_net
             config['Fuel_Cost'] = weekly_fuel_cost
+            config['Airport_Tax'] = weekly_airport_tax
             config['Other_Cost'] = weekly_other_costs
             config['Maint_Cost'] = weekly_maint_cost
             
-            # Birim Zaman Kârlılıkları
             config['Hourly_Profit'] = weekly_net / config['Wk_Hours_Flown'] if config['Wk_Hours_Flown'] > 0 else 0
             config['Flight_Profit'] = weekly_net / chosen_wk_flights if chosen_wk_flights > 0 else 0
             
@@ -193,7 +193,6 @@ if st.button("Filoyu Optimize Et ve Net Kârı Hesapla", use_container_width=Tru
         else:
             st.divider()
             
-            # Finansal Özet Kartı
             st.markdown("""
             <div style="background-color: #1e1e1e; padding: 20px; border-radius: 10px; text-align: center;">
                 <h3 style="margin-bottom: 5px;">💸 Toplam Filo Maliyeti</h3>
@@ -204,7 +203,7 @@ if st.button("Filoyu Optimize Et ve Net Kârı Hesapla", use_container_width=Tru
                         <h3 style="color: #ffffff; margin-top: 0;">$ {:,.0f}</h3>
                     </div>
                     <div>
-                        <h4 style="margin-bottom: 5px; color: #a0a0a0;">Tahmini Net Kâr</h4>
+                        <h4 style="margin-bottom: 5px; color: #a0a0a0;">Oyun İçi Net Kâr</h4>
                         <h3 style="color: #00d26a; margin-top: 0;">$ {:,.0f}</h3>
                     </div>
                 </div>
@@ -242,7 +241,7 @@ if st.button("Filoyu Optimize Et ve Net Kârı Hesapla", use_container_width=Tru
                     with c_in2:
                         st.markdown("**💸 Giderler (Haftalık)**")
                         st.write(f"- Yakıt: **${f['Fuel_Cost']:,.0f}**")
-                        st.write(f"- Vergi: **${f['Other_Cost']:,.0f}**")
+                        st.write(f"- Uçuş/Vergi: **${(f['Other_Cost'] + f['Airport_Tax']):,.0f}**")
                         st.write(f"- Bakım(Wear): **${f['Maint_Cost']:,.0f}**")
                     with c_in3:
                         st.markdown("**🔄 Operasyon**")
@@ -254,7 +253,6 @@ if st.button("Filoyu Optimize Et ve Net Kârı Hesapla", use_container_width=Tru
                         st.write(f"- Seferlik Kâr: **${f['Flight_Profit']:,.0f}**")
                         st.write(f"- Saatlik Kâr: **${f['Hourly_Profit']:,.0f}**")
 
-            # Kullanıcının girdiği formata (Günlük Brüt) geri çevirme işlemi
             rem_daily_e = math.floor((curr_e_wk / 7) * 2)
             rem_daily_b = math.floor((curr_b_wk / 7) * 2)
             rem_daily_f = math.floor((curr_f_wk / 7) * 2)
