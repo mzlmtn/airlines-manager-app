@@ -4,7 +4,7 @@ import math
 st.set_page_config(page_title="AM Finans & Filo Yöneticisi", layout="centered")
 
 st.title("✈️ AM Finansal Filo ve Rota Yöneticisi")
-st.markdown("Demand aşımını önleyen **%100 Doluluk Algoritması**, Otomatik Bilet Hesaplayıcı ve Hızlı **Net Kâr** Analizi.")
+st.markdown("Demand aşımını önleyen **%100 Doluluk Algoritması**, Otomatik Bilet Hesaplayıcı ve İleri Düzey **Net Kâr** Analizi.")
 
 # Genişletilmiş Uçak Veritabanı (Yakıt: L/100pax/km, Yıpranma: %/100h)
 AIRCRAFT_DB = {
@@ -27,7 +27,7 @@ AIRCRAFT_DB = {
     "Boeing 737 MAX 9": {"range": 6574, "speed": 839, "seats": 220, "cargo": 6, "price": 116600000, "fuel": 1.95, "wear": 1.2}
 }
 
-# Arka Plan Sabit Gider Değerleri (Tahmini)
+# Arka Plan Sabit Gider Değerleri
 AVG_FUEL_PRICE = 750 # $/1000L
 ESTIMATED_TAX_RATE = 0.12 # Brüt gelirin %12'si vergi/diğer giderler
 
@@ -66,17 +66,16 @@ with c8: demand_c = st.number_input("Cargo Dmd", value=0, step=1)
 available_planes = [(n, s) for n, s in AIRCRAFT_DB.items() if s["range"] >= distance]
 available_planes.sort(key=lambda x: x[1]["seats"], reverse=True)
 
-st.write("") # Boşluk
+st.write("") 
 if st.button("Filoyu Optimize Et ve Net Kârı Hesapla", use_container_width=True, type="primary"):
     if not available_planes:
         st.error(f"Hata: {distance} km menzile uçabilecek uçak bulunamadı!")
     else:
+        # Arka planda hesaplama için Haftalık Net Demand'e çevrilir
         curr_e_wk = math.ceil(demand_e / 2) * 7
         curr_b_wk = math.ceil(demand_b / 2) * 7
         curr_f_wk = math.ceil(demand_f / 2) * 7
         curr_c_wk = math.ceil(demand_c / 2) * 7
-        
-        st.success(f"📊 **Hedef Haftalık Net Demand:** {curr_e_wk} Eco | {curr_b_wk} Bus | {curr_f_wk} First | {curr_c_wk} Kargo")
         
         fleet = []
         plane_counter = 1
@@ -145,7 +144,7 @@ if st.button("Filoyu Optimize Et ve Net Kârı Hesapla", use_container_width=Tru
             config['Cargo'] = take_c
             curr_c_wk = max(0, curr_c_wk - (take_c * chosen_wk_flights))
             
-            # Operasyon Verileri
+            # Operasyon ve Verimlilik Verileri
             used_seats = (config['F'] * 4) + (config['B'] * 2) + config['E']
             total_pax = config['F'] + config['B'] + config['E']
             config['Fill_Rate'] = (used_seats / chosen_stats["seats"]) * 100
@@ -154,22 +153,28 @@ if st.button("Filoyu Optimize Et ve Net Kârı Hesapla", use_container_width=Tru
             config['Use_Rate'] = ((chosen_wk_flights * rt_time) / 168) * 100
             config['Wk_Hours_Flown'] = chosen_wk_flights * rt_time
             
-            # Finansal Hesaplamalar (Otomatik Arka Plan Değerleriyle)
+            # Finansal Hesaplamalar
             flight_gross_rev = (config['E'] * price_e) + (config['B'] * price_b) + (config['F'] * price_f) + (config['Cargo'] * price_c)
             weekly_gross = flight_gross_rev * chosen_wk_flights
             
-            # Yakıt Gideri: (Gidiş-Dönüş Mesafe * (FuelRate / 100) * Yolcu) * SeferSayisi * (Ortalama Fiyat/1000)
             weekly_fuel_cost = ((distance * 2) * (chosen_stats["fuel"] / 100) * total_pax) * chosen_wk_flights * (AVG_FUEL_PRICE / 1000)
-            
-            # Diğer Giderler (Vergi vb.)
             weekly_other_costs = weekly_gross * ESTIMATED_TAX_RATE
             
-            weekly_net = weekly_gross - weekly_fuel_cost - weekly_other_costs
+            # Tahmini Bakım Gideri (Wear Expense)
+            # Formül: (% Wear / 100) * (Haftalık Uçuş Saati / 100) * Uçak Fiyatı * Bakım Çarpanı
+            weekly_maint_cost = (chosen_stats["wear"] / 100) * (config['Wk_Hours_Flown'] / 100) * (chosen_stats["price"] * 0.015)
+            
+            weekly_net = weekly_gross - weekly_fuel_cost - weekly_other_costs - weekly_maint_cost
             
             config['Weekly_Gross'] = weekly_gross
             config['Weekly_Net'] = weekly_net
             config['Fuel_Cost'] = weekly_fuel_cost
             config['Other_Cost'] = weekly_other_costs
+            config['Maint_Cost'] = weekly_maint_cost
+            
+            # Birim Zaman Kârlılıkları
+            config['Hourly_Profit'] = weekly_net / config['Wk_Hours_Flown'] if config['Wk_Hours_Flown'] > 0 else 0
+            config['Flight_Profit'] = weekly_net / chosen_wk_flights if chosen_wk_flights > 0 else 0
             
             if weekly_net > 0:
                 config['ROI_Weeks'] = chosen_stats["price"] / weekly_net
@@ -207,7 +212,7 @@ if st.button("Filoyu Optimize Et ve Net Kârı Hesapla", use_container_width=Tru
             """.format(total_fleet_cost, total_weekly_gross, total_weekly_net), unsafe_allow_html=True)
             
             if total_weekly_net > 0:
-                st.caption(f"⏱️ **Gerçekçi Amortisman:** Tüm filo yaklaşık **{total_fleet_cost/total_weekly_net:.1f} oyun haftasında** maliyetini çıkarır (Tahmini Net Kâr üzerinden).")
+                st.caption(f"⏱️ **Gerçekçi Amortisman:** Tüm filo yaklaşık **{total_fleet_cost/total_weekly_net:.1f} oyun haftasında** maliyetini çıkarır.")
             
             st.write("")
             
@@ -215,11 +220,10 @@ if st.button("Filoyu Optimize Et ve Net Kârı Hesapla", use_container_width=Tru
                 price_str = f"$ {f['Stats']['price']:,.0f}"
                 roi_str = f"{f['ROI_Weeks']:.1f} Hafta" if f['ROI_Weeks'] > 0 else "-"
                 
-                with st.expander(f"✈️ {f['Plane_Num']}. Uçak: {f['Name']} | Net Kâr: ${f['Weekly_Net']:,.0f}", expanded=True):
+                with st.expander(f"✈️ {f['Plane_Num']}. Uçak: {f['Name']} | Doluluk: %{f['Fill_Rate']:.1f} | Verim: %{f['Use_Rate']:.1f}", expanded=True):
                     
-                    # HTML tabanlı pürüzsüz biçimlendirme (Markdown çakışmalarını önler)
                     info_html = f"""
-                    <div style='margin-bottom: 10px;'>
+                    <div style='margin-bottom: 10px; font-size: 15px;'>
                         <b>Fiyat:</b> {price_str} &nbsp;|&nbsp; 
                         <b>Hft. Brüt:</b> ${f['Weekly_Gross']:,.0f} &nbsp;|&nbsp; 
                         <b>Hft. Net:</b> <span style='color:#00d26a; font-weight:bold;'>${f['Weekly_Net']:,.0f}</span> &nbsp;|&nbsp; 
@@ -228,22 +232,32 @@ if st.button("Filoyu Optimize Et ve Net Kârı Hesapla", use_container_width=Tru
                     """
                     st.markdown(info_html, unsafe_allow_html=True)
                     
-                    c_in1, c_in2, c_in3 = st.columns(3)
+                    c_in1, c_in2, c_in3, c_in4 = st.columns(4)
                     with c_in1:
-                        st.markdown("**Konfigürasyon**")
+                        st.markdown("**💺 Konfigürasyon**")
                         st.write(f"- Eco: **{f['E']}**")
                         st.write(f"- Bus: **{f['B']}**")
                         st.write(f"- First: **{f['F']}**")
                         st.write(f"- Cargo: **{f['Cargo']}**")
                     with c_in2:
-                        st.markdown("**Giderler (Tahmini)**")
+                        st.markdown("**💸 Giderler (Haftalık)**")
                         st.write(f"- Yakıt: **${f['Fuel_Cost']:,.0f}**")
-                        st.write(f"- Vergi/Diğer: **${f['Other_Cost']:,.0f}**")
-                        st.write(f"- Yıpranma Hızı: **%{f['Stats']['wear']}/100h**")
+                        st.write(f"- Vergi: **${f['Other_Cost']:,.0f}**")
+                        st.write(f"- Bakım(Wear): **${f['Maint_Cost']:,.0f}**")
                     with c_in3:
-                        st.markdown("**Operasyon**")
-                        st.write(f"🔄 Sefer: **{f['Wk_Flights']}**")
-                        st.write(f"⏱️ Süre: **{((distance * 2) / f['Stats']['speed']):.1f}s**")
-                        st.write(f"🛫 Uçuş Hacmi: **{f['Wk_Hours_Flown']:.1f} saat**")
+                        st.markdown("**🔄 Operasyon**")
+                        st.write(f"- Sefer: **{f['Wk_Flights']}**")
+                        st.write(f"- Süre: **{((distance * 2) / f['Stats']['speed']):.1f}s**")
+                        st.write(f"- Hacim: **{f['Wk_Hours_Flown']:.1f} saat**")
+                    with c_in4:
+                        st.markdown("**📊 Performans**")
+                        st.write(f"- Seferlik Kâr: **${f['Flight_Profit']:,.0f}**")
+                        st.write(f"- Saatlik Kâr: **${f['Hourly_Profit']:,.0f}**")
 
-            st.info(f"**Kalan (Atanmayan) Haftalık Demand:** {curr_e_wk} Eco, {curr_b_wk} Bus, {curr_f_wk} First, {curr_c_wk} Kargo")
+            # Kullanıcının girdiği formata (Günlük Brüt) geri çevirme işlemi
+            rem_daily_e = math.floor((curr_e_wk / 7) * 2)
+            rem_daily_b = math.floor((curr_b_wk / 7) * 2)
+            rem_daily_f = math.floor((curr_f_wk / 7) * 2)
+            rem_daily_c = math.floor((curr_c_wk / 7) * 2)
+            
+            st.info(f"**Kalan (Atanmayan) GÜNLÜK BRÜT Demand:** {rem_daily_e} Eco, {rem_daily_b} Bus, {rem_daily_f} First, {rem_daily_c} Kargo")
