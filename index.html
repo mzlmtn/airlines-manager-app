@@ -5,27 +5,63 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AM Akıllı Filo</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #121212; color: #ffffff; padding: 15px; margin: 0; }
-        h2, h3 { margin-top: 0; color: #f0f0f0; }
-        .card { background-color: #1e1e1e; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        :root {
+            --bg-dark: #121212;
+            --card-bg: #1e1e1e;
+            --input-bg: #2a2a2a;
+            --accent: #ff4b4b;
+            --success: #00d26a;
+            --success-muted: #55d288;
+            --text-main: #ffffff;
+            --text-muted: #aaaaaa;
+            --border: #333333;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg-dark); color: var(--text-main); padding: 15px; margin: 0; padding-bottom: 50px; }
+        h2, h3, h4 { margin-top: 0; color: #f0f0f0; }
+        
+        /* Sekme Tasarımı */
+        .tab-container { display: flex; margin-bottom: 20px; background-color: var(--card-bg); border-radius: 10px; overflow: hidden; }
+        .tab-btn { flex: 1; padding: 15px; text-align: center; background: none; border: none; color: var(--text-muted); font-weight: bold; font-size: 15px; cursor: pointer; transition: 0.3s; }
+        .tab-btn.active { background-color: var(--input-bg); color: var(--text-main); border-bottom: 3px solid var(--accent); }
+        
+        .card { background-color: var(--card-bg); border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
         .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; }
-        label { display: block; font-size: 12px; color: #aaaaaa; margin-bottom: 5px; }
-        input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #333; background-color: #2a2a2a; color: white; box-sizing: border-box; font-size: 16px; margin-bottom: 10px;}
-        button { width: 100%; padding: 15px; border-radius: 10px; border: none; background-color: #ff4b4b; color: white; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; margin-bottom: 20px;}
-        button:active { background-color: #d43f3f; }
-        .success-text { color: #00d26a; }
-        .danger-text { color: #ff4b4b; }
-        .info-text { color: #5bc0de; }
-        .divider { border-bottom: 1px solid #333; margin: 15px 0; }
-        .summary-box { text-align: center; padding: 10px; background-color: #2a2a2a; border-radius: 8px; margin-bottom: 10px;}
-        .summary-box h4 { margin: 0 0 5px 0; color: #aaa; font-size: 14px;}
-        .summary-box h2 { margin: 0; }
+        
+        label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 5px; }
+        input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background-color: var(--input-bg); color: white; box-sizing: border-box; font-size: 16px; margin-bottom: 10px;}
+        input:focus { outline: none; border-color: var(--accent); }
+        
+        .btn-main { width: 100%; padding: 16px; border-radius: 10px; border: none; background-color: var(--accent); color: white; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(255, 75, 75, 0.3);}
+        .btn-main:active { background-color: #d43f3f; transform: scale(0.98); }
+        
+        .text-success { color: var(--success); }
+        .text-danger { color: var(--accent); }
+        .text-info { color: #5bc0de; }
+        .text-muted { color: var(--text-muted); font-size: 13px; }
+        .divider { border-bottom: 1px solid var(--border); margin: 15px 0; }
+        
+        /* Finansal Özet Kartı */
+        .summary-box { text-align: center; padding: 15px; background-color: var(--input-bg); border-radius: 8px; margin-bottom: 10px;}
+        .summary-box h4 { margin: 0 0 5px 0; color: var(--text-muted); font-size: 13px;}
+        .summary-box h2 { margin: 0; font-size: 22px;}
+        
+        /* Expander (Açılır Kapanır Detaylar) */
+        details { background-color: var(--input-bg); border-radius: 10px; padding: 10px 15px; margin-bottom: 10px; border: 1px solid var(--border); }
+        summary { font-weight: bold; font-size: 15px; cursor: pointer; outline: none; display: flex; align-items: center; justify-content: space-between; padding-bottom: 5px;}
+        summary::-webkit-details-marker { display: none; }
+        .details-content { margin-top: 15px; font-size: 14px; border-top: 1px solid var(--border); padding-top: 15px;}
+        .stat-list { list-style: none; padding: 0; margin: 0; }
+        .stat-list li { margin-bottom: 8px; }
     </style>
 </head>
 <body>
 
-    <h2>✈️ AM Filo Yöneticisi</h2>
+    <div class="tab-container">
+        <button class="tab-btn active">Hesaplayıcı</button>
+        <button class="tab-btn" onclick="alert('Rotalarım veritabanı bir sonraki güncellemede bu sekmeye eklenecektir.')">Rotalarım</button>
+    </div>
 
     <div class="card">
         <h3>📍 Rota ve Konfor</h3>
@@ -53,7 +89,7 @@
         </div>
     </div>
 
-    <button onclick="calculate()">Filoyu Optimize Et</button>
+    <button class="btn-main" onclick="calculate()">Filoyu Optimize Et</button>
 
     <div id="results"></div>
 
@@ -79,15 +115,26 @@
         {name: "Boeing 737 MAX 9", range: 6574, speed: 839, seats: 220, cargo: 6, price: 116600000, fuel: 1.95, wear: 1.2, other: 0.15}
     ].sort((a, b) => b.seats - a.seats);
 
-    // Uygulama açıldığında kayıtlı verileri getir
+    const AVG_FUEL_PRICE = 750; // Ortalama oyun içi yakıt fiyatı
+    const ESTIMATED_TAX_RATE = 0.12;
+
+    // Sayfa yüklendiğinde hafızadaki verileri çek
     window.onload = function() {
+        let hasData = false;
         ['dist', 'comf', 'd_e', 'd_b', 'd_f', 'd_c'].forEach(id => {
-            if(localStorage.getItem(id)) document.getElementById(id).value = localStorage.getItem(id);
+            if(localStorage.getItem(id) !== null) {
+                document.getElementById(id).value = localStorage.getItem(id);
+                hasData = true;
+            }
         });
         calcPrices();
+        // Eğer daha önceden girilmiş bir mesafe varsa direkt hesapla
+        if(hasData && parseFloat(document.getElementById('dist').value) > 0) {
+            calculate();
+        }
     };
 
-    // Verileri tarayıcıya (telefona) kaydet
+    // Her tuşlamada verileri telefona kaydet
     function saveData() {
         ['dist', 'comf', 'd_e', 'd_b', 'd_f', 'd_c'].forEach(id => {
             localStorage.setItem(id, document.getElementById(id).value);
@@ -112,7 +159,7 @@
     }
 
     function calculate() {
-        saveData(); // Butona basıldığında da kaydet
+        saveData();
         let dist = parseFloat(document.getElementById('dist').value) || 0;
         let d_e = parseFloat(document.getElementById('d_e').value) || 0;
         let d_b = parseFloat(document.getElementById('d_b').value) || 0;
@@ -129,7 +176,7 @@
 
         let available = AIRCRAFT_DB.filter(p => p.range >= dist);
         if(available.length === 0) {
-            resDiv.innerHTML = `<div class="card danger-text"><b>Hata:</b> ${dist} km menzile yetecek uçak bulunamadı.</div>`;
+            resDiv.innerHTML = `<div class="card text-danger"><b>Hata:</b> ${dist} km menzile yetecek uçak veritabanında bulunamadı.</div>`;
             return;
         }
 
@@ -139,11 +186,11 @@
         let c_c = Math.ceil(d_c / 2) * 7;
 
         let fleet = [];
-        let cost = 0, gross = 0, net = 0;
+        let cost = 0, gross_wk = 0, net_wk = 0;
         let loopSafe = 0;
 
         while(true) {
-            loopSafe++; if(loopSafe > 50) break; // Sonsuz döngü koruması
+            loopSafe++; if(loopSafe > 50) break; // Kilitlenme koruması
             
             let total_d = c_e + (c_b * 2) + (c_f * 4);
             if(total_d <= 0 && c_c <= 0) break;
@@ -193,70 +240,125 @@
             c_c = Math.max(0, c_c - (conf.C * chosen_flights));
 
             let total_pax = conf.E + conf.B + conf.F;
+            let used_seats = (conf.F * 4) + (conf.B * 2) + conf.E;
+            conf.fill_rate = (used_seats / chosen.seats) * 100;
+            
+            let rt_time = (dist * 2) / chosen.speed;
+            conf.use_rate = ((chosen_flights * rt_time) / 168) * 100;
+            let wk_hours = chosen_flights * rt_time;
+            
             let wk_rev = ((conf.E*p_e) + (conf.B*p_b) + (conf.F*p_f) + (conf.C*p_c)) * chosen_flights;
             
-            let fuel_cost = ((dist*2)/100) * chosen.fuel * total_pax * chosen_flights * 0.85 * 0.75;
+            let fuel_cost = ((dist*2)/100) * chosen.fuel * total_pax * chosen_flights * (AVG_FUEL_PRICE/1000);
             let tax = chosen_flights * (dist >= 5000 ? 70000 : 40000);
             let other = wk_rev * chosen.other;
+            let maint = (chosen.wear / 100) * (wk_hours / 100) * (chosen.price * 0.01);
             
             conf.wk_gross = wk_rev;
             conf.wk_net = wk_rev - fuel_cost - tax - other;
             
+            conf.fuel_c = fuel_cost;
+            conf.tax_c = tax + other;
+            conf.maint_c = maint;
+            
+            conf.hr_profit = wk_hours > 0 ? conf.wk_net / wk_hours : 0;
+            conf.fl_profit = chosen_flights > 0 ? conf.wk_net / chosen_flights : 0;
+            conf.roi = conf.wk_net > 0 ? chosen.price / conf.wk_net : 0;
+            
             cost += chosen.price;
-            gross += conf.wk_gross;
-            net += conf.wk_net;
+            gross_wk += conf.wk_gross;
+            net_wk += conf.wk_net;
 
             fleet.push(conf);
         }
 
         if(fleet.length === 0) {
-            resDiv.innerHTML = `<div class="card info-text">Atanacak yeterli demand yok. Yeni uçak zarar yazar.</div>`;
+            resDiv.innerHTML = `<div class="card text-info">Atanacak yeterli demand yok. Yeni uçak ataması zarar ettireceği için durduruldu.</div>`;
             return;
         }
 
+        let gross_day = gross_wk / 7;
+        let net_day = net_wk / 7;
+
         let html = `
-        <div class="card">
+        <div class="card" style="text-align: center;">
             <div class="summary-box">
                 <h4>💸 Toplam Filo Maliyeti</h4>
-                <h2 class="danger-text">${formatMoney(cost)}</h2>
+                <h2 class="text-danger">${formatMoney(cost)}</h2>
             </div>
+            <div class="divider"></div>
             <div class="grid-2">
-                <div class="summary-box">
-                    <h4>Günlük Kâr (T0 D-1)</h4>
-                    <h2 class="success-text">${formatMoney(net/7)}</h2>
+                <div>
+                    <h4 class="text-muted" style="margin-bottom:5px;">Brüt Gelir</h4>
+                    <div style="font-size:20px; font-weight:bold;">${formatMoney(gross_wk)}</div>
+                    <div class="text-muted">(Gnlk: ${formatMoney(gross_day)})</div>
                 </div>
-                <div class="summary-box">
-                    <h4>Amortisman</h4>
-                    <h2 style="color:white">${(cost/net).toFixed(1)} Hft</h2>
+                <div>
+                    <h4 class="text-muted" style="margin-bottom:5px;">Oyun İçi Net Kâr</h4>
+                    <div class="text-success" style="font-size:20px; font-weight:bold;">${formatMoney(net_wk)}</div>
+                    <div style="color:var(--success-muted); font-size:13px;">(Gnlk: ${formatMoney(net_day)})</div>
                 </div>
+            </div>
+            <div style="margin-top:15px; font-size:13px; color:#888;">
+                ⏱️ Ortalama Amortisman: ${(cost/net_wk).toFixed(1)} Hafta
             </div>
         </div>`;
 
         fleet.forEach((f, i) => {
             html += `
-            <div class="card">
-                <h3 class="info-text">✈️ Uçak ${i+1}: ${f.name}</h3>
-                <div style="font-size: 14px; margin-bottom: 10px;">
-                    <b>Günlük Net:</b> <span class="success-text">${formatMoney(f.wk_net/7)}</span> | 
-                    <b>Fiyat:</b> ${formatMoney(f.stats.price)}
-                </div>
-                <div class="grid-2" style="font-size: 14px;">
-                    <div>
-                        <div class="divider" style="margin:5px 0;"></div>
-                        <b>💺 Konfigürasyon</b><br>
-                        Eco: <b>${f.E}</b><br>
-                        Bus: <b>${f.B}</b><br>
-                        First: <b>${f.F}</b><br>
-                        Kargo: <b>${f.C}</b>
+            <details>
+                <summary>
+                    <div>✈️ ${i+1}. Uçak: ${f.name} <span class="text-muted" style="font-size:12px; font-weight:normal;">(Doluluk: %${f.fill_rate.toFixed(1)})</span></div>
+                    <span style="font-size: 14px;">➕</span>
+                </summary>
+                
+                <div class="details-content">
+                    <div style="margin-bottom: 12px; font-size: 14px; line-height: 1.6;">
+                        <b>Fiyat:</b> ${formatMoney(f.stats.price)} &nbsp;|&nbsp; 
+                        <b>Hft. Net:</b> <span class="text-success" style="font-weight:bold;">${formatMoney(f.wk_net)}</span> 
+                        <span class="text-muted">(Gnlk: ${formatMoney(f.wk_net/7)})</span> &nbsp;|&nbsp; 
+                        <b>Amortisman:</b> ${f.roi > 0 ? f.roi.toFixed(1) + ' Hft' : '-'}
                     </div>
-                    <div>
-                        <div class="divider" style="margin:5px 0;"></div>
-                        <b>🔄 Operasyon</b><br>
-                        Hft. Sefer: <b>${f.flights}</b><br>
-                        Süre: <b>${((dist*2)/f.stats.speed).toFixed(1)}s</b>
+                    
+                    <div class="grid-2" style="margin-bottom:10px;">
+                        <div>
+                            <span class="text-muted">💺 Konfigürasyon</span>
+                            <ul class="stat-list">
+                                <li>Eco: <b>${f.E}</b></li>
+                                <li>Bus: <b>${f.B}</b></li>
+                                <li>First: <b>${f.F}</b></li>
+                                <li>Cargo: <b>${f.C}</b></li>
+                            </ul>
+                        </div>
+                        <div>
+                            <span class="text-muted">🔄 Operasyon</span>
+                            <ul class="stat-list">
+                                <li>Sefer: <b>${f.flights}</b></li>
+                                <li>Süre: <b>${((dist*2)/f.stats.speed).toFixed(1)}s</b></li>
+                                <li>Kullanım: <b>%${f.use_rate.toFixed(1)}</b></li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="grid-2">
+                        <div>
+                            <span class="text-muted">💸 Giderler (Haftalık)</span>
+                            <ul class="stat-list">
+                                <li>Yakıt: <b>${formatMoney(f.fuel_c)}</b></li>
+                                <li>Uçuş/Vergi: <b>${formatMoney(f.tax_c)}</b></li>
+                                <li>Bakım(Wear): <b>${formatMoney(f.maint_c)}</b></li>
+                            </ul>
+                        </div>
+                        <div>
+                            <span class="text-muted">📊 Performans</span>
+                            <ul class="stat-list">
+                                <li>Seferlik Kâr: <b>${formatMoney(f.fl_profit)}</b></li>
+                                <li>Saatlik Kâr: <b>${formatMoney(f.hr_profit)}</b></li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
-            </div>`;
+            </details>`;
         });
 
         let r_e = Math.floor((c_e/7)*2);
@@ -264,7 +366,7 @@
         let r_f = Math.floor((c_f/7)*2);
         let r_c = Math.floor((c_c/7)*2);
 
-        html += `<div class="card" style="font-size: 14px;"><b>Kalan GÜNLÜK Demand:</b> ${r_e} Eco, ${r_b} Bus, ${r_f} First, ${r_c} Kargo</div>`;
+        html += `<div class="card text-muted" style="text-align:center;"><b>Kalan GÜNLÜK Demand:</b> ${r_e} E, ${r_b} B, ${r_f} F, ${r_c} C</div>`;
         
         resDiv.innerHTML = html;
     }
