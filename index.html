@@ -3,98 +3,188 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AM Akıllı Filo</title>
+    <title>Airlines Manager Pro</title>
     <style>
+        /* Modern ve Premium Renk Paleti (Tailwind Slate & Emerald tabanlı) */
         :root {
-            --bg-dark: #121212;
-            --card-bg: #1e1e1e;
-            --input-bg: #2a2a2a;
-            --accent: #ff4b4b;
-            --success: #00d26a;
-            --success-muted: #55d288;
-            --text-main: #ffffff;
-            --text-muted: #aaaaaa;
-            --border: #333333;
+            --bg-dark: #0f172a;
+            --card-bg: #1e293b;
+            --input-bg: #334155;
+            --accent: #3b82f6; /* Canlı Mavi */
+            --danger: #f43f5e; /* Canlı Mercan Kırmızı */
+            --success: #10b981; /* Zengin Yeşil */
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #475569;
         }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg-dark); color: var(--text-main); padding: 15px; margin: 0; padding-bottom: 50px; }
-        h2, h3, h4 { margin-top: 0; color: #f0f0f0; }
+        h2, h3, h4 { margin-top: 0; color: #f8fafc; }
         
         /* Sekme Tasarımı */
-        .tab-container { display: flex; margin-bottom: 20px; background-color: var(--card-bg); border-radius: 10px; overflow: hidden; }
-        .tab-btn { flex: 1; padding: 15px; text-align: center; background: none; border: none; color: var(--text-muted); font-weight: bold; font-size: 15px; cursor: pointer; transition: 0.3s; }
-        .tab-btn.active { background-color: var(--input-bg); color: var(--text-main); border-bottom: 3px solid var(--accent); }
+        .tab-container { display: flex; margin-bottom: 20px; background-color: var(--card-bg); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+        .tab-btn { flex: 1; padding: 16px; text-align: center; background: none; border: none; color: var(--text-muted); font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.3s; }
+        .tab-btn.active { background-color: var(--input-bg); color: var(--text-main); border-bottom: 4px solid var(--accent); }
         
-        .card { background-color: var(--card-bg); border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-        .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; }
+        .card { background-color: var(--card-bg); border-radius: 12px; padding: 18px; margin-bottom: 18px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); }
         
-        label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 5px; }
-        input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background-color: var(--input-bg); color: white; box-sizing: border-box; font-size: 16px; margin-bottom: 10px;}
-        input:focus { outline: none; border-color: var(--accent); }
+        /* Esnek Grid Sistemi (Taşmaları önler) */
+        .grid-flex { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         
-        .btn-main { width: 100%; padding: 16px; border-radius: 10px; border: none; background-color: var(--accent); color: white; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(255, 75, 75, 0.3);}
-        .btn-main:active { background-color: #d43f3f; transform: scale(0.98); }
+        label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 6px; font-weight: 500;}
+        input, textarea { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background-color: var(--input-bg); color: white; box-sizing: border-box; font-size: 16px; margin-bottom: 12px; font-family: inherit;}
+        input:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3); }
+        textarea { resize: vertical; min-height: 80px; }
+        
+        .btn-main { width: 100%; padding: 16px; border-radius: 10px; border: none; background-color: var(--accent); color: white; font-size: 17px; font-weight: bold; cursor: pointer; margin-top: 5px; margin-bottom: 25px; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4); transition: 0.2s;}
+        .btn-main:active { transform: scale(0.98); background-color: #2563eb; }
+        
+        .btn-danger { background-color: var(--danger); box-shadow: 0 4px 12px rgba(244, 63, 94, 0.4); }
+        .btn-danger:active { background-color: #e11d48; }
+        
+        .btn-success { background-color: var(--success); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4); }
+        
+        .btn-small { padding: 8px 12px; font-size: 14px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; color: white;}
+        .bg-gray { background-color: var(--input-bg); border: 1px solid var(--border); }
         
         .text-success { color: var(--success); }
-        .text-danger { color: var(--accent); }
-        .text-info { color: #5bc0de; }
-        .text-muted { color: var(--text-muted); font-size: 13px; }
-        .divider { border-bottom: 1px solid var(--border); margin: 15px 0; }
+        .text-danger { color: var(--danger); }
+        .text-muted { color: var(--text-muted); font-size: 14px; }
+        .divider { border-bottom: 1px solid var(--border); margin: 18px 0; }
         
-        /* Finansal Özet Kartı */
-        .summary-box { text-align: center; padding: 15px; background-color: var(--input-bg); border-radius: 8px; margin-bottom: 10px;}
-        .summary-box h4 { margin: 0 0 5px 0; color: var(--text-muted); font-size: 13px;}
-        .summary-box h2 { margin: 0; font-size: 22px;}
+        /* Finansal Özet Kartı - Daha Vurgulu */
+        .summary-box { text-align: center; padding: 18px; background-color: var(--input-bg); border-radius: 10px; margin-bottom: 12px; border: 1px solid var(--border);}
+        .summary-box h4 { margin: 0 0 8px 0; color: var(--text-muted); font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;}
+        .summary-box h2 { margin: 0; font-size: 26px;}
+        .daily-profit-highlight { font-size: 32px !important; color: var(--success); text-shadow: 0 2px 10px rgba(16, 185, 129, 0.3); }
         
-        /* Expander (Açılır Kapanır Detaylar) */
-        details { background-color: var(--input-bg); border-radius: 10px; padding: 10px 15px; margin-bottom: 10px; border: 1px solid var(--border); }
-        summary { font-weight: bold; font-size: 15px; cursor: pointer; outline: none; display: flex; align-items: center; justify-content: space-between; padding-bottom: 5px;}
+        /* Açılır Kapanır Detaylar (Maximize Default) */
+        details { background-color: var(--input-bg); border-radius: 10px; padding: 12px 18px; margin-bottom: 15px; border: 1px solid var(--border); }
+        summary { font-weight: bold; font-size: 16px; cursor: pointer; outline: none; list-style: none;}
         summary::-webkit-details-marker { display: none; }
-        .details-content { margin-top: 15px; font-size: 14px; border-top: 1px solid var(--border); padding-top: 15px;}
+        .details-content { margin-top: 15px; font-size: 15px; border-top: 1px solid var(--border); padding-top: 15px;}
         .stat-list { list-style: none; padding: 0; margin: 0; }
-        .stat-list li { margin-bottom: 8px; }
+        .stat-list li { margin-bottom: 10px; display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border); padding-bottom: 5px;}
+        .stat-list li:last-child { border-bottom: none; }
+        
+        /* Modal (Popup) Tasarımı */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: flex-start; overflow-y: auto; padding: 20px 0; }
+        .modal-content { background-color: var(--bg-dark); width: 90%; max-width: 500px; border-radius: 12px; padding: 20px; border: 1px solid var(--border); box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        
+        /* Hub ve Route Listesi Görünümü */
+        .hub-header { display: flex; justify-content: space-between; align-items: center; background-color: var(--input-bg); padding: 12px 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid var(--accent);}
+        .route-item { background-color: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; padding: 15px; margin-bottom: 10px; }
+        .route-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;}
+        .route-title { font-size: 18px; font-weight: bold; color: var(--accent); }
     </style>
 </head>
 <body>
 
     <div class="tab-container">
-        <button class="tab-btn active">Hesaplayıcı</button>
-        <button class="tab-btn" onclick="alert('Rotalarım veritabanı bir sonraki güncellemede bu sekmeye eklenecektir.')">Rotalarım</button>
+        <button class="tab-btn active" id="btn-tab-calc" onclick="switchTab('calc')">Hesaplayıcı</button>
+        <button class="tab-btn" id="btn-tab-routes" onclick="switchTab('routes')">Rotalarım</button>
     </div>
 
-    <div class="card">
-        <h3>📍 Rota ve Konfor</h3>
-        <div class="grid-2">
-            <div><label>Uzaklık (km)</label><input type="number" id="dist" value="8000" oninput="saveData(); calcPrices();"></div>
-            <div><label>Comfort İstatistiği</label><input type="number" id="comf" value="0" oninput="saveData(); calcPrices();"></div>
+    <div id="tab-calc">
+        <div class="card">
+            <h3>📍 Rota ve Konfor Bilgileri</h3>
+            <div class="grid-2">
+                <div><label>Uzaklık (km)</label><input type="number" id="dist" value="8000" oninput="saveData(); calcPrices();"></div>
+                <div><label>Comfort İstatistiği</label><input type="number" id="comf" value="0" oninput="saveData(); calcPrices();"></div>
+            </div>
+            <div class="divider"></div>
+            <h3>🏷️ Otomatik Bilet Fiyatları</h3>
+            <div class="grid-flex">
+                <div><label>Economy Class ($)</label><input type="number" id="p_e" readonly></div>
+                <div><label>Business Class ($)</label><input type="number" id="p_b" readonly></div>
+                <div><label>First Class ($)</label><input type="number" id="p_f" readonly></div>
+                <div><label>Kargo ($)</label><input type="number" id="p_c" readonly></div>
+            </div>
         </div>
-        <div class="divider"></div>
-        <h3>🏷️ Bilet Fiyatları (Otomatik)</h3>
-        <div class="grid-4">
-            <div><label>Eco ($)</label><input type="number" id="p_e" readonly></div>
-            <div><label>Bus ($)</label><input type="number" id="p_b" readonly></div>
-            <div><label>First ($)</label><input type="number" id="p_f" readonly></div>
-            <div><label>Cargo ($)</label><input type="number" id="p_c" readonly></div>
+
+        <div class="card">
+            <h3>👥 Rota Brüt Yolcu Talebi (Günlük)</h3>
+            <div class="grid-flex">
+                <div><label>Economy Class</label><input type="number" id="d_e" value="0" oninput="saveData()"></div>
+                <div><label>Business Class</label><input type="number" id="d_b" value="0" oninput="saveData()"></div>
+                <div><label>First Class</label><input type="number" id="d_f" value="0" oninput="saveData()"></div>
+                <div><label>Kargo (Ton)</label><input type="number" id="d_c" value="0" oninput="saveData()"></div>
+            </div>
+        </div>
+
+        <button class="btn-main" onclick="calculate()">Uçak Konfigürasyonlarını Hesapla</button>
+        <div id="results"></div>
+    </div>
+
+    <div id="tab-routes" style="display: none;">
+        <button class="btn-main" onclick="openHubModal()" style="margin-bottom: 15px;">+ Yeni Hub (Merkez) Ekle</button>
+        <div id="hubs-container"></div>
+    </div>
+
+    <div class="modal-overlay" id="modal-hub">
+        <div class="modal-content">
+            <h3 id="hub-modal-title">Hub Ekle</h3>
+            <label>Hub Adı (Örn: IST, LAX)</label>
+            <input type="text" id="hub-name-input" placeholder="Hub kodunu veya adını girin">
+            <div class="grid-2" style="margin-top: 15px;">
+                <button class="btn-small bg-gray" onclick="closeModal('modal-hub')">İptal</button>
+                <button class="btn-small btn-success" onclick="saveHub()">Kaydet</button>
+            </div>
         </div>
     </div>
 
-    <div class="card">
-        <h3>👥 Günlük Brüt Demand</h3>
-        <div class="grid-4">
-            <div><label>Eco</label><input type="number" id="d_e" value="0" oninput="saveData()"></div>
-            <div><label>Bus</label><input type="number" id="d_b" value="0" oninput="saveData()"></div>
-            <div><label>First</label><input type="number" id="d_f" value="0" oninput="saveData()"></div>
-            <div><label>Cargo</label><input type="number" id="d_c" value="0" oninput="saveData()"></div>
+    <div class="modal-overlay" id="modal-route">
+        <div class="modal-content">
+            <h3 id="route-modal-title">Rota Ekle</h3>
+            
+            <label>Rota Adı (Örn: IST - JFK)</label>
+            <input type="text" id="rt-name">
+            
+            <div class="grid-2">
+                <div><label>Uzaklık (km)</label><input type="number" id="rt-dist"></div>
+                <div><label>Net Günlük Kâr ($)</label><input type="number" id="rt-profit" placeholder="Oyun içi gerçek kâr"></div>
+            </div>
+            
+            <div class="divider"></div>
+            <h4>Bilet Fiyatları ($)</h4>
+            <div class="grid-2">
+                <div><label>Economy Class</label><input type="number" id="rt-price-e"></div>
+                <div><label>Business Class</label><input type="number" id="rt-price-b"></div>
+                <div><label>First Class</label><input type="number" id="rt-price-f"></div>
+                <div><label>Kargo</label><input type="number" id="rt-price-c"></div>
+            </div>
+
+            <div class="divider"></div>
+            <h4>Toplam Rota Talebi (Demand)</h4>
+            <div class="grid-2">
+                <div><label>Economy Demand</label><input type="number" id="rt-dem-e"></div>
+                <div><label>Business Demand</label><input type="number" id="rt-dem-b"></div>
+                <div><label>First Demand</label><input type="number" id="rt-dem-f"></div>
+                <div><label>Kargo Demand</label><input type="number" id="rt-dem-c"></div>
+            </div>
+            
+            <div class="divider"></div>
+            <h4>Uçuş Sonrası Kalan Talep</h4>
+            <div class="grid-2">
+                <div><label>Kalan Economy</label><input type="number" id="rt-rem-e"></div>
+                <div><label>Kalan Business</label><input type="number" id="rt-rem-b"></div>
+                <div><label>Kalan First</label><input type="number" id="rt-rem-f"></div>
+                <div><label>Kalan Kargo</label><input type="number" id="rt-rem-c"></div>
+            </div>
+
+            <div class="divider"></div>
+            <label>Atanan Uçaklar ve Konfigürasyonları</label>
+            <textarea id="rt-fleet" placeholder="Örn: 2x 777-300ER (550 Economy)&#10;1x 787-8 (200 Eco, 50 Bus)"></textarea>
+            
+            <div class="grid-2" style="margin-top: 15px;">
+                <button class="btn-small bg-gray" onclick="closeModal('modal-route')">İptal Vazgeç</button>
+                <button class="btn-small btn-success" onclick="saveRoute()">Rotayı Kaydet</button>
+            </div>
         </div>
     </div>
-
-    <button class="btn-main" onclick="calculate()">Filoyu Optimize Et</button>
-
-    <div id="results"></div>
 
 <script>
-    // Genişletilmiş Uçak Veritabanı
+    // --- HESAPLAYICI VERİTABANI VE MANTIK ---
     const AIRCRAFT_DB = [
         {name: "Airbus A380-800", range: 15556, speed: 903, seats: 853, cargo: 84, price: 403000000, fuel: 2.05, wear: 1.2, other: 0.10},
         {name: "Boeing 747-8I", range: 14815, speed: 911, seats: 605, cargo: 76, price: 379100000, fuel: 2.11, wear: 1.4, other: 0.12},
@@ -115,11 +205,11 @@
         {name: "Boeing 737 MAX 9", range: 6574, speed: 839, seats: 220, cargo: 6, price: 116600000, fuel: 1.95, wear: 1.2, other: 0.15}
     ].sort((a, b) => b.seats - a.seats);
 
-    const AVG_FUEL_PRICE = 750; // Ortalama oyun içi yakıt fiyatı
-    const ESTIMATED_TAX_RATE = 0.12;
+    const AVG_FUEL_PRICE = 750; 
 
-    // Sayfa yüklendiğinde hafızadaki verileri çek
+    // Uygulama yüklendiğinde çalışacaklar
     window.onload = function() {
+        // Hesaplayıcı verilerini yükle
         let hasData = false;
         ['dist', 'comf', 'd_e', 'd_b', 'd_f', 'd_c'].forEach(id => {
             if(localStorage.getItem(id) !== null) {
@@ -128,13 +218,22 @@
             }
         });
         calcPrices();
-        // Eğer daha önceden girilmiş bir mesafe varsa direkt hesapla
-        if(hasData && parseFloat(document.getElementById('dist').value) > 0) {
-            calculate();
-        }
+        if(hasData && parseFloat(document.getElementById('dist').value) > 0) calculate();
+        
+        // Rota Veritabanını yükle
+        loadHubsData();
     };
 
-    // Her tuşlamada verileri telefona kaydet
+    // --- SEKME YÖNETİMİ ---
+    function switchTab(tabId) {
+        document.getElementById('tab-calc').style.display = tabId === 'calc' ? 'block' : 'none';
+        document.getElementById('tab-routes').style.display = tabId === 'routes' ? 'block' : 'none';
+        
+        document.getElementById('btn-tab-calc').classList.toggle('active', tabId === 'calc');
+        document.getElementById('btn-tab-routes').classList.toggle('active', tabId === 'routes');
+    }
+
+    // --- HESAPLAYICI MANTIK ---
     function saveData() {
         ['dist', 'comf', 'd_e', 'd_b', 'd_f', 'd_c'].forEach(id => {
             localStorage.setItem(id, document.getElementById(id).value);
@@ -145,11 +244,9 @@
         let dist = parseFloat(document.getElementById('dist').value) || 0;
         let comf = parseFloat(document.getElementById('comf').value) || 0;
         let multi = 1 + (comf / 3000);
-        
         document.getElementById('p_e').value = Math.floor(120 + (dist * 0.2639) * multi);
         document.getElementById('p_b').value = Math.floor(160 + (dist * 0.3509) * multi);
         document.getElementById('p_f').value = Math.floor(276 + (dist * 0.6068) * multi);
-        
         let c_coef = dist >= 5000 ? 0.47 : (dist >= 2000 ? 0.52 : 0.56);
         document.getElementById('p_c').value = Math.floor(200 + (dist * c_coef));
     }
@@ -190,7 +287,7 @@
         let loopSafe = 0;
 
         while(true) {
-            loopSafe++; if(loopSafe > 50) break; // Kilitlenme koruması
+            loopSafe++; if(loopSafe > 50) break;
             
             let total_d = c_e + (c_b * 2) + (c_f * 4);
             if(total_d <= 0 && c_c <= 0) break;
@@ -231,24 +328,16 @@
             c_e = Math.max(0, c_e - (conf.E * chosen_flights));
             rem -= conf.E;
 
-            if(rem > 0) {
-                conf.E += rem;
-                c_e = Math.max(0, c_e - (rem * chosen_flights));
-            }
+            if(rem > 0) { conf.E += rem; c_e = Math.max(0, c_e - (rem * chosen_flights)); }
 
             conf.C = Math.min(Math.ceil(c_c / chosen_flights), chosen.cargo);
             c_c = Math.max(0, c_c - (conf.C * chosen_flights));
 
             let total_pax = conf.E + conf.B + conf.F;
-            let used_seats = (conf.F * 4) + (conf.B * 2) + conf.E;
-            conf.fill_rate = (used_seats / chosen.seats) * 100;
-            
             let rt_time = (dist * 2) / chosen.speed;
-            conf.use_rate = ((chosen_flights * rt_time) / 168) * 100;
             let wk_hours = chosen_flights * rt_time;
             
             let wk_rev = ((conf.E*p_e) + (conf.B*p_b) + (conf.F*p_f) + (conf.C*p_c)) * chosen_flights;
-            
             let fuel_cost = ((dist*2)/100) * chosen.fuel * total_pax * chosen_flights * (AVG_FUEL_PRICE/1000);
             let tax = chosen_flights * (dist >= 5000 ? 70000 : 40000);
             let other = wk_rev * chosen.other;
@@ -260,9 +349,6 @@
             conf.fuel_c = fuel_cost;
             conf.tax_c = tax + other;
             conf.maint_c = maint;
-            
-            conf.hr_profit = wk_hours > 0 ? conf.wk_net / wk_hours : 0;
-            conf.fl_profit = chosen_flights > 0 ? conf.wk_net / chosen_flights : 0;
             conf.roi = conf.wk_net > 0 ? chosen.price / conf.wk_net : 0;
             
             cost += chosen.price;
@@ -273,7 +359,7 @@
         }
 
         if(fleet.length === 0) {
-            resDiv.innerHTML = `<div class="card text-info">Atanacak yeterli demand yok. Yeni uçak ataması zarar ettireceği için durduruldu.</div>`;
+            resDiv.innerHTML = `<div class="card text-muted">Atanacak yeterli yolcu kalmadı. Uçak ataması durduruldu.</div>`;
             return;
         }
 
@@ -281,79 +367,57 @@
         let net_day = net_wk / 7;
 
         let html = `
-        <div class="card" style="text-align: center;">
-            <div class="summary-box">
-                <h4>💸 Toplam Filo Maliyeti</h4>
-                <h2 class="text-danger">${formatMoney(cost)}</h2>
+        <div class="card">
+            <div class="summary-box" style="border-color: var(--success); background-color: rgba(16, 185, 129, 0.05);">
+                <h4>Oyun İçi Günlük Net Kâr</h4>
+                <h2 class="daily-profit-highlight">${formatMoney(net_day)}</h2>
             </div>
-            <div class="divider"></div>
             <div class="grid-2">
-                <div>
-                    <h4 class="text-muted" style="margin-bottom:5px;">Brüt Gelir</h4>
-                    <div style="font-size:20px; font-weight:bold;">${formatMoney(gross_wk)}</div>
-                    <div class="text-muted">(Gnlk: ${formatMoney(gross_day)})</div>
+                <div class="summary-box">
+                    <h4>Toplam Filo Maliyeti</h4>
+                    <h2 class="text-danger" style="font-size:20px;">${formatMoney(cost)}</h2>
                 </div>
-                <div>
-                    <h4 class="text-muted" style="margin-bottom:5px;">Oyun İçi Net Kâr</h4>
-                    <div class="text-success" style="font-size:20px; font-weight:bold;">${formatMoney(net_wk)}</div>
-                    <div style="color:var(--success-muted); font-size:13px;">(Gnlk: ${formatMoney(net_day)})</div>
+                <div class="summary-box">
+                    <h4>Günlük Brüt Gelir</h4>
+                    <h2 style="font-size:20px; color:white;">${formatMoney(gross_day)}</h2>
                 </div>
             </div>
-            <div style="margin-top:15px; font-size:13px; color:#888;">
-                ⏱️ Ortalama Amortisman: ${(cost/net_wk).toFixed(1)} Hafta
+            <div style="text-align:center; margin-top:5px; font-size:14px; color:var(--text-muted);">
+                ⏱️ Ortalama Amortisman: <b>${(cost/net_wk).toFixed(1)} Hafta</b>
             </div>
         </div>`;
 
         fleet.forEach((f, i) => {
             html += `
-            <details>
+            <details open>
                 <summary>
-                    <div>✈️ ${i+1}. Uçak: ${f.name} <span class="text-muted" style="font-size:12px; font-weight:normal;">(Doluluk: %${f.fill_rate.toFixed(1)})</span></div>
-                    <span style="font-size: 14px;">➕</span>
+                    <div>✈️ ${i+1}. Uçak: ${f.name}</div>
                 </summary>
                 
                 <div class="details-content">
-                    <div style="margin-bottom: 12px; font-size: 14px; line-height: 1.6;">
-                        <b>Fiyat:</b> ${formatMoney(f.stats.price)} &nbsp;|&nbsp; 
-                        <b>Hft. Net:</b> <span class="text-success" style="font-weight:bold;">${formatMoney(f.wk_net)}</span> 
-                        <span class="text-muted">(Gnlk: ${formatMoney(f.wk_net/7)})</span> &nbsp;|&nbsp; 
-                        <b>Amortisman:</b> ${f.roi > 0 ? f.roi.toFixed(1) + ' Hft' : '-'}
-                    </div>
-                    
-                    <div class="grid-2" style="margin-bottom:10px;">
-                        <div>
-                            <span class="text-muted">💺 Konfigürasyon</span>
-                            <ul class="stat-list">
-                                <li>Eco: <b>${f.E}</b></li>
-                                <li>Bus: <b>${f.B}</b></li>
-                                <li>First: <b>${f.F}</b></li>
-                                <li>Cargo: <b>${f.C}</b></li>
-                            </ul>
-                        </div>
-                        <div>
-                            <span class="text-muted">🔄 Operasyon</span>
-                            <ul class="stat-list">
-                                <li>Sefer: <b>${f.flights}</b></li>
-                                <li>Süre: <b>${((dist*2)/f.stats.speed).toFixed(1)}s</b></li>
-                                <li>Kullanım: <b>%${f.use_rate.toFixed(1)}</b></li>
-                            </ul>
-                        </div>
+                    <div style="margin-bottom: 15px; font-size: 15px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">
+                        <div><b>Uçak Fiyatı:</b> ${formatMoney(f.stats.price)}</div>
+                        <div style="margin-top:5px;"><b>Haftalık Net Kâr:</b> <span class="text-success" style="font-weight:bold; font-size: 16px;">${formatMoney(f.wk_net)}</span></div>
+                        <div style="margin-top:5px;"><b>Amortisman:</b> ${f.roi > 0 ? f.roi.toFixed(1) + ' Hafta' : '-'}</div>
                     </div>
                     
                     <div class="grid-2">
                         <div>
-                            <span class="text-muted">💸 Giderler (Haftalık)</span>
+                            <span class="text-muted" style="display:block; margin-bottom:8px; border-bottom:1px solid #444; padding-bottom:4px;">💺 Konfigürasyon</span>
                             <ul class="stat-list">
-                                <li>Yakıt: <b>${formatMoney(f.fuel_c)}</b></li>
-                                <li>Uçuş/Vergi: <b>${formatMoney(f.tax_c)}</b></li>
-                                <li>Bakım(Wear): <b>${formatMoney(f.maint_c)}</b></li>
+                                <li><span>Economy Class</span> <b>${f.E}</b></li>
+                                <li><span>Business Class</span> <b>${f.B}</b></li>
+                                <li><span>First Class</span> <b>${f.F}</b></li>
+                                <li><span>Kargo</span> <b>${f.C}</b></li>
                             </ul>
                         </div>
                         <div>
-                            <span class="text-muted">📊 Performans</span>
+                            <span class="text-muted" style="display:block; margin-bottom:8px; border-bottom:1px solid #444; padding-bottom:4px;">💸 Giderler & Operasyon</span>
                             <ul class="stat-list">
-                                <li>Seferlik Kâr: <b>${formatMoney(f.fl_profit)}</b></li>
-                                <li>Saatlik Kâr: <b>${formatMoney(f.hr_profit)}</b></li>
+                                <li><span>Haftalık Sefer</span> <b>${f.flights}</b></li>
+                                <li><span>Haftalık Yakıt</span> <b>${formatMoney(f.fuel_c)}</b></li>
+                                <li><span>Haftalık Vergi</span> <b>${formatMoney(f.tax_c)}</b></li>
+                                <li><span>Haftalık Bakım</span> <b>${formatMoney(f.maint_c)}</b></li>
                             </ul>
                         </div>
                     </div>
@@ -366,9 +430,210 @@
         let r_f = Math.floor((c_f/7)*2);
         let r_c = Math.floor((c_c/7)*2);
 
-        html += `<div class="card text-muted" style="text-align:center;"><b>Kalan GÜNLÜK Demand:</b> ${r_e} E, ${r_b} B, ${r_f} F, ${r_c} C</div>`;
+        html += `<div class="card text-muted" style="text-align:center;"><b>Kalan Günlük Yolcu Talebi:</b> ${r_e} Economy, ${r_b} Business, ${r_f} First, ${r_c} Kargo</div>`;
         
         resDiv.innerHTML = html;
+    }
+
+    // --- ROTALARIM (VERİTABANI) MANTIĞI ---
+    let myHubs = [];
+    let editingHubId = null;
+    let editingRouteId = null;
+
+    function loadHubsData() {
+        let stored = localStorage.getItem('am_hubs_db');
+        if (stored) myHubs = JSON.parse(stored);
+        renderHubs();
+    }
+
+    function saveHubsData() {
+        localStorage.setItem('am_hubs_db', JSON.stringify(myHubs));
+        renderHubs();
+    }
+
+    function renderHubs() {
+        const container = document.getElementById('hubs-container');
+        container.innerHTML = "";
+        
+        if (myHubs.length === 0) {
+            container.innerHTML = `<div class="card text-muted" style="text-align:center;">Henüz eklenmiş bir Merkez (Hub) yok.</div>`;
+            return;
+        }
+
+        myHubs.forEach(hub => {
+            let html = `
+            <div class="hub-header">
+                <h3 style="margin:0;">🏢 ${hub.name}</h3>
+                <div>
+                    <button class="btn-small bg-gray" onclick="editHub(${hub.id})">✎</button>
+                    <button class="btn-small btn-danger" onclick="deleteHub(${hub.id})">Sil</button>
+                </div>
+            </div>`;
+
+            if(hub.routes && hub.routes.length > 0) {
+                hub.routes.forEach(rt => {
+                    html += `
+                    <div class="route-item">
+                        <div class="route-header">
+                            <span class="route-title">📍 ${rt.name}</span>
+                            <div>
+                                <button class="btn-small bg-gray" onclick="openRouteModal(${hub.id}, ${rt.id})">Düzenle</button>
+                                <button class="btn-small btn-danger" onclick="deleteRoute(${hub.id}, ${rt.id})">Sil</button>
+                            </div>
+                        </div>
+                        <div class="grid-2 text-muted" style="margin-bottom: 10px;">
+                            <div>Uzaklık: <b style="color:white">${rt.distance} km</b></div>
+                            <div>Günlük Net Kâr: <b class="text-success">${formatMoney(rt.profit)}</b></div>
+                        </div>
+                        <details style="margin-bottom:0;">
+                            <summary style="font-size:14px; font-weight:normal; padding-bottom:0;">Detayları ve Filoyu Görüntüle</summary>
+                            <div class="details-content" style="padding-top:10px; margin-top:10px;">
+                                <div class="grid-2">
+                                    <ul class="stat-list">
+                                        <li style="color:var(--text-muted)">Toplam Yolcu Talebi</li>
+                                        <li>Eco: <b>${rt.demE}</b></li>
+                                        <li>Bus: <b>${rt.demB}</b></li>
+                                        <li>First: <b>${rt.demF}</b></li>
+                                    </ul>
+                                    <ul class="stat-list">
+                                        <li style="color:var(--text-muted)">Kalan Yolcu Talebi</li>
+                                        <li>Eco: <b>${rt.remE}</b></li>
+                                        <li>Bus: <b>${rt.remB}</b></li>
+                                        <li>First: <b>${rt.remF}</b></li>
+                                    </ul>
+                                </div>
+                                <div class="divider" style="margin:10px 0;"></div>
+                                <div style="white-space: pre-wrap; font-size:14px;"><b>Atanan Filo:</b><br>${rt.fleet}</div>
+                            </div>
+                        </details>
+                    </div>`;
+                });
+            } else {
+                html += `<div class="text-muted" style="padding: 10px; text-align:center;">Bu merkezde henüz rota yok.</div>`;
+            }
+            
+            html += `<button class="btn-main" style="background-color:var(--input-bg); border:1px dashed var(--border); box-shadow:none; margin-bottom:30px;" onclick="openRouteModal(${hub.id}, null)">+ Bu Merkeze Rota Ekle</button>`;
+            container.innerHTML += html;
+        });
+    }
+
+    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+    // --- HUB İŞLEMLERİ ---
+    function openHubModal() {
+        editingHubId = null;
+        document.getElementById('hub-modal-title').innerText = "Yeni Merkez (Hub) Ekle";
+        document.getElementById('hub-name-input').value = "";
+        openModal('modal-hub');
+    }
+
+    function editHub(id) {
+        editingHubId = id;
+        let hub = myHubs.find(h => h.id === id);
+        document.getElementById('hub-modal-title').innerText = "Merkezi Düzenle";
+        document.getElementById('hub-name-input').value = hub.name;
+        openModal('modal-hub');
+    }
+
+    function saveHub() {
+        let name = document.getElementById('hub-name-input').value.trim();
+        if(!name) return alert("Lütfen bir isim girin.");
+        
+        if(editingHubId) {
+            let hub = myHubs.find(h => h.id === editingHubId);
+            hub.name = name;
+        } else {
+            myHubs.push({ id: Date.now(), name: name, routes: [] });
+        }
+        saveHubsData();
+        closeModal('modal-hub');
+    }
+
+    function deleteHub(id) {
+        if(confirm("Bu merkezi ve içindeki TÜM rotaları silmek istediğinize emin misiniz?")) {
+            myHubs = myHubs.filter(h => h.id !== id);
+            saveHubsData();
+        }
+    }
+
+    // --- ROTA İŞLEMLERİ ---
+    function openRouteModal(hubId, routeId) {
+        editingHubId = hubId;
+        editingRouteId = routeId;
+        
+        if (routeId) {
+            document.getElementById('route-modal-title').innerText = "Rotayı Düzenle";
+            let hub = myHubs.find(h => h.id === hubId);
+            let rt = hub.routes.find(r => r.id === routeId);
+            
+            document.getElementById('rt-name').value = rt.name;
+            document.getElementById('rt-dist').value = rt.distance;
+            document.getElementById('rt-profit').value = rt.profit;
+            document.getElementById('rt-price-e').value = rt.priceE;
+            document.getElementById('rt-price-b').value = rt.priceB;
+            document.getElementById('rt-price-f').value = rt.priceF;
+            document.getElementById('rt-price-c').value = rt.priceC;
+            document.getElementById('rt-dem-e').value = rt.demE;
+            document.getElementById('rt-dem-b').value = rt.demB;
+            document.getElementById('rt-dem-f').value = rt.demF;
+            document.getElementById('rt-dem-c').value = rt.demC;
+            document.getElementById('rt-rem-e').value = rt.remE;
+            document.getElementById('rt-rem-b').value = rt.remB;
+            document.getElementById('rt-rem-f').value = rt.remF;
+            document.getElementById('rt-rem-c').value = rt.remC;
+            document.getElementById('rt-fleet').value = rt.fleet;
+        } else {
+            document.getElementById('route-modal-title').innerText = "Yeni Rota Ekle";
+            // Alanları Temizle
+            ['rt-name', 'rt-dist', 'rt-profit', 'rt-price-e', 'rt-price-b', 'rt-price-f', 'rt-price-c', 'rt-dem-e', 'rt-dem-b', 'rt-dem-f', 'rt-dem-c', 'rt-rem-e', 'rt-rem-b', 'rt-rem-f', 'rt-rem-c', 'rt-fleet'].forEach(id => document.getElementById(id).value = "");
+        }
+        openModal('modal-route');
+    }
+
+    function saveRoute() {
+        let name = document.getElementById('rt-name').value.trim();
+        if(!name) return alert("Rota adı zorunludur.");
+        
+        let rtObj = {
+            id: editingRouteId || Date.now(),
+            name: name,
+            distance: document.getElementById('rt-dist').value || 0,
+            profit: document.getElementById('rt-profit').value || 0,
+            priceE: document.getElementById('rt-price-e').value || 0,
+            priceB: document.getElementById('rt-price-b').value || 0,
+            priceF: document.getElementById('rt-price-f').value || 0,
+            priceC: document.getElementById('rt-price-c').value || 0,
+            demE: document.getElementById('rt-dem-e').value || 0,
+            demB: document.getElementById('rt-dem-b').value || 0,
+            demF: document.getElementById('rt-dem-f').value || 0,
+            demC: document.getElementById('rt-dem-c').value || 0,
+            remE: document.getElementById('rt-rem-e').value || 0,
+            remB: document.getElementById('rt-rem-b').value || 0,
+            remF: document.getElementById('rt-rem-f').value || 0,
+            remC: document.getElementById('rt-rem-c').value || 0,
+            fleet: document.getElementById('rt-fleet').value || ""
+        };
+
+        let hub = myHubs.find(h => h.id === editingHubId);
+        
+        if (editingRouteId) {
+            let idx = hub.routes.findIndex(r => r.id === editingRouteId);
+            hub.routes[idx] = rtObj;
+        } else {
+            hub.routes.push(rtObj);
+        }
+        
+        saveHubsData();
+        closeModal('modal-route');
+    }
+
+    function deleteRoute(hubId, routeId) {
+        if(confirm("Bu rotayı silmek istediğinize emin misiniz?")) {
+            let hub = myHubs.find(h => h.id === hubId);
+            hub.routes = hub.routes.filter(r => r.id !== routeId);
+            saveHubsData();
+        }
     }
 </script>
 </body>
