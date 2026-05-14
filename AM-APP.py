@@ -4,7 +4,7 @@ import math
 st.set_page_config(page_title="AM Finans & Filo Yöneticisi", layout="centered")
 
 st.title("✈️ AM Finansal Filo ve Rota Yöneticisi")
-st.markdown("Demand aşımını önleyen **%100 Doluluk Algoritması**, Otomatik Bilet Hesaplayıcı ve İleri Düzey **Net Kâr** Analizi.")
+st.markdown("Demand aşımını önleyen **%100 Doluluk Algoritması**, Otomatik Bilet Hesaplayıcı ve İleri Düzey **Net/Günlük Kâr** Analizi.")
 
 # Fiyatları güncellenmiş ve NGAF (Other Costs) mekaniği eklenmiş Uçak Veritabanı
 AIRCRAFT_DB = {
@@ -76,6 +76,8 @@ if st.button("Filoyu Optimize Et ve Net Kârı Hesapla", use_container_width=Tru
         total_fleet_cost = 0
         total_weekly_gross = 0
         total_weekly_net = 0
+        total_daily_gross = 0
+        total_daily_net = 0
         
         while True:
             total_eco_demand_wk = curr_e_wk + (curr_b_wk * 2) + (curr_f_wk * 4)
@@ -149,7 +151,7 @@ if st.button("Filoyu Optimize Et ve Net Kârı Hesapla", use_container_width=Tru
             flight_gross_rev = (config['E'] * price_e) + (config['B'] * price_b) + (config['F'] * price_f) + (config['Cargo'] * price_c)
             weekly_gross = flight_gross_rev * chosen_wk_flights
             
-            # AM Gerçek Yakıt Formülü: (Mesafe / 100) * Tüketim * Toplam Yolcu * Sefer * Ortalama Yakıt Fiyatı Katsayısı
+            # AM Gerçek Yakıt Formülü
             weekly_fuel_cost = ((distance * 2) / 100) * chosen_stats["fuel"] * total_pax * chosen_wk_flights * 0.85
             
             # Havalimanı Vergisi (LH rotalar için ~70k, MH rotalar için ~40k)
@@ -159,15 +161,22 @@ if st.button("Filoyu Optimize Et ve Net Kârı Hesapla", use_container_width=Tru
             # Other Costs (Yeni nesil NGAF masrafları)
             weekly_other_costs = weekly_gross * chosen_stats["other_pct"]
             
-            # Net Uçuş Kârı (AM Flight Result Ekranındaki Değer)
+            # Net Uçuş Kârı
             weekly_flight_costs = weekly_fuel_cost + weekly_airport_tax + weekly_other_costs
             weekly_net = weekly_gross - weekly_flight_costs
+            
+            # Günlük T0 D-1 Kâr Çevirimi
+            daily_gross = weekly_gross / 7
+            daily_net = weekly_net / 7
             
             # Bakım Amortismanı (Wear tabanlı, uçuştan ayrı tutulur)
             weekly_maint_cost = (chosen_stats["wear"] / 100) * (config['Wk_Hours_Flown'] / 100) * (chosen_stats["price"] * 0.01)
             
             config['Weekly_Gross'] = weekly_gross
+            config['Daily_Gross'] = daily_gross
             config['Weekly_Net'] = weekly_net
+            config['Daily_Net'] = daily_net
+            
             config['Fuel_Cost'] = weekly_fuel_cost
             config['Airport_Tax'] = weekly_airport_tax
             config['Other_Cost'] = weekly_other_costs
@@ -184,6 +193,8 @@ if st.button("Filoyu Optimize Et ve Net Kârı Hesapla", use_container_width=Tru
             total_fleet_cost += chosen_stats["price"]
             total_weekly_gross += weekly_gross
             total_weekly_net += weekly_net
+            total_daily_gross += daily_gross
+            total_daily_net += daily_net
             
             fleet.append(config)
             plane_counter += 1
@@ -193,22 +204,24 @@ if st.button("Filoyu Optimize Et ve Net Kârı Hesapla", use_container_width=Tru
         else:
             st.divider()
             
+            # Günlük (T0 D-1) verilerle güncellenmiş finansal özet
             st.markdown("""
             <div style="background-color: #1e1e1e; padding: 20px; border-radius: 10px; text-align: center;">
                 <h3 style="margin-bottom: 5px;">💸 Toplam Filo Maliyeti</h3>
                 <h2 style="color: #ff4b4b; margin-top: 0;">$ {:,.0f}</h2>
+                <hr style="border-color: #333; margin: 20px 0;">
                 <div style="display: flex; justify-content: space-around; margin-top: 15px;">
                     <div>
-                        <h4 style="margin-bottom: 5px; color: #a0a0a0;">Brüt Haftalık Gelir</h4>
-                        <h3 style="color: #ffffff; margin-top: 0;">$ {:,.0f}</h3>
+                        <h4 style="margin-bottom: 5px; color: #a0a0a0;">Brüt Gelir <span style="font-size: 14px; font-weight: normal;">(Haftalık / Günlük T0 D-1)</span></h4>
+                        <h3 style="color: #ffffff; margin-top: 0;">$ {:,.0f} <span style="font-size: 18px; color: #aaa;">/ $ {:,.0f}</span></h3>
                     </div>
                     <div>
-                        <h4 style="margin-bottom: 5px; color: #a0a0a0;">Oyun İçi Net Kâr</h4>
-                        <h3 style="color: #00d26a; margin-top: 0;">$ {:,.0f}</h3>
+                        <h4 style="margin-bottom: 5px; color: #a0a0a0;">Oyun İçi Net Kâr <span style="font-size: 14px; font-weight: normal;">(Haftalık / Günlük T0 D-1)</span></h4>
+                        <h3 style="color: #00d26a; margin-top: 0;">$ {:,.0f} <span style="font-size: 18px; color: #55d288;">/ $ {:,.0f}</span></h3>
                     </div>
                 </div>
             </div>
-            """.format(total_fleet_cost, total_weekly_gross, total_weekly_net), unsafe_allow_html=True)
+            """.format(total_fleet_cost, total_weekly_gross, total_daily_gross, total_weekly_net, total_daily_net), unsafe_allow_html=True)
             
             if total_weekly_net > 0:
                 st.caption(f"⏱️ **Gerçekçi Amortisman:** Tüm filo yaklaşık **{total_fleet_cost/total_weekly_net:.1f} oyun haftasında** maliyetini çıkarır.")
@@ -221,11 +234,12 @@ if st.button("Filoyu Optimize Et ve Net Kârı Hesapla", use_container_width=Tru
                 
                 with st.expander(f"✈️ {f['Plane_Num']}. Uçak: {f['Name']} | Doluluk: %{f['Fill_Rate']:.1f} | Verim: %{f['Use_Rate']:.1f}", expanded=True):
                     
+                    # Günlük verilerin eklendiği detaylı uçak HTML satırı
                     info_html = f"""
                     <div style='margin-bottom: 10px; font-size: 15px;'>
                         <b>Fiyat:</b> {price_str} &nbsp;|&nbsp; 
-                        <b>Hft. Brüt:</b> ${f['Weekly_Gross']:,.0f} &nbsp;|&nbsp; 
-                        <b>Hft. Net:</b> <span style='color:#00d26a; font-weight:bold;'>${f['Weekly_Net']:,.0f}</span> &nbsp;|&nbsp; 
+                        <b>Hft. Brüt:</b> ${f['Weekly_Gross']:,.0f} <i style='color:#aaa; font-size:13px;'>(Gnlk: ${f['Daily_Gross']:,.0f})</i> &nbsp;|&nbsp; 
+                        <b>Hft. Net:</b> <span style='color:#00d26a; font-weight:bold;'>${f['Weekly_Net']:,.0f}</span> <i style='color:#55d288; font-size:13px;'>(Gnlk: ${f['Daily_Net']:,.0f})</i> &nbsp;|&nbsp; 
                         <b>Amortisman:</b> {roi_str}
                     </div>
                     """
