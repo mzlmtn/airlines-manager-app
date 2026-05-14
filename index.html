@@ -8,14 +8,13 @@
     <meta http-equiv="Expires" content="0">
     <title>Airlines Manager Pro</title>
     <style>
-        /* Daha Koyu ve Nötr Renk Paleti (Slate/Zinc) */
         :root {
             --bg-dark: #09090b;
             --card-bg: #18181b;
             --input-bg: #27272a;
-            --accent: #10b981; /* Emerald Accent */
-            --danger: #ef4444; /* Kırmızı Giderler */
-            --success: #22c55e; /* Net Kar Yeşili */
+            --accent: #10b981; 
+            --danger: #ef4444; 
+            --success: #22c55e; 
             --text-main: #f4f4f5;
             --text-muted: #a1a1aa;
             --border: #3f3f46;
@@ -27,20 +26,20 @@
         .refresh-btn { background: none; border: 1px solid var(--border); color: var(--text-main); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; }
         .refresh-btn:active { background: var(--input-bg); }
 
-        /* Sekme Tasarımı */
         .tab-container { display: flex; margin-bottom: 20px; background-color: var(--card-bg); border-radius: 10px; overflow: hidden; border: 1px solid var(--border);}
-        .tab-btn { flex: 1; padding: 14px; text-align: center; background: none; border: none; color: var(--text-muted); font-weight: bold; font-size: 15px; cursor: pointer; transition: 0.2s; }
+        .tab-btn { flex: 1; padding: 14px; text-align: center; background: none; border: none; color: var(--text-muted); font-weight: bold; font-size: 14px; cursor: pointer; transition: 0.2s; }
         .tab-btn.active { background-color: var(--input-bg); color: var(--text-main); border-bottom: 3px solid var(--accent); }
         
         .card { background-color: var(--card-bg); border-radius: 10px; padding: 16px; margin-bottom: 16px; border: 1px solid var(--border); }
         
-        .grid-flex { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; }
+        .grid-flex { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+        .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; }
         
         label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 5px; font-weight: 600;}
-        input { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background-color: var(--input-bg); color: white; box-sizing: border-box; font-size: 15px; margin-bottom: 10px;}
-        input:focus { outline: none; border-color: var(--accent); }
+        input, select { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background-color: var(--input-bg); color: white; box-sizing: border-box; font-size: 15px; margin-bottom: 10px; font-family: inherit;}
+        input:focus, select:focus { outline: none; border-color: var(--accent); }
         
         .btn-main { width: 100%; padding: 14px; border-radius: 8px; border: none; background-color: var(--accent); color: #000; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 5px; margin-bottom: 20px; }
         .btn-main:active { opacity: 0.8; transform: scale(0.98); }
@@ -53,33 +52,29 @@
         .text-success { color: var(--success); }
         .text-danger { color: var(--danger); }
         .text-muted { color: var(--text-muted); font-size: 13px; }
-        .divider { border-bottom: 1px solid var(--border); margin: 15px 0; }
+        .divider { border-bottom: 1px dashed var(--border); margin: 15px 0; }
         
-        /* Finansal Özet Kartı */
-        .summary-box { text-align: center; padding: 15px; background-color: var(--input-bg); border-radius: 8px; border: 1px solid var(--border);}
-        .summary-box h4 { margin: 0 0 5px 0; color: var(--text-muted); font-size: 12px; text-transform: uppercase;}
-        .summary-box h2 { margin: 0; font-size: 22px;}
-        
-        /* Açılır Kapanır Detaylar */
         details { background-color: var(--input-bg); border-radius: 8px; padding: 10px 15px; margin-bottom: 12px; border: 1px solid var(--border); }
         summary { font-weight: bold; font-size: 15px; cursor: pointer; outline: none; list-style: none;}
         summary::-webkit-details-marker { display: none; }
-        .details-content { margin-top: 12px; font-size: 14px; border-top: 1px solid var(--border); padding-top: 12px;}
+        .details-content { margin-top: 12px; font-size: 13px; border-top: 1px solid var(--border); padding-top: 12px;}
         .stat-list { list-style: none; padding: 0; margin: 0; }
         .stat-list li { margin-bottom: 8px; display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border); padding-bottom: 4px;}
         .stat-list li:last-child { border-bottom: none; }
         
-        /* Modal ve Navigation */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: flex-start; overflow-y: auto; padding: 20px 0; }
         .modal-content { background-color: var(--card-bg); width: 92%; max-width: 500px; border-radius: 10px; padding: 18px; border: 1px solid var(--border); }
         .back-btn { background: none; border: none; color: var(--accent); font-size: 15px; cursor: pointer; padding: 0; margin-bottom: 15px; font-weight: bold; display: flex; align-items: center; gap: 5px;}
         
-        /* Liste Tasarımları */
-        .list-item { background-color: var(--input-bg); border: 1px solid var(--border); border-radius: 8px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .list-item { background-color: var(--input-bg); border: 1px solid var(--border); border-radius: 8px; padding: 15px; margin-bottom: 12px; cursor: pointer; }
         .list-item:active { opacity: 0.8; }
-        .list-title { font-size: 16px; font-weight: bold; }
-        .fleet-add-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto; gap: 5px; margin-bottom: 10px; align-items: end;}
-        .fleet-item { background: var(--bg-dark); padding: 8px; border-radius: 5px; font-size: 13px; display: flex; justify-content: space-between; margin-bottom: 5px; border: 1px solid var(--border);}
+        .list-title { font-size: 16px; font-weight: bold; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;}
+        
+        .hub-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; color: var(--text-muted); background: var(--bg-dark); padding: 10px; border-radius: 6px; margin-bottom: 12px;}
+        .hub-stats div span { color: var(--text-main); font-weight: bold; }
+        
+        .fleet-add-row { display: grid; grid-template-columns: 0.8fr 2fr 1fr 1fr 1fr 1fr auto; gap: 5px; margin-bottom: 10px; align-items: end;}
+        .fleet-item { background: var(--bg-dark); padding: 8px; border-radius: 5px; font-size: 13px; display: flex; justify-content: space-between; margin-bottom: 5px; border: 1px solid var(--border); align-items: center;}
     </style>
 </head>
 <body>
@@ -92,14 +87,16 @@
     <div class="tab-container">
         <button class="tab-btn active" id="btn-tab-calc" onclick="switchTab('calc')">Hesaplayıcı</button>
         <button class="tab-btn" id="btn-tab-routes" onclick="switchTab('routes')">Rotalarım</button>
+        <button class="tab-btn" id="btn-tab-stats" onclick="switchTab('stats')">İstatistikler</button>
     </div>
 
     <div id="tab-calc">
         <div class="card">
-            <h3>📍 Rota ve Konfor</h3>
             <div class="grid-2">
                 <div><label>Uzaklık (km)</label><input type="number" id="dist" value="8000" oninput="saveData(); calcPrices();"></div>
-                <div><label>Comfort İstatistiği</label><input type="number" id="comf" value="0" oninput="saveData(); calcPrices();"></div>
+                <div style="display: flex; align-items: flex-end; padding-bottom: 10px;">
+                    <span class="text-muted" style="font-size: 11px;">(Comfort ve diğer veriler İstatistikler sekmesinden çekilir)</span>
+                </div>
             </div>
             <div class="divider"></div>
             <h3>🏷️ Bilet Fiyatları</h3>
@@ -126,7 +123,6 @@
     </div>
 
     <div id="tab-routes" style="display: none;">
-        
         <div id="view-hubs">
             <button class="btn-main" style="padding: 12px; margin-bottom: 15px;" onclick="openHubModal()">+ Yeni Merkez (Hub) Ekle</button>
             <div id="hubs-container"></div>
@@ -142,6 +138,27 @@
         <div id="view-route-details" style="display: none;">
             <button class="back-btn" onclick="navTo('routes')">⬅ Rotalara Dön</button>
             <div class="card" id="route-details-container"></div>
+        </div>
+    </div>
+
+    <div id="tab-stats" style="display: none;">
+        <div class="card">
+            <h3>⚙️ Genel Havayolu Servisleri</h3>
+            <label>Comfort (Konfor) İstatistiği</label>
+            <input type="number" id="g_comf" value="0" oninput="saveGlobalStats(); calcPrices();">
+            
+            <label>Ortalama Yakıt Fiyatı ($/1000L)</label>
+            <input type="number" id="g_fuel" value="750" oninput="saveGlobalStats();">
+            
+            <label>NGAF (Yeni Nesil Uçak Dosyası) Seviyesi</label>
+            <select id="g_ngaf" onchange="saveGlobalStats();">
+                <option value="0">Seviye 0 (Masraf Düşüşü Yok)</option>
+                <option value="1">Seviye 1 (%25 Masraf Düşüşü)</option>
+                <option value="2">Seviye 2 (%50 Masraf Düşüşü)</option>
+                <option value="3">Seviye 3 (%75 Masraf Düşüşü)</option>
+                <option value="4">Seviye 4 (%100 - Masraf Yok)</option>
+            </select>
+            <p class="text-muted" style="font-size: 11px;">Bu veriler cihazınıza kaydedilir. Hesaplayıcıdaki bilet ve gider formülleri buradaki verileri referans alır.</p>
         </div>
     </div>
 
@@ -196,6 +213,7 @@
             <div class="divider"></div>
             <h4>Atanan Filo</h4>
             <div class="fleet-add-row">
+                <div><label>Adet</label><input type="number" id="tmp-qty" value="1"></div>
                 <div><label>Model</label><input type="text" id="tmp-name" placeholder="777"></div>
                 <div><label>E</label><input type="number" id="tmp-e"></div>
                 <div><label>B</label><input type="number" id="tmp-b"></div>
@@ -213,11 +231,9 @@
     </div>
 
 <script>
-    // Zorla Yenileme
-    function forceRefresh() {
-        window.location.reload(true);
-    }
+    function forceRefresh() { window.location.reload(true); }
 
+    // Güncel Liste Fiyatlarıyla Tam Veritabanı
     const AIRCRAFT_DB = [
         {name: "Airbus A380-800", range: 15556, speed: 903, seats: 853, cargo: 84, price: 403000000, fuel: 2.05, wear: 1.2, other: 0.10},
         {name: "Boeing 747-8I", range: 14815, speed: 911, seats: 605, cargo: 76, price: 379100000, fuel: 2.11, wear: 1.4, other: 0.12},
@@ -238,11 +254,15 @@
         {name: "Boeing 737 MAX 9", range: 6574, speed: 839, seats: 220, cargo: 6, price: 116600000, fuel: 1.95, wear: 1.2, other: 0.15}
     ].sort((a, b) => b.seats - a.seats);
 
-    const AVG_FUEL_PRICE = 750;
-
     window.onload = function() {
+        // İstatistikleri Yükle
+        if(localStorage.getItem('g_comf')) document.getElementById('g_comf').value = localStorage.getItem('g_comf');
+        if(localStorage.getItem('g_fuel')) document.getElementById('g_fuel').value = localStorage.getItem('g_fuel');
+        if(localStorage.getItem('g_ngaf')) document.getElementById('g_ngaf').value = localStorage.getItem('g_ngaf');
+
+        // Hesaplayıcı Girdilerini Yükle
         let hasData = false;
-        ['dist', 'comf', 'd_e', 'd_b', 'd_f', 'd_c'].forEach(id => {
+        ['dist', 'd_e', 'd_b', 'd_f', 'd_c'].forEach(id => {
             if(localStorage.getItem(id) !== null) {
                 document.getElementById(id).value = localStorage.getItem(id);
                 hasData = true;
@@ -250,23 +270,33 @@
         });
         calcPrices();
         if(hasData && parseFloat(document.getElementById('dist').value) > 0) calculate();
+        
         loadHubsData();
     };
 
     function switchTab(tabId) {
         document.getElementById('tab-calc').style.display = tabId === 'calc' ? 'block' : 'none';
         document.getElementById('tab-routes').style.display = tabId === 'routes' ? 'block' : 'none';
+        document.getElementById('tab-stats').style.display = tabId === 'stats' ? 'block' : 'none';
+        
         document.getElementById('btn-tab-calc').classList.toggle('active', tabId === 'calc');
         document.getElementById('btn-tab-routes').classList.toggle('active', tabId === 'routes');
+        document.getElementById('btn-tab-stats').classList.toggle('active', tabId === 'stats');
+    }
+
+    function saveGlobalStats() {
+        localStorage.setItem('g_comf', document.getElementById('g_comf').value);
+        localStorage.setItem('g_fuel', document.getElementById('g_fuel').value);
+        localStorage.setItem('g_ngaf', document.getElementById('g_ngaf').value);
     }
 
     function saveData() {
-        ['dist', 'comf', 'd_e', 'd_b', 'd_f', 'd_c'].forEach(id => localStorage.setItem(id, document.getElementById(id).value));
+        ['dist', 'd_e', 'd_b', 'd_f', 'd_c'].forEach(id => localStorage.setItem(id, document.getElementById(id).value));
     }
 
     function calcPrices() {
         let dist = parseFloat(document.getElementById('dist').value) || 0;
-        let comf = parseFloat(document.getElementById('comf').value) || 0;
+        let comf = parseFloat(document.getElementById('g_comf').value) || 0;
         let multi = 1 + (comf / 3000);
         document.getElementById('p_e').value = Math.floor(120 + (dist * 0.2639) * multi);
         document.getElementById('p_b').value = Math.floor(160 + (dist * 0.3509) * multi);
@@ -288,6 +318,10 @@
         let p_b = parseFloat(document.getElementById('p_b').value) || 0;
         let p_f = parseFloat(document.getElementById('p_f').value) || 0;
         let p_c = parseFloat(document.getElementById('p_c').value) || 0;
+
+        let fuelPrice = parseFloat(document.getElementById('g_fuel').value) || 750;
+        let ngafLevel = parseInt(document.getElementById('g_ngaf').value) || 0;
+        let ngafMultiplier = 1 - (ngafLevel * 0.25); // 0=1, 1=0.75, 2=0.50, 3=0.25, 4=0
 
         let resDiv = document.getElementById('results');
         let available = AIRCRAFT_DB.filter(p => p.range >= dist);
@@ -325,14 +359,14 @@
             conf.C = Math.min(Math.ceil(c_c / chosen_flights), chosen.cargo); c_c = Math.max(0, c_c - (conf.C * chosen_flights));
 
             let wk_rev = ((conf.E*p_e) + (conf.B*p_b) + (conf.F*p_f) + (conf.C*p_c)) * chosen_flights;
-            let fuel_cost = ((dist*2)/100) * chosen.fuel * (conf.E + conf.B + conf.F) * chosen_flights * (AVG_FUEL_PRICE/1000);
+            let fuel_cost = ((dist*2)/100) * chosen.fuel * (conf.E + conf.B + conf.F) * chosen_flights * (fuelPrice/1000) * 0.85;
             let tax = chosen_flights * (dist >= 5000 ? 70000 : 40000);
-            let other = wk_rev * chosen.other;
+            let other = wk_rev * (chosen.other * ngafMultiplier);
             let maint = (chosen.wear / 100) * ((chosen_flights * ((dist*2)/chosen.speed)) / 100) * (chosen.price * 0.01);
             
-            conf.wk_net = wk_rev - fuel_cost - tax - other;
+            conf.wk_net = wk_rev - fuel_cost - tax - other - maint;
             conf.fuel_c = fuel_cost; conf.tax_c = tax + other; conf.maint_c = maint;
-            conf.roi = conf.wk_net > 0 ? chosen.price / conf.wk_net : 0;
+            conf.cost = chosen.price;
             
             cost += chosen.price; gross_wk += wk_rev; net_wk += conf.wk_net;
             fleet.push(conf);
@@ -340,30 +374,37 @@
 
         if(!fleet.length) return resDiv.innerHTML = `<div class="card text-muted">Atanacak yeterli demand yok.</div>`;
 
+        let rem_e = Math.floor((c_e/7)*2), rem_b = Math.floor((c_b/7)*2), rem_f = Math.floor((c_f/7)*2);
+
         let html = `
         <div class="card" style="padding: 0; overflow: hidden; border: 1px solid var(--border);">
-            <div style="display: flex; text-align: center; background: var(--input-bg);">
-                <div style="flex: 1; padding: 15px; border-right: 1px solid var(--border);">
-                    <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 5px;">GÜNLÜK BRÜT</div>
-                    <div style="font-size: 20px; color: white; font-weight: bold;">${formatMoney(gross_wk/7)}</div>
+            <div style="background: var(--input-bg); padding: 20px; text-align: center; border-bottom: 1px solid var(--border);">
+                <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 5px;">GÜNLÜK NET KÂR</div>
+                <div style="font-size: 36px; color: var(--success); font-weight: bold;">${formatMoney(net_wk/7)}</div>
+                <div style="font-size: 14px; color: var(--text-muted); margin-top: 5px;">Haftalık: ${formatMoney(net_wk)}</div>
+            </div>
+            
+            <div class="grid-2" style="background: var(--bg-dark); padding: 15px; text-align:center;">
+                <div style="border-right: 1px solid var(--border);">
+                    <div style="font-size: 12px; color: var(--text-muted);">GÜNLÜK BRÜT</div>
+                    <div style="font-size: 18px; color: white; font-weight: bold;">${formatMoney(gross_wk/7)}</div>
                 </div>
-                <div style="flex: 1; padding: 15px;">
-                    <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 5px;">GÜNLÜK NET</div>
-                    <div style="font-size: 20px; color: var(--success); font-weight: bold;">${formatMoney(net_wk/7)}</div>
+                <div>
+                    <div style="font-size: 12px; color: var(--text-muted);">FİLO MALİYETİ</div>
+                    <div style="font-size: 18px; color: var(--danger); font-weight: bold;">${formatMoney(cost)}</div>
                 </div>
             </div>
-            <div style="padding: 15px; background: var(--bg-dark);">
-                <div class="grid-2" style="font-size: 13px; color: var(--text-muted);">
-                    <div>⏱️ <b>Amortisman:</b> ${(cost/net_wk).toFixed(1)} Hft</div>
-                    <div>📉 <b>Kalan Talep:</b> ${Math.floor((c_e/7)*2)} E, ${Math.floor((c_b/7)*2)} B, ${Math.floor((c_f/7)*2)} F</div>
-                </div>
+            
+            <div style="background: var(--input-bg); padding: 12px; font-size: 13px; color: var(--text-muted); border-top: 1px solid var(--border); display:flex; justify-content:space-between;">
+                <div>⏱️ Amortisman: <b style="color:white">${(cost/net_wk).toFixed(1)} Hft</b></div>
+                <div>📉 Kalan Demand: <b style="color:white">${rem_e}E ${rem_b}B ${rem_f}F</b></div>
             </div>
         </div>`;
 
         fleet.forEach((f, i) => {
             html += `
             <details open>
-                <summary>✈️ ${i+1}. Uçak: ${f.name}</summary>
+                <summary>✈️ ${i+1}. Uçak: ${f.name} <span style="font-size:13px; font-weight:normal; color:var(--text-muted); float:right;">${formatMoney(f.cost)}</span></summary>
                 <div class="details-content">
                     <div class="grid-2">
                         <div>
@@ -376,10 +417,10 @@
                         </div>
                         <div>
                             <ul class="stat-list">
-                                <li><span class="text-danger">Yakıt Gideri</span> <b class="text-danger">-${formatMoney(f.fuel_c)}</b></li>
-                                <li><span class="text-danger">Vergi Gideri</span> <b class="text-danger">-${formatMoney(f.tax_c)}</b></li>
-                                <li><span class="text-danger">Bakım Gideri</span> <b class="text-danger">-${formatMoney(f.maint_c)}</b></li>
                                 <li><span>Haftalık Sefer</span> <b>${f.flights}</b></li>
+                                <li><span class="text-danger">Yakıt Gideri</span> <b class="text-danger">-${formatMoney(f.fuel_c)}</b></li>
+                                <li><span class="text-danger">Vergi/NGAF</span> <b class="text-danger">-${formatMoney(f.tax_c)}</b></li>
+                                <li><span class="text-danger">Bakım Gideri</span> <b class="text-danger">-${formatMoney(f.maint_c)}</b></li>
                             </ul>
                         </div>
                     </div>
@@ -396,11 +437,11 @@
     let tempFleetArray = [];
 
     function loadHubsData() {
-        let stored = localStorage.getItem('am_hubs_v2');
+        let stored = localStorage.getItem('am_hubs_v3');
         if (stored) db = JSON.parse(stored);
         renderHubsList();
     }
-    function saveHubsData() { localStorage.setItem('am_hubs_v2', JSON.stringify(db)); }
+    function saveHubsData() { localStorage.setItem('am_hubs_v3', JSON.stringify(db)); }
 
     function navTo(view) {
         document.getElementById('view-hubs').style.display = view === 'hubs' ? 'block' : 'none';
@@ -410,25 +451,56 @@
         if(view === 'routes') renderRoutesList();
     }
 
-    // Katman 1: Hubs
+    // Katman 1: Hubs Listesi
     function renderHubsList() {
         let c = document.getElementById('hubs-container');
         c.innerHTML = "";
+        
+        if (db.hubs.length === 0) {
+            c.innerHTML = `<div class="card text-muted" style="text-align:center;">Henüz eklenmiş bir Merkez (Hub) yok.</div>`;
+            return;
+        }
+
         db.hubs.forEach(h => {
+            let t_profit = 0, t_km = 0, t_planes = 0, t_cost = 0, t_pax = 0;
+            h.routes.forEach(r => {
+                t_profit += parseFloat(r.profit) || 0;
+                t_km += parseFloat(r.distance) || 0;
+                r.fleet.forEach(fl => {
+                    let qty = parseInt(fl.qty) || 1;
+                    t_planes += qty;
+                    let dbPlane = AIRCRAFT_DB.find(p => p.name === fl.name);
+                    if(dbPlane) t_cost += (dbPlane.price * qty);
+                    t_pax += ((parseInt(fl.e)||0) + (parseInt(fl.b)||0) + (parseInt(fl.f)||0)) * qty;
+                });
+            });
+
             c.innerHTML += `
             <div class="list-item" onclick="openHub(${h.id})">
-                <div class="list-title">🏢 ${h.name} <span class="text-muted">(${h.routes.length} Rota)</span></div>
-                <div>
-                    <button class="btn-small bg-gray" onclick="event.stopPropagation(); editHub(${h.id})">✎</button>
-                    <button class="btn-small btn-danger" onclick="event.stopPropagation(); deleteHub(${h.id})">Sil</button>
+                <div style="width: 100%;">
+                    <div class="list-title">
+                        🏢 ${h.name}
+                        <div>
+                            <button class="btn-small bg-gray" onclick="event.stopPropagation(); editHub(${h.id})">✎</button>
+                            <button class="btn-small btn-danger" onclick="event.stopPropagation(); deleteHub(${h.id})">Sil</button>
+                        </div>
+                    </div>
+                    <div class="hub-stats">
+                        <div>Rota Sayısı: <span>${h.routes.length}</span></div>
+                        <div>Toplam Km: <span>${t_km.toLocaleString('tr-TR')} km</span></div>
+                        <div>Uçak Sayısı: <span>${t_planes}</span></div>
+                        <div>Yolcu (Günlük): <span>${t_pax.toLocaleString('tr-TR')}</span></div>
+                        <div>Filo Değeri: <span class="text-danger">${formatMoney(t_cost)}</span></div>
+                        <div>Net Kâr: <span class="text-success">${formatMoney(t_profit)}</span></div>
+                    </div>
                 </div>
             </div>`;
         });
     }
 
-    function openHub(id) { cHubId = id; document.getElementById('current-hub-title').innerText = "🏢 " + db.hubs.find(h=>h.id==id).name + " Rotaları"; navTo('routes'); }
+    function openHub(id) { cHubId = id; document.getElementById('current-hub-title').innerText = "🏢 " + db.hubs.find(h=>h.id==id).name; navTo('routes'); }
 
-    // Katman 2: Routes
+    // Katman 2: Routes Listesi
     function renderRoutesList() {
         let hub = db.hubs.find(h => h.id === cHubId);
         let c = document.getElementById('routes-container');
@@ -436,11 +508,14 @@
         hub.routes.forEach(r => {
             c.innerHTML += `
             <div class="list-item" onclick="viewRoute(${r.id})">
-                <div>
-                    <div class="list-title" style="color:var(--accent);">📍 ${r.name || '-'}</div>
-                    <div class="text-muted" style="margin-top:5px;">Kâr: <span class="text-success">${r.profit ? '$'+r.profit : '-'}</span></div>
+                <div style="width: 100%;">
+                    <div class="list-title" style="color:var(--accent);">📍 ${r.name || 'İsimsiz Rota'}</div>
+                    <div class="grid-2 text-muted" style="font-size:13px; margin-top:5px;">
+                        <div>Mesafe: <span style="color:white">${r.distance ? r.distance+' km' : '-'}</span></div>
+                        <div>Net Kâr: <span class="text-success">${r.profit ? '$'+r.profit : '-'}</span></div>
+                    </div>
                 </div>
-                <div>
+                <div style="margin-left: 10px; display:flex; flex-direction:column; gap:5px;">
                     <button class="btn-small bg-gray" onclick="event.stopPropagation(); openRouteModal(${r.id})">✎</button>
                     <button class="btn-small btn-danger" onclick="event.stopPropagation(); deleteRoute(${r.id})">Sil</button>
                 </div>
@@ -451,10 +526,10 @@
     // Katman 3: Route Details
     function viewRoute(id) {
         cRouteId = id;
-        let r = db.hubs.find(h => h.id === cHubId).routes.find(r => r.id === id);
+        let r = db.hubs.find(h => h.id === cHubId).routes.find(rt => rt.id === id);
         let c = document.getElementById('route-details-container');
         
-        let fleetHtml = (r.fleet && r.fleet.length > 0) ? r.fleet.map(f => `<li>${f.name} <span class="text-muted">(${f.e}E ${f.b}B ${f.f}F ${f.c}C)</span></li>`).join('') : '<li class="text-muted">Filo eklenmedi</li>';
+        let fleetHtml = (r.fleet && r.fleet.length > 0) ? r.fleet.map(f => `<li style="padding:10px 0;"><b>${f.qty}x ${f.name}</b> <span class="text-muted">(${f.e||0}E ${f.b||0}B ${f.f||0}F ${f.c||0}C)</span></li>`).join('') : '<li class="text-muted">Filo eklenmedi</li>';
         
         c.innerHTML = `
             <h3 style="color:var(--accent); margin-bottom:5px;">📍 ${r.name || '-'}</h3>
@@ -480,7 +555,7 @@
             </div>
             <div class="divider"></div>
             <span class="text-muted" style="display:block; margin-bottom:8px;">Atanan Filo</span>
-            <ul class="stat-list">${fleetHtml}</ul>
+            <ul class="stat-list" style="border-top:1px solid var(--border);">${fleetHtml}</ul>
         `;
         navTo('details');
     }
@@ -499,7 +574,7 @@
         saveHubsData(); renderHubsList(); closeModal('modal-hub');
     }
     
-    function deleteHub(id) { if(confirm("Silinsin mi?")) { db.hubs = db.hubs.filter(h=>h.id!==id); saveHubsData(); renderHubsList(); } }
+    function deleteHub(id) { if(confirm("Silinsin mi?")) { db.hubs = db.hubs.filter(h=>h.id!==id); saveHubsData(); renderHubsList(); navTo('hubs'); } }
 
     function openRouteModal(id = null) {
         cRouteId = id;
@@ -524,20 +599,22 @@
         let c = document.getElementById('temp-fleet-container');
         c.innerHTML = tempFleetArray.map((f, i) => `
             <div class="fleet-item">
-                <div><b>${f.name}</b> <span class="text-muted">(${f.e}E ${f.b}B ${f.f}F ${f.c}C)</span></div>
+                <div><b>${f.qty}x ${f.name}</b> <span class="text-muted">(${f.e||0}E ${f.b||0}B ${f.f||0}F ${f.c||0}C)</span></div>
                 <button class="btn-small btn-danger" style="padding:4px 8px;" onclick="removeTempFleet(${i})">Sil</button>
             </div>
         `).join('');
     }
 
     function addTempFleet() {
+        let q = document.getElementById('tmp-qty').value || 1;
         let n = document.getElementById('tmp-name').value || "Uçak";
         let e = document.getElementById('tmp-e').value || 0;
         let b = document.getElementById('tmp-b').value || 0;
         let f = document.getElementById('tmp-f').value || 0;
         let c = document.getElementById('tmp-c').value || 0;
-        tempFleetArray.push({name:n, e:e, b:b, f:f, c:c});
+        tempFleetArray.push({qty:q, name:n, e:e, b:b, f:f, c:c});
         ['tmp-name','tmp-e','tmp-b','tmp-f','tmp-c'].forEach(id => document.getElementById(id).value = "");
+        document.getElementById('tmp-qty').value = "1";
         renderTempFleet();
     }
     function removeTempFleet(i) { tempFleetArray.splice(i, 1); renderTempFleet(); }
