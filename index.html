@@ -36,7 +36,6 @@
         
         .grid-flex { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
         .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; }
         
         label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 5px; font-weight: 600;}
@@ -194,8 +193,8 @@
             </div>
             
             <div class="divider"></div>
-            <label style="color: var(--text-main);">Hedeflenen Kapasite (Uçaktaki Koltuk Sayısı)</label>
-            <input type="number" id="sim-target-cap" placeholder="Örn: 440" oninput="calcSimPrice()">
+            <label style="color: var(--text-main);">Hedeflenen Kapasite (Uçağa Atanan Koltuk x2)</label>
+            <input type="number" id="sim-target-cap" placeholder="Örn: 996 (498 Eco x 2)" oninput="calcSimPrice()">
             
             <div class="sim-result-box">
                 <h4>OYUN İÇİ YENİ BİLET FİYATI</h4>
@@ -226,51 +225,24 @@
                 <div><label>Uzaklık (km)</label><input type="number" id="rt-dist"></div>
             </div>
             <div><label>Net Günlük Kâr ($)</label><input type="number" id="rt-profit"></div>
-            
             <div class="divider"></div>
             <h4>Bilet Fiyatları ($)</h4>
-            <div class="grid-4">
-                <div><label>Eco</label><input type="number" id="rt-price-e"></div>
-                <div><label>Bus</label><input type="number" id="rt-price-b"></div>
-                <div><label>First</label><input type="number" id="rt-price-f"></div>
-                <div><label>Cargo</label><input type="number" id="rt-price-c"></div>
-            </div>
-
+            <div class="grid-4"><div><label>Eco</label><input type="number" id="rt-price-e"></div><div><label>Bus</label><input type="number" id="rt-price-b"></div><div><label>First</label><input type="number" id="rt-price-f"></div><div><label>Cargo</label><input type="number" id="rt-price-c"></div></div>
             <div class="divider"></div>
             <h4>Rota Toplam Talebi</h4>
-            <div class="grid-4">
-                <div><label>Eco</label><input type="number" id="rt-dem-e"></div>
-                <div><label>Bus</label><input type="number" id="rt-dem-b"></div>
-                <div><label>First</label><input type="number" id="rt-dem-f"></div>
-                <div><label>Cargo</label><input type="number" id="rt-dem-c"></div>
-            </div>
-
+            <div class="grid-4"><div><label>Eco</label><input type="number" id="rt-dem-e"></div><div><label>Bus</label><input type="number" id="rt-dem-b"></div><div><label>First</label><input type="number" id="rt-dem-f"></div><div><label>Cargo</label><input type="number" id="rt-dem-c"></div></div>
             <div class="divider"></div>
             <h4>Kalan Talep</h4>
-            <div class="grid-4">
-                <div><label>Eco</label><input type="number" id="rt-rem-e"></div>
-                <div><label>Bus</label><input type="number" id="rt-rem-b"></div>
-                <div><label>First</label><input type="number" id="rt-rem-f"></div>
-                <div><label>Cargo</label><input type="number" id="rt-rem-c"></div>
-            </div>
-
+            <div class="grid-4"><div><label>Eco</label><input type="number" id="rt-rem-e"></div><div><label>Bus</label><input type="number" id="rt-rem-b"></div><div><label>First</label><input type="number" id="rt-rem-f"></div><div><label>Cargo</label><input type="number" id="rt-rem-c"></div></div>
             <div class="divider"></div>
             <h4>Atanan Filo</h4>
             <div class="fleet-add-row">
-                <div><label>Adet</label><input type="number" id="tmp-qty" value="1"></div>
-                <div><label>Model</label><input type="text" id="tmp-name" placeholder="777"></div>
-                <div><label>E</label><input type="number" id="tmp-e"></div>
-                <div><label>B</label><input type="number" id="tmp-b"></div>
-                <div><label>F</label><input type="number" id="tmp-f"></div>
-                <div><label>C</label><input type="number" id="tmp-c"></div>
+                <div><label>Adet</label><input type="number" id="tmp-qty" value="1"></div><div><label>Model</label><input type="text" id="tmp-name" placeholder="777"></div>
+                <div><label>E</label><input type="number" id="tmp-e"></div><div><label>B</label><input type="number" id="tmp-b"></div><div><label>F</label><input type="number" id="tmp-f"></div><div><label>C</label><input type="number" id="tmp-c"></div>
                 <div><label>&nbsp;</label><button class="btn-small bg-gray" style="padding: 10px;" onclick="addTempFleet()">+</button></div>
             </div>
             <div id="temp-fleet-container" style="margin-bottom: 15px;"></div>
-            
-            <div class="grid-2">
-                <button class="btn-small bg-gray" onclick="closeModal('modal-route')">İptal</button>
-                <button class="btn-small btn-success" onclick="saveRoute()">Kaydet</button>
-            </div>
+            <div class="grid-2"><button class="btn-small bg-gray" onclick="closeModal('modal-route')">İptal</button><button class="btn-small btn-success" onclick="saveRoute()">Kaydet</button></div>
         </div>
     </div>
 
@@ -326,7 +298,6 @@
         });
         calcPrices();
         if(hasData && parseFloat(document.getElementById('dist').value) > 0) calculate();
-        
         loadHubsData();
     };
 
@@ -435,7 +406,6 @@
                 let rt_time = (dist * 2) / p.speed || 1;
                 let max_wk_flights = Math.floor(168 / rt_time);
                 
-                // GÜNLÜK DENGE (DAILY BALANCE) ALGORİTMASI: Sadece 7'nin katları
                 let wk_flights = 1;
                 if (max_wk_flights >= 7) {
                     wk_flights = Math.floor(max_wk_flights / 7) * 7;
@@ -448,7 +418,8 @@
                 let carried = Math.min(cap, total_d);
                 let fill_rate = carried / cap;
                 
-                if(fill_rate < 0.70) continue; 
+                // BOŞLUK TOLERANSI %85'e YÜKSELTİLDİ (Daha verimli uçak seçimi için)
+                if(fill_rate < 0.85) continue; 
                 
                 let rev = carried * p_e; 
                 let fuel = ((dist*2)/100) * p.fuel * carried * (fuelPrice/1000) * 0.85; 
@@ -546,11 +517,11 @@
                 <summary>✈️ ${i+1}. Uçak: ${f.name} <span style="font-size:13px; font-weight:normal; color:var(--text-muted); float:right;">${formatMoney(f.cost)}</span></summary>
                 <div class="details-content">
                     <div class="mini-stats">
-                        <span>Hız: <b>${f.stats.speed}</b> km/s</span>
-                        <span>Menzil: <b>${f.stats.range}</b> km</span>
-                        <span>Kapasite: <b>${f.stats.seats}</b></span>
-                        <span>Süre: <b>${fl_time}</b> s</span>
-                        <span>Sefer: <b>${f.flights}</b> /hafta</span>
+                        <span>Uçuş Hızı: <b>${f.stats.speed}</b> km/s</span>
+                        <span>Maksimum Menzil: <b>${f.stats.range}</b> km</span>
+                        <span>Maksimum Kapasite: <b>${f.stats.seats}</b> Koltuk</span>
+                        <span>Uçuş Süresi: <b>${fl_time}</b> Saat</span>
+                        <span>Haftalık Sefer: <b>${f.flights}</b> Sefer</span>
                     </div>
                     <div class="grid-2">
                         <div>
