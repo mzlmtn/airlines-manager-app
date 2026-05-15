@@ -58,6 +58,11 @@
         summary { font-weight: bold; font-size: 15px; cursor: pointer; outline: none; list-style: none;}
         summary::-webkit-details-marker { display: none; }
         .details-content { margin-top: 12px; font-size: 13px; border-top: 1px solid var(--border); padding-top: 12px;}
+        
+        .mini-stats { display: flex; gap: 12px; flex-wrap: wrap; font-size: 11.5px; color: var(--text-muted); background: var(--bg-dark); padding: 8px 10px; border-radius: 6px; margin-bottom: 12px; border: 1px solid var(--border); }
+        .mini-stats span { opacity: 0.8; }
+        .mini-stats b { color: var(--text-main); font-weight: 600; opacity: 1; }
+
         .stat-list { list-style: none; padding: 0; margin: 0; }
         .stat-list li { margin-bottom: 8px; display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border); padding-bottom: 4px;}
         .stat-list li:last-child { border-bottom: none; }
@@ -233,7 +238,6 @@
 <script>
     function forceRefresh() { window.location.reload(true); }
 
-    // Güncel Liste Fiyatlarıyla Tam Veritabanı
     const AIRCRAFT_DB = [
         {name: "Airbus A380-800", range: 15556, speed: 903, seats: 853, cargo: 84, price: 403000000, fuel: 2.05, wear: 1.2, other: 0.10},
         {name: "Boeing 747-8I", range: 14815, speed: 911, seats: 605, cargo: 76, price: 379100000, fuel: 2.11, wear: 1.4, other: 0.12},
@@ -255,12 +259,10 @@
     ].sort((a, b) => b.seats - a.seats);
 
     window.onload = function() {
-        // İstatistikleri Yükle
         if(localStorage.getItem('g_comf')) document.getElementById('g_comf').value = localStorage.getItem('g_comf');
         if(localStorage.getItem('g_fuel')) document.getElementById('g_fuel').value = localStorage.getItem('g_fuel');
         if(localStorage.getItem('g_ngaf')) document.getElementById('g_ngaf').value = localStorage.getItem('g_ngaf');
 
-        // Hesaplayıcı Girdilerini Yükle
         let hasData = false;
         ['dist', 'd_e', 'd_b', 'd_f', 'd_c'].forEach(id => {
             if(localStorage.getItem(id) !== null) {
@@ -321,7 +323,7 @@
 
         let fuelPrice = parseFloat(document.getElementById('g_fuel').value) || 750;
         let ngafLevel = parseInt(document.getElementById('g_ngaf').value) || 0;
-        let ngafMultiplier = 1 - (ngafLevel * 0.25); // 0=1, 1=0.75, 2=0.50, 3=0.25, 4=0
+        let ngafMultiplier = 1 - (ngafLevel * 0.25); 
 
         let resDiv = document.getElementById('results');
         let available = AIRCRAFT_DB.filter(p => p.range >= dist);
@@ -402,10 +404,18 @@
         </div>`;
 
         fleet.forEach((f, i) => {
+            let fl_time = ((dist * 2) / f.stats.speed).toFixed(1);
             html += `
             <details open>
                 <summary>✈️ ${i+1}. Uçak: ${f.name} <span style="font-size:13px; font-weight:normal; color:var(--text-muted); float:right;">${formatMoney(f.cost)}</span></summary>
                 <div class="details-content">
+                    <div class="mini-stats">
+                        <span>Hız: <b>${f.stats.speed}</b> km/s</span>
+                        <span>Mnzl: <b>${f.stats.range}</b> km</span>
+                        <span>Kps: <b>${f.stats.seats}</b></span>
+                        <span>Süre: <b>${fl_time}</b>s</span>
+                        <span>Sfr: <b>${f.flights}</b>/hft</span>
+                    </div>
                     <div class="grid-2">
                         <div>
                             <ul class="stat-list">
@@ -417,7 +427,6 @@
                         </div>
                         <div>
                             <ul class="stat-list">
-                                <li><span>Haftalık Sefer</span> <b>${f.flights}</b></li>
                                 <li><span class="text-danger">Yakıt Gideri</span> <b class="text-danger">-${formatMoney(f.fuel_c)}</b></li>
                                 <li><span class="text-danger">Vergi/NGAF</span> <b class="text-danger">-${formatMoney(f.tax_c)}</b></li>
                                 <li><span class="text-danger">Bakım Gideri</span> <b class="text-danger">-${formatMoney(f.maint_c)}</b></li>
