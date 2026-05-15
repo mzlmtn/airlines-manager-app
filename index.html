@@ -34,7 +34,6 @@
         
         .grid-flex { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
         .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; }
         
         label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 5px; font-weight: 600;}
@@ -58,14 +57,13 @@
         summary { font-weight: bold; font-size: 15px; cursor: pointer; outline: none; list-style: none;}
         summary::-webkit-details-marker { display: none; }
         .details-content { margin-top: 12px; font-size: 13px; border-top: 1px solid var(--border); padding-top: 12px;}
+        .stat-list { list-style: none; padding: 0; margin: 0; }
+        .stat-list li { margin-bottom: 8px; display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border); padding-bottom: 4px;}
+        .stat-list li:last-child { border-bottom: none; }
         
         .mini-stats { display: flex; gap: 12px; flex-wrap: wrap; font-size: 11.5px; color: var(--text-muted); background: var(--bg-dark); padding: 8px 10px; border-radius: 6px; margin-bottom: 12px; border: 1px solid var(--border); }
         .mini-stats span { opacity: 0.8; }
         .mini-stats b { color: var(--text-main); font-weight: 600; opacity: 1; }
-
-        .stat-list { list-style: none; padding: 0; margin: 0; }
-        .stat-list li { margin-bottom: 8px; display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border); padding-bottom: 4px;}
-        .stat-list li:last-child { border-bottom: none; }
         
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: flex-start; overflow-y: auto; padding: 20px 0; }
         .modal-content { background-color: var(--card-bg); width: 92%; max-width: 500px; border-radius: 10px; padding: 18px; border: 1px solid var(--border); }
@@ -238,24 +236,40 @@
 <script>
     function forceRefresh() { window.location.reload(true); }
 
+    // Tam Kapsamlı ve Genişletilmiş Uçak Veritabanı (LH ve MH Ağırlıklı)
     const AIRCRAFT_DB = [
         {name: "Airbus A380-800", range: 15556, speed: 903, seats: 853, cargo: 84, price: 403000000, fuel: 2.05, wear: 1.2, other: 0.10},
         {name: "Boeing 747-8I", range: 14815, speed: 911, seats: 605, cargo: 76, price: 379100000, fuel: 2.11, wear: 1.4, other: 0.12},
         {name: "Boeing 747-400", range: 13450, speed: 903, seats: 660, cargo: 65, price: 296300000, fuel: 2.65, wear: 2.1, other: 0.02},
         {name: "Boeing 777-300ER", range: 14685, speed: 898, seats: 550, cargo: 71, price: 330000000, fuel: 2.10, wear: 1.5, other: 0.08},
+        {name: "Boeing 777-200LR", range: 15843, speed: 898, seats: 440, cargo: 59, price: 296000000, fuel: 2.50, wear: 1.5, other: 0.06},
         {name: "Boeing 777-200ER", range: 14305, speed: 898, seats: 440, cargo: 59, price: 261500000, fuel: 2.40, wear: 1.8, other: 0.05},
         {name: "Airbus A350-1000", range: 14750, speed: 903, seats: 475, cargo: 54, price: 335000000, fuel: 1.65, wear: 1.1, other: 0.18},
         {name: "Airbus A350-900XWB", range: 15000, speed: 903, seats: 440, cargo: 45, price: 295200000, fuel: 1.70, wear: 1.1, other: 0.18},
+        {name: "Airbus A340-600", range: 14450, speed: 880, seats: 475, cargo: 55, price: 295000000, fuel: 3.00, wear: 1.9, other: 0.04},
+        {name: "Airbus A340-500", range: 16670, speed: 880, seats: 475, cargo: 50, price: 275000000, fuel: 3.10, wear: 1.9, other: 0.04},
+        {name: "Airbus A340-300", range: 13700, speed: 880, seats: 440, cargo: 45, price: 254000000, fuel: 2.80, wear: 1.8, other: 0.04},
+        {name: "Boeing 787-10", range: 11910, speed: 911, seats: 440, cargo: 40, price: 289000000, fuel: 1.75, wear: 1.1, other: 0.18},
         {name: "Boeing 787-9", range: 14140, speed: 911, seats: 420, cargo: 34, price: 264600000, fuel: 1.80, wear: 1.1, other: 0.18},
         {name: "Boeing 787-8", range: 13620, speed: 911, seats: 381, cargo: 28, price: 206800000, fuel: 1.85, wear: 1.1, other: 0.18},
         {name: "Airbus A330-900neo", range: 13334, speed: 880, seats: 440, cargo: 45, price: 272000000, fuel: 1.95, wear: 1.3, other: 0.15},
+        {name: "Airbus A330-800neo", range: 15094, speed: 880, seats: 406, cargo: 40, price: 245000000, fuel: 2.00, wear: 1.3, other: 0.15},
         {name: "Airbus A330-300", range: 11750, speed: 880, seats: 440, cargo: 45, price: 239400000, fuel: 2.30, wear: 1.8, other: 0.04},
+        {name: "Airbus A330-200", range: 13450, speed: 880, seats: 406, cargo: 40, price: 222000000, fuel: 2.40, wear: 1.8, other: 0.04},
+        {name: "Boeing 767-400ER", range: 10415, speed: 850, seats: 375, cargo: 43, price: 200000000, fuel: 2.45, wear: 1.9, other: 0.02},
         {name: "Boeing 767-300ER", range: 11070, speed: 850, seats: 350, cargo: 38, price: 182800000, fuel: 2.50, wear: 2.0, other: 0.01},
-        {name: "Boeing 737-700ER", range: 10200, speed: 850, seats: 149, cargo: 15, price: 81000000, fuel: 2.60, wear: 1.7, other: 0.02},
-        {name: "Airbus A310-300", range: 9540, speed: 850, seats: 275, cargo: 33, price: 157300000, fuel: 2.70, wear: 2.2, other: 0.01},
+        {name: "Boeing 767-200ER", range: 12220, speed: 850, seats: 290, cargo: 35, price: 160200000, fuel: 2.65, wear: 2.1, other: 0.01},
+        {name: "Boeing 757-300", range: 6287, speed: 850, seats: 295, cargo: 30, price: 105000000, fuel: 2.60, wear: 1.9, other: 0.02},
         {name: "Boeing 757-200", range: 7222, speed: 850, seats: 239, cargo: 25, price: 85000000, fuel: 2.55, wear: 1.9, other: 0.02},
+        {name: "Airbus A310-300", range: 9540, speed: 850, seats: 275, cargo: 33, price: 157300000, fuel: 2.70, wear: 2.2, other: 0.01},
         {name: "Airbus A321-200neo-LR", range: 7408, speed: 840, seats: 244, cargo: 5, price: 131500000, fuel: 1.90, wear: 1.2, other: 0.15},
-        {name: "Boeing 737 MAX 9", range: 6574, speed: 839, seats: 220, cargo: 6, price: 116600000, fuel: 1.95, wear: 1.2, other: 0.15}
+        {name: "Airbus A321neo", range: 6852, speed: 840, seats: 244, cargo: 5, price: 124000000, fuel: 1.95, wear: 1.2, other: 0.15},
+        {name: "Airbus A320neo", range: 6500, speed: 828, seats: 195, cargo: 4, price: 107000000, fuel: 1.95, wear: 1.2, other: 0.15},
+        {name: "Boeing 737-900ER", range: 5925, speed: 839, seats: 220, cargo: 6, price: 101900000, fuel: 2.45, wear: 1.8, other: 0.02},
+        {name: "Boeing 737 MAX 9", range: 6574, speed: 839, seats: 220, cargo: 6, price: 116600000, fuel: 1.95, wear: 1.2, other: 0.15},
+        {name: "Boeing 737 MAX 8", range: 6510, speed: 839, seats: 200, cargo: 5, price: 110000000, fuel: 1.95, wear: 1.2, other: 0.15},
+        {name: "Boeing 737-800", range: 5665, speed: 838, seats: 189, cargo: 5, price: 90000000, fuel: 2.50, wear: 1.8, other: 0.02},
+        {name: "Boeing 737-700ER", range: 10200, speed: 850, seats: 149, cargo: 15, price: 81000000, fuel: 2.60, wear: 1.7, other: 0.02}
     ].sort((a, b) => b.seats - a.seats);
 
     window.onload = function() {
@@ -338,30 +352,74 @@
             if(total_d <= 0 && c_c <= 0) break;
 
             let chosen = null, chosen_flights = 1;
+            let bestProfit = -Infinity;
+
+            // KÂR MAKSİMİZASYONU ALGORİTMASI: Tüm uçakları değerlendir, en çok kazandıranı seç!
             for(let p of available) {
                 let rt_time = (dist * 2) / p.speed || 1;
                 let wk_flights = Math.max(1, Math.floor(168 / rt_time));
-                if (p.seats * wk_flights <= total_d) { chosen = p; chosen_flights = wk_flights; break; }
+                let cap = p.seats * wk_flights;
+                let carried = Math.min(cap, total_d);
+                let fill_rate = carried / cap;
+                
+                // Eğer uçak %70'ten daha az doluyorsa zarardan kaçınmak için ele
+                if(fill_rate < 0.70) continue; 
+                
+                // Simüle edilmiş kâr hesabı
+                let rev = carried * p_e; // Kaba gelir tahmini
+                let fuel = ((dist*2)/100) * p.fuel * carried * wk_flights * (fuelPrice/1000) * 0.85;
+                let tax = wk_flights * (dist >= 5000 ? 70000 : 40000);
+                let other = rev * (p.other * ngafMultiplier);
+                let maint = (p.wear / 100) * ((wk_flights * rt_time) / 100) * (p.price * 0.01);
+                
+                let net = rev - fuel - tax - other - maint;
+                
+                if (net > bestProfit) {
+                    bestProfit = net;
+                    chosen = p;
+                    chosen_flights = wk_flights;
+                }
             }
 
+            // Hiçbir uçak %70 barajını geçemediyse, kalan kırıntı demand'i en küçük uçakla topla
             if(!chosen) {
                 let p = available[available.length - 1];
                 let wk_flights = Math.max(1, Math.floor(168 / ((dist * 2) / p.speed || 1)));
-                if (total_d < (p.seats * wk_flights) * 0.65) break;
+                if (total_d < (p.seats * wk_flights) * 0.45) break; // %45'ten azsa artık uçak kaldırma
                 chosen = p; chosen_flights = wk_flights;
             }
 
             let rem = chosen.seats;
             let conf = {name: chosen.name, E:0, B:0, F:0, C:0, flights: chosen_flights, stats: chosen};
 
-            conf.F = Math.min(Math.ceil(c_f / chosen_flights), Math.floor(rem / 4)); c_f = Math.max(0, c_f - (conf.F * chosen_flights)); rem -= conf.F * 4;
-            conf.B = Math.min(Math.ceil(c_b / chosen_flights), Math.floor(rem / 2)); c_b = Math.max(0, c_b - (conf.B * chosen_flights)); rem -= conf.B * 2;
-            conf.E = Math.min(Math.ceil(c_e / chosen_flights), rem); c_e = Math.max(0, c_e - (conf.E * chosen_flights)); rem -= conf.E;
-            if(rem > 0) { conf.E += rem; c_e = Math.max(0, c_e - (rem * chosen_flights)); }
-            conf.C = Math.min(Math.ceil(c_c / chosen_flights), chosen.cargo); c_c = Math.max(0, c_c - (conf.C * chosen_flights));
+            // First ve Business ataması
+            conf.F = Math.min(Math.ceil(c_f / chosen_flights), Math.floor(rem / 4)); 
+            let carried_F = Math.min(conf.F * chosen_flights, c_f);
+            c_f = Math.max(0, c_f - carried_F); 
+            rem -= conf.F * 4;
+            
+            conf.B = Math.min(Math.ceil(c_b / chosen_flights), Math.floor(rem / 2)); 
+            let carried_B = Math.min(conf.B * chosen_flights, c_b);
+            c_b = Math.max(0, c_b - carried_B); 
+            rem -= conf.B * 2;
+            
+            // Kalan tüm alanı Eco'ya bas
+            conf.E = Math.min(Math.ceil(c_e / chosen_flights), rem);
+            let carried_E = Math.min(conf.E * chosen_flights, c_e);
+            
+            if(rem > conf.E) { conf.E = rem; }
+            carried_E = Math.min(conf.E * chosen_flights, c_e); // Gerçekte ödeme yapan yolcu
+            c_e = Math.max(0, c_e - carried_E); 
+            
+            conf.C = Math.min(Math.ceil(c_c / chosen_flights), chosen.cargo); 
+            let carried_C = Math.min(conf.C * chosen_flights, c_c);
+            c_c = Math.max(0, c_c - carried_C);
 
-            let wk_rev = ((conf.E*p_e) + (conf.B*p_b) + (conf.F*p_f) + (conf.C*p_c)) * chosen_flights;
-            let fuel_cost = ((dist*2)/100) * chosen.fuel * (conf.E + conf.B + conf.F) * chosen_flights * (fuelPrice/1000) * 0.85;
+            // Giderler sadece GERÇEK taşınan yolcu üzerinden hesaplanır (Hata düzeltmesi)
+            let wk_rev = (carried_E * p_e) + (carried_B * p_b) + (carried_F * p_f) + (carried_C * p_c);
+            let total_real_pax = carried_E + carried_B + carried_F;
+            
+            let fuel_cost = ((dist*2)/100) * chosen.fuel * total_real_pax * chosen_flights * (fuelPrice/1000) * 0.85;
             let tax = chosen_flights * (dist >= 5000 ? 70000 : 40000);
             let other = wk_rev * (chosen.other * ngafMultiplier);
             let maint = (chosen.wear / 100) * ((chosen_flights * ((dist*2)/chosen.speed)) / 100) * (chosen.price * 0.01);
@@ -411,10 +469,10 @@
                 <div class="details-content">
                     <div class="mini-stats">
                         <span>Hız: <b>${f.stats.speed}</b> km/s</span>
-                        <span>Menzil: <b>${f.stats.range}</b> km</span>
-                        <span>Kapasite: <b>${f.stats.seats}</b></span>
+                        <span>Mnzl: <b>${f.stats.range}</b> km</span>
+                        <span>Kps: <b>${f.stats.seats}</b></span>
                         <span>Süre: <b>${fl_time}</b>s</span>
-                        <span>Sefer: <b>${f.flights}</b>/hafta</span>
+                        <span>Sfr: <b>${f.flights}</b>/hft</span>
                     </div>
                     <div class="grid-2">
                         <div>
@@ -460,7 +518,6 @@
         if(view === 'routes') renderRoutesList();
     }
 
-    // Katman 1: Hubs Listesi
     function renderHubsList() {
         let c = document.getElementById('hubs-container');
         c.innerHTML = "";
@@ -509,7 +566,6 @@
 
     function openHub(id) { cHubId = id; document.getElementById('current-hub-title').innerText = "🏢 " + db.hubs.find(h=>h.id==id).name; navTo('routes'); }
 
-    // Katman 2: Routes Listesi
     function renderRoutesList() {
         let hub = db.hubs.find(h => h.id === cHubId);
         let c = document.getElementById('routes-container');
@@ -532,7 +588,6 @@
         });
     }
 
-    // Katman 3: Route Details
     function viewRoute(id) {
         cRouteId = id;
         let r = db.hubs.find(h => h.id === cHubId).routes.find(rt => rt.id === id);
@@ -569,7 +624,6 @@
         navTo('details');
     }
 
-    // --- Modal Fonksiyonları ---
     function openModal(id) { document.getElementById(id).style.display = 'flex'; }
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
