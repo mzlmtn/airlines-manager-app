@@ -8,7 +8,6 @@
     <meta http-equiv="Expires" content="0">
     <title>Airlines Manager Pro</title>
     <style>
-        /* Premium Koyu Tema (Zinc/Slate) */
         :root {
             --bg-dark: #09090b;
             --card-bg: #18181b;
@@ -64,8 +63,8 @@
         summary::-webkit-details-marker { display: none; }
         .details-content { margin-top: 12px; font-size: 13px; border-top: 1px solid var(--border); padding-top: 12px;}
         
-        .mini-stats { display: flex; gap: 12px; flex-wrap: wrap; font-size: 11.5px; color: var(--text-muted); background: var(--bg-dark); padding: 8px 10px; border-radius: 6px; margin-bottom: 12px; border: 1px solid var(--border); }
-        .mini-stats span { opacity: 0.8; }
+        .mini-stats { display: flex; gap: 12px; flex-wrap: wrap; font-size: 13px; color: var(--text-muted); background: var(--bg-dark); padding: 12px; border-radius: 6px; margin-bottom: 12px; border: 1px solid var(--border); }
+        .mini-stats span { opacity: 0.9; }
         .mini-stats b { color: var(--text-main); font-weight: 600; opacity: 1; }
 
         .stat-list { list-style: none; padding: 0; margin: 0; }
@@ -80,7 +79,6 @@
         .sim-result-box h4 { margin: 0 0 5px 0; color: var(--text-muted); font-size: 12px;}
         .sim-result-box h2 { margin: 0; font-size: 32px; color: var(--accent-blue);}
         
-        /* Rotalarım */
         .list-item { background-color: var(--input-bg); border: 1px solid var(--border); border-radius: 8px; padding: 15px; margin-bottom: 12px; cursor: pointer; }
         .list-title { font-size: 16px; font-weight: bold; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;}
         .hub-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; color: var(--text-muted); background: var(--bg-dark); padding: 10px; border-radius: 6px; margin-bottom: 12px;}
@@ -279,7 +277,6 @@
 <script>
     function forceRefresh() { window.location.reload(true); }
 
-    // Uçak Veritabanı
     const AIRCRAFT_DB = [
         {name: "Airbus A380-800", range: 15556, speed: 903, seats: 853, cargo: 84, price: 403000000, fuel: 2.05, wear: 1.2, other: 0.10},
         {name: "Boeing 747-8I", range: 14815, speed: 911, seats: 605, cargo: 76, price: 379100000, fuel: 2.11, wear: 1.4, other: 0.12},
@@ -329,6 +326,7 @@
         });
         calcPrices();
         if(hasData && parseFloat(document.getElementById('dist').value) > 0) calculate();
+        
         loadHubsData();
     };
 
@@ -363,7 +361,7 @@
 
     function formatMoney(n) { return "$" + Math.round(n).toLocaleString('en-US'); }
 
-    // --- FİYAT BULUCU (SİMÜLATÖR) MANTIĞI ---
+    // --- FİYAT BULUCU SİMÜLATÖR ---
     function openSimulatorModal() {
         updateSimFields();
         document.getElementById('sim-target-cap').value = "";
@@ -390,7 +388,6 @@
             return;
         }
 
-        // Oyun İçi Esneklik Formülü
         let newPrice = p * (2 - (cap / d));
         if (newPrice < 0) newPrice = 0;
         document.getElementById('sim-new-price').innerText = "$" + Math.round(newPrice).toLocaleString('en-US');
@@ -424,7 +421,7 @@
         let c_c = Math.ceil(d_c_start / 2) * 7;
         
         let fleet = [], cost = 0, gross_wk = 0, net_wk = 0, loopSafe = 0;
-        let total_conf_e = 0, total_conf_b = 0, total_conf_f = 0, total_conf_c = 0; // Doğru kalan demand takibi için
+        let total_conf_e = 0, total_conf_b = 0, total_conf_f = 0, total_conf_c = 0;
 
         while(true) {
             if(++loopSafe > 50) break;
@@ -436,7 +433,17 @@
 
             for(let p of available) {
                 let rt_time = (dist * 2) / p.speed || 1;
-                let wk_flights = Math.max(1, Math.floor(168 / rt_time));
+                let max_wk_flights = Math.floor(168 / rt_time);
+                
+                // GÜNLÜK DENGE (DAILY BALANCE) ALGORİTMASI: Sadece 7'nin katları
+                let wk_flights = 1;
+                if (max_wk_flights >= 7) {
+                    wk_flights = Math.floor(max_wk_flights / 7) * 7;
+                } else {
+                    wk_flights = max_wk_flights;
+                    if (wk_flights < 1) wk_flights = 1;
+                }
+
                 let cap = p.seats * wk_flights;
                 let carried = Math.min(cap, total_d);
                 let fill_rate = carried / cap;
@@ -444,7 +451,7 @@
                 if(fill_rate < 0.70) continue; 
                 
                 let rev = carried * p_e; 
-                let fuel = ((dist*2)/100) * p.fuel * carried * (fuelPrice/1000) * 0.85; // BUG FİX: wk_flights kaldırıldı!
+                let fuel = ((dist*2)/100) * p.fuel * carried * (fuelPrice/1000) * 0.85; 
                 let tax = wk_flights * (dist >= 5000 ? 70000 : 40000);
                 let other = rev * (p.other * ngafMultiplier);
                 let maint = (p.wear / 100) * ((wk_flights * rt_time) / 100) * (p.price * 0.01);
@@ -456,7 +463,11 @@
 
             if(!chosen) {
                 let p = available[available.length - 1];
-                let wk_flights = Math.max(1, Math.floor(168 / ((dist * 2) / p.speed || 1)));
+                let rt_time = (dist * 2) / p.speed || 1;
+                let max_wk_flights = Math.floor(168 / rt_time);
+                let wk_flights = (max_wk_flights >= 7) ? Math.floor(max_wk_flights / 7) * 7 : max_wk_flights;
+                if (wk_flights < 1) wk_flights = 1;
+
                 if (total_d < (p.seats * wk_flights) * 0.45) break; 
                 chosen = p; chosen_flights = wk_flights;
             }
@@ -471,7 +482,7 @@
             let carried_B = Math.min(conf.B * chosen_flights, c_b); c_b = Math.max(0, c_b - carried_B); rem -= conf.B * 2;
             
             conf.E = Math.min(Math.ceil(c_e / chosen_flights), rem);
-            if(rem > conf.E) { conf.E = rem; } // Uçaktaki tüm boşlukları Eco'ya bas (AM Mekaniği)
+            if(rem > conf.E) { conf.E = rem; }
             let carried_E = Math.min(conf.E * chosen_flights, c_e); 
             c_e = Math.max(0, c_e - carried_E); 
             
@@ -486,7 +497,7 @@
             let wk_rev = (carried_E * p_e) + (carried_B * p_b) + (carried_F * p_f) + (carried_C * p_c);
             let total_real_pax = carried_E + carried_B + carried_F;
             
-            let fuel_cost = ((dist*2)/100) * chosen.fuel * total_real_pax * (fuelPrice/1000) * 0.85; // BUG FİXED
+            let fuel_cost = ((dist*2)/100) * chosen.fuel * total_real_pax * (fuelPrice/1000) * 0.85; 
             let tax = chosen_flights * (dist >= 5000 ? 70000 : 40000);
             let other = wk_rev * (chosen.other * ngafMultiplier);
             let maint = (chosen.wear / 100) * ((chosen_flights * ((dist*2)/chosen.speed)) / 100) * (chosen.price * 0.01);
@@ -501,11 +512,9 @@
 
         if(!fleet.length) return resDiv.innerHTML = `<div class="card text-muted">Atanacak yeterli demand yok.</div>`;
 
-        // Kalan demand'in EKSİ (-) değerleri de gösterebilmesi için doğru matematik:
         let rem_e = Math.round((Math.ceil(d_e_start / 2) * 7 - total_conf_e) / 7 * 2);
         let rem_b = Math.round((Math.ceil(d_b_start / 2) * 7 - total_conf_b) / 7 * 2);
         let rem_f = Math.round((Math.ceil(d_f_start / 2) * 7 - total_conf_f) / 7 * 2);
-        let rem_c = Math.round((Math.ceil(d_c_start / 2) * 7 - total_conf_c) / 7 * 2);
 
         let html = `
         <div class="card" style="padding: 0; overflow: hidden; border: 1px solid var(--border);">
@@ -537,11 +546,11 @@
                 <summary>✈️ ${i+1}. Uçak: ${f.name} <span style="font-size:13px; font-weight:normal; color:var(--text-muted); float:right;">${formatMoney(f.cost)}</span></summary>
                 <div class="details-content">
                     <div class="mini-stats">
-                        <span>Hız: <b>${f.stats.speed}</b> km/s</span>
-                        <span>Mnzl: <b>${f.stats.range}</b> km</span>
-                        <span>Kps: <b>${f.stats.seats}</b></span>
-                        <span>Süre: <b>${fl_time}</b>s</span>
-                        <span>Sfr: <b>${f.flights}</b>/hft</span>
+                        <span>Uçuş Hızı: <b>${f.stats.speed}</b> km/s</span>
+                        <span>Maksimum Menzil: <b>${f.stats.range}</b> km</span>
+                        <span>Maksimum Kapasite: <b>${f.stats.seats}</b> Koltuk</span>
+                        <span>Uçuş Süresi: <b>${fl_time}</b> Saat</span>
+                        <span>Haftalık Sefer: <b>${f.flights}</b> Sefer</span>
                     </div>
                     <div class="grid-2">
                         <div>
@@ -566,7 +575,7 @@
         resDiv.innerHTML = html;
     }
 
-    // --- MODALLAR VE ROTA SİSTEMİ FONKSİYONLARI ---
+    // --- ROTALARIM (VERİTABANI VE KADEMELİ GÖRÜNÜM) ---
     function openModal(id) { document.getElementById(id).style.display = 'flex'; }
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
     
