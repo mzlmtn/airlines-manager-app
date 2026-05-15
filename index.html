@@ -13,6 +13,8 @@
             --card-bg: #18181b;
             --input-bg: #27272a;
             --accent: #10b981; 
+            --accent-hover: #059669;
+            --accent-blue: #3b82f6;
             --danger: #ef4444; 
             --success: #22c55e; 
             --text-main: #f4f4f5;
@@ -34,6 +36,7 @@
         
         .grid-flex { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
         .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; }
         
         label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 5px; font-weight: 600;}
@@ -45,6 +48,7 @@
         
         .btn-danger { background-color: var(--danger); color: white; }
         .btn-success { background-color: var(--success); color: black; }
+        .btn-blue { background-color: var(--accent-blue); color: white; margin: 0; padding: 8px 12px; font-size: 13px; margin-left: 10px; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);}
         .btn-small { padding: 6px 12px; font-size: 13px; border-radius: 5px; border: none; cursor: pointer; font-weight: bold; color: white;}
         .bg-gray { background-color: var(--input-bg); border: 1px solid var(--text-muted); }
         
@@ -78,6 +82,10 @@
         
         .fleet-add-row { display: grid; grid-template-columns: 0.8fr 2fr 1fr 1fr 1fr 1fr auto; gap: 5px; margin-bottom: 10px; align-items: end;}
         .fleet-item { background: var(--bg-dark); padding: 8px; border-radius: 5px; font-size: 13px; display: flex; justify-content: space-between; margin-bottom: 5px; border: 1px solid var(--border); align-items: center;}
+        
+        .sim-result-box { background-color: var(--bg-dark); padding: 15px; text-align: center; border-radius: 8px; border: 1px dashed var(--accent-blue); margin-top: 15px; }
+        .sim-result-box h4 { margin: 0 0 5px 0; color: var(--text-muted); font-size: 12px;}
+        .sim-result-box h2 { margin: 0; font-size: 32px; color: var(--accent-blue);}
     </style>
 </head>
 <body>
@@ -98,11 +106,16 @@
             <div class="grid-2">
                 <div><label>Uzaklık (km)</label><input type="number" id="dist" value="8000" oninput="saveData(); calcPrices();"></div>
                 <div style="display: flex; align-items: flex-end; padding-bottom: 10px;">
-                    <span class="text-muted" style="font-size: 11px;">(Comfort ve diğer veriler İstatistikler sekmesinden çekilir)</span>
+                    <span class="text-muted" style="font-size: 11px;">(Comfort verisi İstatistikler'den çekilir)</span>
                 </div>
             </div>
             <div class="divider"></div>
-            <h3>🏷️ Bilet Fiyatları</h3>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h3 style="margin: 0;">🏷️ Bilet Fiyatları</h3>
+                <button class="btn-main btn-blue" onclick="openSimulatorModal()">🎯 Fiyat Bulucu</button>
+            </div>
+            
             <div class="grid-flex">
                 <div><label>Eco ($)</label><input type="number" id="p_e" readonly></div>
                 <div><label>Bus ($)</label><input type="number" id="p_b" readonly></div>
@@ -162,6 +175,37 @@
                 <option value="4">Seviye 4 (%100 - Masraf Yok)</option>
             </select>
             <p class="text-muted" style="font-size: 11px;">Bu veriler cihazınıza kaydedilir. Hesaplayıcıdaki bilet ve gider formülleri buradaki verileri referans alır.</p>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-simulator">
+        <div class="modal-content" style="border-color: var(--accent-blue);">
+            <h3 style="color: var(--accent-blue); margin-bottom: 5px;">🎯 Fiyat Bulucu</h3>
+            <p class="text-muted" style="font-size: 12px; margin-top: 0;">Filo kapasitenize (koltuk sayınıza) göre, uçaklarınızı bozmadan tam %100 dolduracak yeni bilet fiyatınızı hesaplayın.</p>
+            
+            <label>Sınıf Seçin</label>
+            <select id="sim-class" onchange="updateSimFields()">
+                <option value="E">Economy Class</option>
+                <option value="B">Business Class</option>
+                <option value="F">First Class</option>
+                <option value="C">Kargo</option>
+            </select>
+            
+            <div class="grid-2">
+                <div><label>Audit (İdeal) Fiyat</label><input type="number" id="sim-audit-price" readonly></div>
+                <div><label>Audit (İdeal) Demand</label><input type="number" id="sim-audit-demand" readonly></div>
+            </div>
+            
+            <div class="divider"></div>
+            <label style="color: var(--text-main);">Hedeflenen Kapasite (Uçaktaki Koltuk Sayısı)</label>
+            <input type="number" id="sim-target-cap" placeholder="Örn: 550" oninput="calcSimPrice()">
+            
+            <div class="sim-result-box">
+                <h4>ÖNERİLEN YENİ FİYAT</h4>
+                <h2 id="sim-new-price">-</h2>
+            </div>
+            
+            <button class="btn-main bg-gray" style="margin-top: 15px; margin-bottom: 0;" onclick="closeModal('modal-simulator')">Kapat</button>
         </div>
     </div>
 
@@ -236,7 +280,6 @@
 <script>
     function forceRefresh() { window.location.reload(true); }
 
-    // Tam Kapsamlı ve Genişletilmiş Uçak Veritabanı (LH ve MH Ağırlıklı)
     const AIRCRAFT_DB = [
         {name: "Airbus A380-800", range: 15556, speed: 903, seats: 853, cargo: 84, price: 403000000, fuel: 2.05, wear: 1.2, other: 0.10},
         {name: "Boeing 747-8I", range: 14815, speed: 911, seats: 605, cargo: 76, price: 379100000, fuel: 2.11, wear: 1.4, other: 0.12},
@@ -322,6 +365,43 @@
 
     function formatMoney(n) { return "$" + Math.round(n).toLocaleString('en-US'); }
 
+    // --- FİYAT SİMÜLATÖRÜ MANTIĞI ---
+    function openSimulatorModal() {
+        updateSimFields();
+        document.getElementById('sim-target-cap').value = "";
+        document.getElementById('sim-new-price').innerText = "-";
+        openModal('modal-simulator');
+    }
+
+    function updateSimFields() {
+        let cls = document.getElementById('sim-class').value;
+        let pId = cls === 'E' ? 'p_e' : (cls === 'B' ? 'p_b' : (cls === 'F' ? 'p_f' : 'p_c'));
+        let dId = cls === 'E' ? 'd_e' : (cls === 'B' ? 'd_b' : (cls === 'F' ? 'd_f' : 'd_c'));
+        
+        document.getElementById('sim-audit-price').value = document.getElementById(pId).value;
+        document.getElementById('sim-audit-demand').value = document.getElementById(dId).value;
+        calcSimPrice();
+    }
+
+    function calcSimPrice() {
+        let p = parseFloat(document.getElementById('sim-audit-price').value) || 0;
+        let d = parseFloat(document.getElementById('sim-audit-demand').value) || 0;
+        let cap = parseFloat(document.getElementById('sim-target-cap').value) || 0;
+
+        if (d === 0 || cap === 0) {
+            document.getElementById('sim-new-price').innerText = "-";
+            return;
+        }
+
+        // AM Tycoon Tersine Simülasyon Esnekliği: Price = Audit_Price * (2 - (Target_Demand / Audit_Demand))
+        let newPrice = p * (2 - (cap / d));
+        
+        if (newPrice < 0) newPrice = 0;
+
+        document.getElementById('sim-new-price').innerText = "$" + Math.round(newPrice).toLocaleString('en-US');
+    }
+
+    // --- HESAPLAYICI ANA ALGORİTMA ---
     function calculate() {
         saveData();
         let dist = parseFloat(document.getElementById('dist').value) || 0;
@@ -354,7 +434,6 @@
             let chosen = null, chosen_flights = 1;
             let bestProfit = -Infinity;
 
-            // KÂR MAKSİMİZASYONU ALGORİTMASI: Tüm uçakları değerlendir, en çok kazandıranı seç!
             for(let p of available) {
                 let rt_time = (dist * 2) / p.speed || 1;
                 let wk_flights = Math.max(1, Math.floor(168 / rt_time));
@@ -362,11 +441,9 @@
                 let carried = Math.min(cap, total_d);
                 let fill_rate = carried / cap;
                 
-                // Eğer uçak %70'ten daha az doluyorsa zarardan kaçınmak için ele
                 if(fill_rate < 0.70) continue; 
                 
-                // Simüle edilmiş kâr hesabı
-                let rev = carried * p_e; // Kaba gelir tahmini
+                let rev = carried * p_e; 
                 let fuel = ((dist*2)/100) * p.fuel * carried * wk_flights * (fuelPrice/1000) * 0.85;
                 let tax = wk_flights * (dist >= 5000 ? 70000 : 40000);
                 let other = rev * (p.other * ngafMultiplier);
@@ -381,18 +458,16 @@
                 }
             }
 
-            // Hiçbir uçak %70 barajını geçemediyse, kalan kırıntı demand'i en küçük uçakla topla
             if(!chosen) {
                 let p = available[available.length - 1];
                 let wk_flights = Math.max(1, Math.floor(168 / ((dist * 2) / p.speed || 1)));
-                if (total_d < (p.seats * wk_flights) * 0.45) break; // %45'ten azsa artık uçak kaldırma
+                if (total_d < (p.seats * wk_flights) * 0.45) break; 
                 chosen = p; chosen_flights = wk_flights;
             }
 
             let rem = chosen.seats;
             let conf = {name: chosen.name, E:0, B:0, F:0, C:0, flights: chosen_flights, stats: chosen};
 
-            // First ve Business ataması
             conf.F = Math.min(Math.ceil(c_f / chosen_flights), Math.floor(rem / 4)); 
             let carried_F = Math.min(conf.F * chosen_flights, c_f);
             c_f = Math.max(0, c_f - carried_F); 
@@ -403,19 +478,16 @@
             c_b = Math.max(0, c_b - carried_B); 
             rem -= conf.B * 2;
             
-            // Kalan tüm alanı Eco'ya bas
             conf.E = Math.min(Math.ceil(c_e / chosen_flights), rem);
             let carried_E = Math.min(conf.E * chosen_flights, c_e);
-            
             if(rem > conf.E) { conf.E = rem; }
-            carried_E = Math.min(conf.E * chosen_flights, c_e); // Gerçekte ödeme yapan yolcu
+            carried_E = Math.min(conf.E * chosen_flights, c_e); 
             c_e = Math.max(0, c_e - carried_E); 
             
             conf.C = Math.min(Math.ceil(c_c / chosen_flights), chosen.cargo); 
             let carried_C = Math.min(conf.C * chosen_flights, c_c);
             c_c = Math.max(0, c_c - carried_C);
 
-            // Giderler sadece GERÇEK taşınan yolcu üzerinden hesaplanır (Hata düzeltmesi)
             let wk_rev = (carried_E * p_e) + (carried_B * p_b) + (carried_F * p_f) + (carried_C * p_c);
             let total_real_pax = carried_E + carried_B + carried_F;
             
@@ -497,17 +569,13 @@
         resDiv.innerHTML = html;
     }
 
-    // --- ROTALARIM (VERİTABANI VE KADEMELİ GÖRÜNÜM) ---
+    // --- ROTALARIM VE MODALLAR ---
     let db = { hubs: [] };
     let cHubId = null;
     let cRouteId = null;
     let tempFleetArray = [];
 
-    function loadHubsData() {
-        let stored = localStorage.getItem('am_hubs_v3');
-        if (stored) db = JSON.parse(stored);
-        renderHubsList();
-    }
+    function loadHubsData() { let stored = localStorage.getItem('am_hubs_v3'); if (stored) db = JSON.parse(stored); renderHubsList(); }
     function saveHubsData() { localStorage.setItem('am_hubs_v3', JSON.stringify(db)); }
 
     function navTo(view) {
@@ -521,43 +589,26 @@
     function renderHubsList() {
         let c = document.getElementById('hubs-container');
         c.innerHTML = "";
-        
-        if (db.hubs.length === 0) {
-            c.innerHTML = `<div class="card text-muted" style="text-align:center;">Henüz eklenmiş bir Merkez (Hub) yok.</div>`;
-            return;
-        }
-
+        if (db.hubs.length === 0) { c.innerHTML = `<div class="card text-muted" style="text-align:center;">Henüz eklenmiş bir Merkez (Hub) yok.</div>`; return; }
         db.hubs.forEach(h => {
             let t_profit = 0, t_km = 0, t_planes = 0, t_cost = 0, t_pax = 0;
             h.routes.forEach(r => {
-                t_profit += parseFloat(r.profit) || 0;
-                t_km += parseFloat(r.distance) || 0;
+                t_profit += parseFloat(r.profit) || 0; t_km += parseFloat(r.distance) || 0;
                 r.fleet.forEach(fl => {
-                    let qty = parseInt(fl.qty) || 1;
-                    t_planes += qty;
+                    let qty = parseInt(fl.qty) || 1; t_planes += qty;
                     let dbPlane = AIRCRAFT_DB.find(p => p.name === fl.name);
                     if(dbPlane) t_cost += (dbPlane.price * qty);
                     t_pax += ((parseInt(fl.e)||0) + (parseInt(fl.b)||0) + (parseInt(fl.f)||0)) * qty;
                 });
             });
-
             c.innerHTML += `
             <div class="list-item" onclick="openHub(${h.id})">
                 <div style="width: 100%;">
-                    <div class="list-title">
-                        🏢 ${h.name}
-                        <div>
-                            <button class="btn-small bg-gray" onclick="event.stopPropagation(); editHub(${h.id})">✎</button>
-                            <button class="btn-small btn-danger" onclick="event.stopPropagation(); deleteHub(${h.id})">Sil</button>
-                        </div>
-                    </div>
+                    <div class="list-title">🏢 ${h.name}<div><button class="btn-small bg-gray" onclick="event.stopPropagation(); editHub(${h.id})">✎</button><button class="btn-small btn-danger" onclick="event.stopPropagation(); deleteHub(${h.id})">Sil</button></div></div>
                     <div class="hub-stats">
-                        <div>Rota Sayısı: <span>${h.routes.length}</span></div>
-                        <div>Toplam Km: <span>${t_km.toLocaleString('tr-TR')} km</span></div>
-                        <div>Uçak Sayısı: <span>${t_planes}</span></div>
-                        <div>Yolcu (Günlük): <span>${t_pax.toLocaleString('tr-TR')}</span></div>
-                        <div>Filo Değeri: <span class="text-danger">${formatMoney(t_cost)}</span></div>
-                        <div>Net Kâr: <span class="text-success">${formatMoney(t_profit)}</span></div>
+                        <div>Rota Sayısı: <span>${h.routes.length}</span></div><div>Toplam Km: <span>${t_km.toLocaleString('tr-TR')} km</span></div>
+                        <div>Uçak Sayısı: <span>${t_planes}</span></div><div>Yolcu (Günlük): <span>${t_pax.toLocaleString('tr-TR')}</span></div>
+                        <div>Filo Değeri: <span class="text-danger">${formatMoney(t_cost)}</span></div><div>Net Kâr: <span class="text-success">${formatMoney(t_profit)}</span></div>
                     </div>
                 </div>
             </div>`;
@@ -575,10 +626,7 @@
             <div class="list-item" onclick="viewRoute(${r.id})">
                 <div style="width: 100%;">
                     <div class="list-title" style="color:var(--accent);">📍 ${r.name || 'İsimsiz Rota'}</div>
-                    <div class="grid-2 text-muted" style="font-size:13px; margin-top:5px;">
-                        <div>Mesafe: <span style="color:white">${r.distance ? r.distance+' km' : '-'}</span></div>
-                        <div>Net Kâr: <span class="text-success">${r.profit ? '$'+r.profit : '-'}</span></div>
-                    </div>
+                    <div class="grid-2 text-muted" style="font-size:13px; margin-top:5px;"><div>Mesafe: <span style="color:white">${r.distance ? r.distance+' km' : '-'}</span></div><div>Net Kâr: <span class="text-success">${r.profit ? '$'+r.profit : '-'}</span></div></div>
                 </div>
                 <div style="margin-left: 10px; display:flex; flex-direction:column; gap:5px;">
                     <button class="btn-small bg-gray" onclick="event.stopPropagation(); openRouteModal(${r.id})">✎</button>
@@ -592,34 +640,15 @@
         cRouteId = id;
         let r = db.hubs.find(h => h.id === cHubId).routes.find(rt => rt.id === id);
         let c = document.getElementById('route-details-container');
-        
         let fleetHtml = (r.fleet && r.fleet.length > 0) ? r.fleet.map(f => `<li style="padding:10px 0;"><b>${f.qty}x ${f.name}</b> <span class="text-muted">(${f.e||0}E ${f.b||0}B ${f.f||0}F ${f.c||0}C)</span></li>`).join('') : '<li class="text-muted">Filo eklenmedi</li>';
-        
         c.innerHTML = `
             <h3 style="color:var(--accent); margin-bottom:5px;">📍 ${r.name || '-'}</h3>
             <div style="font-size:18px; margin-bottom:15px;">Net Günlük: <b class="text-success">${r.profit ? '$'+r.profit : '-'}</b></div>
-            
             <div class="grid-2">
-                <div>
-                    <span class="text-muted">Bilet Fiyatları</span>
-                    <ul class="stat-list">
-                        <li>Eco: <b>${r.pE || '-'}</b></li>
-                        <li>Bus: <b>${r.pB || '-'}</b></li>
-                        <li>First: <b>${r.pF || '-'}</b></li>
-                    </ul>
-                </div>
-                <div>
-                    <span class="text-muted">Kalan Talep</span>
-                    <ul class="stat-list">
-                        <li>Eco: <b>${r.rE || '-'}</b></li>
-                        <li>Bus: <b>${r.rB || '-'}</b></li>
-                        <li>First: <b>${r.rF || '-'}</b></li>
-                    </ul>
-                </div>
+                <div><span class="text-muted">Bilet Fiyatları</span><ul class="stat-list"><li>Eco: <b>${r.pE || '-'}</b></li><li>Bus: <b>${r.pB || '-'}</b></li><li>First: <b>${r.pF || '-'}</b></li></ul></div>
+                <div><span class="text-muted">Kalan Talep</span><ul class="stat-list"><li>Eco: <b>${r.rE || '-'}</b></li><li>Bus: <b>${r.rB || '-'}</b></li><li>First: <b>${r.rF || '-'}</b></li></ul></div>
             </div>
-            <div class="divider"></div>
-            <span class="text-muted" style="display:block; margin-bottom:8px;">Atanan Filo</span>
-            <ul class="stat-list" style="border-top:1px solid var(--border);">${fleetHtml}</ul>
+            <div class="divider"></div><span class="text-muted" style="display:block; margin-bottom:8px;">Atanan Filo</span><ul class="stat-list" style="border-top:1px solid var(--border);">${fleetHtml}</ul>
         `;
         navTo('details');
     }
@@ -629,87 +658,47 @@
 
     function openHubModal() { document.getElementById('hub-name-input').value = ""; cHubId = null; document.getElementById('hub-modal-title').innerText="Hub Ekle"; openModal('modal-hub'); }
     function editHub(id) { cHubId = id; document.getElementById('hub-name-input').value = db.hubs.find(h=>h.id==id).name; document.getElementById('hub-modal-title').innerText="Hub Düzenle"; openModal('modal-hub'); }
-    
-    function saveHub() {
-        let n = document.getElementById('hub-name-input').value.trim();
-        if(!n) return;
-        if(cHubId) { db.hubs.find(h=>h.id==cHubId).name = n; } else { db.hubs.push({id: Date.now(), name: n, routes: []}); }
-        saveHubsData(); renderHubsList(); closeModal('modal-hub');
-    }
-    
+    function saveHub() { let n = document.getElementById('hub-name-input').value.trim(); if(!n) return; if(cHubId) { db.hubs.find(h=>h.id==cHubId).name = n; } else { db.hubs.push({id: Date.now(), name: n, routes: []}); } saveHubsData(); renderHubsList(); closeModal('modal-hub'); }
     function deleteHub(id) { if(confirm("Silinsin mi?")) { db.hubs = db.hubs.filter(h=>h.id!==id); saveHubsData(); renderHubsList(); navTo('hubs'); } }
 
     function openRouteModal(id = null) {
-        cRouteId = id;
-        tempFleetArray = [];
+        cRouteId = id; tempFleetArray = [];
         let r = {name:"", distance:"", profit:"", pE:"", pB:"", pF:"", pC:"", dE:"", dB:"", dF:"", dC:"", rE:"", rB:"", rF:"", rC:"", fleet:[]};
-        if(id) {
-            r = db.hubs.find(h => h.id === cHubId).routes.find(rt => rt.id === id);
-            tempFleetArray = JSON.parse(JSON.stringify(r.fleet || []));
-        }
-        
+        if(id) { r = db.hubs.find(h => h.id === cHubId).routes.find(rt => rt.id === id); tempFleetArray = JSON.parse(JSON.stringify(r.fleet || [])); }
         ['name','dist','profit','price-e','price-b','price-f','price-c','dem-e','dem-b','dem-f','dem-c','rem-e','rem-b','rem-f','rem-c'].forEach((f, i) => {
             let keys = ['name','distance','profit','pE','pB','pF','pC','dE','dB','dF','dC','rE','rB','rF','rC'];
             document.getElementById('rt-'+f).value = r[keys[i]] || "";
         });
-        
         document.getElementById('route-modal-title').innerText = id ? "Rota Düzenle" : "Rota Ekle";
-        renderTempFleet();
-        openModal('modal-route');
+        renderTempFleet(); openModal('modal-route');
     }
 
     function renderTempFleet() {
         let c = document.getElementById('temp-fleet-container');
-        c.innerHTML = tempFleetArray.map((f, i) => `
-            <div class="fleet-item">
-                <div><b>${f.qty}x ${f.name}</b> <span class="text-muted">(${f.e||0}E ${f.b||0}B ${f.f||0}F ${f.c||0}C)</span></div>
-                <button class="btn-small btn-danger" style="padding:4px 8px;" onclick="removeTempFleet(${i})">Sil</button>
-            </div>
-        `).join('');
+        c.innerHTML = tempFleetArray.map((f, i) => `<div class="fleet-item"><div><b>${f.qty}x ${f.name}</b> <span class="text-muted">(${f.e||0}E ${f.b||0}B ${f.f||0}F ${f.c||0}C)</span></div><button class="btn-small btn-danger" style="padding:4px 8px;" onclick="removeTempFleet(${i})">Sil</button></div>`).join('');
     }
 
     function addTempFleet() {
-        let q = document.getElementById('tmp-qty').value || 1;
-        let n = document.getElementById('tmp-name').value || "Uçak";
-        let e = document.getElementById('tmp-e').value || 0;
-        let b = document.getElementById('tmp-b').value || 0;
-        let f = document.getElementById('tmp-f').value || 0;
-        let c = document.getElementById('tmp-c').value || 0;
+        let q = document.getElementById('tmp-qty').value || 1, n = document.getElementById('tmp-name').value || "Uçak", e = document.getElementById('tmp-e').value || 0, b = document.getElementById('tmp-b').value || 0, f = document.getElementById('tmp-f').value || 0, c = document.getElementById('tmp-c').value || 0;
         tempFleetArray.push({qty:q, name:n, e:e, b:b, f:f, c:c});
-        ['tmp-name','tmp-e','tmp-b','tmp-f','tmp-c'].forEach(id => document.getElementById(id).value = "");
-        document.getElementById('tmp-qty').value = "1";
+        ['tmp-name','tmp-e','tmp-b','tmp-f','tmp-c'].forEach(id => document.getElementById(id).value = ""); document.getElementById('tmp-qty').value = "1";
         renderTempFleet();
     }
+    
     function removeTempFleet(i) { tempFleetArray.splice(i, 1); renderTempFleet(); }
 
     function saveRoute() {
-        let rObj = {
-            id: cRouteId || Date.now(),
-            fleet: tempFleetArray
-        };
+        let rObj = { id: cRouteId || Date.now(), fleet: tempFleetArray };
         ['name','dist','profit','price-e','price-b','price-f','price-c','dem-e','dem-b','dem-f','dem-c','rem-e','rem-b','rem-f','rem-c'].forEach((f, i) => {
             let keys = ['name','distance','profit','pE','pB','pF','pC','dE','dB','dF','dC','rE','rB','rF','rC'];
             rObj[keys[i]] = document.getElementById('rt-'+f).value;
         });
-
         let hub = db.hubs.find(h => h.id === cHubId);
-        if(cRouteId) {
-            let idx = hub.routes.findIndex(r => r.id === cRouteId);
-            hub.routes[idx] = rObj;
-        } else {
-            hub.routes.push(rObj);
-        }
-        
+        if(cRouteId) { let idx = hub.routes.findIndex(r => r.id === cRouteId); hub.routes[idx] = rObj; } else { hub.routes.push(rObj); }
         saveHubsData(); renderRoutesList(); closeModal('modal-route');
     }
 
-    function deleteRoute(id) {
-        if(confirm("Rota silinsin mi?")) {
-            let hub = db.hubs.find(h => h.id === cHubId);
-            hub.routes = hub.routes.filter(r => r.id !== id);
-            saveHubsData(); renderRoutesList();
-        }
-    }
+    function deleteRoute(id) { if(confirm("Rota silinsin mi?")) { let hub = db.hubs.find(h => h.id === cHubId); hub.routes = hub.routes.filter(r => r.id !== id); saveHubsData(); renderRoutesList(); } }
 </script>
 </body>
 </html>
