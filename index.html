@@ -141,12 +141,14 @@
             <button class="btn-main" style="padding: 12px; margin-bottom: 15px;" onclick="openHubModal()">+ Yeni Merkez (Hub) Ekle</button>
             <div id="hubs-container"></div>
         </div>
+
         <div id="view-routes" style="display: none;">
             <button class="back-btn" onclick="navTo('hubs')">⬅ Merkezlere Dön</button>
             <h3 id="current-hub-title" style="margin-bottom: 15px;"></h3>
             <button class="btn-main" style="padding: 10px; font-size:14px; background-color: var(--input-bg); border: 1px dashed var(--text-muted); color:white;" onclick="openRouteModal()">+ Rota Ekle</button>
             <div id="routes-container"></div>
         </div>
+
         <div id="view-route-details" style="display: none;">
             <button class="back-btn" onclick="navTo('routes')">⬅ Rotalara Dön</button>
             <div class="card" id="route-details-container"></div>
@@ -225,63 +227,67 @@
                 <div><label>Uzaklık (km)</label><input type="number" id="rt-dist"></div>
             </div>
             <div><label>Net Günlük Kâr ($)</label><input type="number" id="rt-profit"></div>
+            
             <div class="divider"></div>
             <h4>Bilet Fiyatları ($)</h4>
-            <div class="grid-4"><div><label>Eco</label><input type="number" id="rt-price-e"></div><div><label>Bus</label><input type="number" id="rt-price-b"></div><div><label>First</label><input type="number" id="rt-price-f"></div><div><label>Cargo</label><input type="number" id="rt-price-c"></div></div>
+            <div class="grid-4">
+                <div><label>Eco</label><input type="number" id="rt-price-e"></div>
+                <div><label>Bus</label><input type="number" id="rt-price-b"></div>
+                <div><label>First</label><input type="number" id="rt-price-f"></div>
+                <div><label>Cargo</label><input type="number" id="rt-price-c"></div>
+            </div>
+
             <div class="divider"></div>
             <h4>Rota Toplam Talebi</h4>
-            <div class="grid-4"><div><label>Eco</label><input type="number" id="rt-dem-e"></div><div><label>Bus</label><input type="number" id="rt-dem-b"></div><div><label>First</label><input type="number" id="rt-dem-f"></div><div><label>Cargo</label><input type="number" id="rt-dem-c"></div></div>
+            <div class="grid-4">
+                <div><label>Eco</label><input type="number" id="rt-dem-e"></div>
+                <div><label>Bus</label><input type="number" id="rt-dem-b"></div>
+                <div><label>First</label><input type="number" id="rt-dem-f"></div>
+                <div><label>Cargo</label><input type="number" id="rt-dem-c"></div>
+            </div>
+
             <div class="divider"></div>
             <h4>Kalan Talep</h4>
-            <div class="grid-4"><div><label>Eco</label><input type="number" id="rt-rem-e"></div><div><label>Bus</label><input type="number" id="rt-rem-b"></div><div><label>First</label><input type="number" id="rt-rem-f"></div><div><label>Cargo</label><input type="number" id="rt-rem-c"></div></div>
+            <div class="grid-4">
+                <div><label>Eco</label><input type="number" id="rt-rem-e"></div>
+                <div><label>Bus</label><input type="number" id="rt-rem-b"></div>
+                <div><label>First</label><input type="number" id="rt-rem-f"></div>
+                <div><label>Cargo</label><input type="number" id="rt-rem-c"></div>
+            </div>
+
             <div class="divider"></div>
             <h4>Atanan Filo</h4>
             <div class="fleet-add-row">
-                <div><label>Adet</label><input type="number" id="tmp-qty" value="1"></div><div><label>Model</label><input type="text" id="tmp-name" placeholder="777"></div>
-                <div><label>E</label><input type="number" id="tmp-e"></div><div><label>B</label><input type="number" id="tmp-b"></div><div><label>F</label><input type="number" id="tmp-f"></div><div><label>C</label><input type="number" id="tmp-c"></div>
+                <div><label>Adet</label><input type="number" id="tmp-qty" value="1"></div>
+                <div><label>Model</label><input type="text" id="tmp-name" placeholder="777"></div>
+                <div><label>E</label><input type="number" id="tmp-e"></div>
+                <div><label>B</label><input type="number" id="tmp-b"></div>
+                <div><label>F</label><input type="number" id="tmp-f"></div>
+                <div><label>C</label><input type="number" id="tmp-c"></div>
                 <div><label>&nbsp;</label><button class="btn-small bg-gray" style="padding: 10px;" onclick="addTempFleet()">+</button></div>
             </div>
             <div id="temp-fleet-container" style="margin-bottom: 15px;"></div>
-            <div class="grid-2"><button class="btn-small bg-gray" onclick="closeModal('modal-route')">İptal</button><button class="btn-small btn-success" onclick="saveRoute()">Kaydet</button></div>
+            
+            <div class="grid-2">
+                <button class="btn-small bg-gray" onclick="closeModal('modal-route')">İptal</button>
+                <button class="btn-small btn-success" onclick="saveRoute()">Kaydet</button>
+            </div>
         </div>
     </div>
 
 <script>
     function forceRefresh() { window.location.reload(true); }
 
+    // DÜZENLENMİŞ, PRO OYUNCU (ELİT) UÇAK VERİTABANI
     const AIRCRAFT_DB = [
         {name: "Airbus A380-800", range: 15556, speed: 903, seats: 853, cargo: 84, price: 403000000, fuel: 2.05, wear: 1.2, other: 0.10},
-        {name: "Boeing 747-8I", range: 14815, speed: 911, seats: 605, cargo: 76, price: 379100000, fuel: 2.11, wear: 1.4, other: 0.12},
         {name: "Boeing 747-400", range: 13450, speed: 903, seats: 660, cargo: 65, price: 296300000, fuel: 2.65, wear: 2.1, other: 0.02},
         {name: "Boeing 777-300ER", range: 14685, speed: 898, seats: 550, cargo: 71, price: 330000000, fuel: 2.10, wear: 1.5, other: 0.08},
-        {name: "Boeing 777-200LR", range: 15843, speed: 898, seats: 440, cargo: 59, price: 296000000, fuel: 2.50, wear: 1.5, other: 0.06},
-        {name: "Boeing 777-200ER", range: 14305, speed: 898, seats: 440, cargo: 59, price: 261500000, fuel: 2.40, wear: 1.8, other: 0.05},
         {name: "Airbus A350-1000", range: 14750, speed: 903, seats: 475, cargo: 54, price: 335000000, fuel: 1.65, wear: 1.1, other: 0.18},
-        {name: "Airbus A350-900XWB", range: 15000, speed: 903, seats: 440, cargo: 45, price: 295200000, fuel: 1.70, wear: 1.1, other: 0.18},
-        {name: "Airbus A340-600", range: 14450, speed: 880, seats: 475, cargo: 55, price: 295000000, fuel: 3.00, wear: 1.9, other: 0.04},
-        {name: "Airbus A340-500", range: 16670, speed: 880, seats: 475, cargo: 50, price: 275000000, fuel: 3.10, wear: 1.9, other: 0.04},
-        {name: "Airbus A340-300", range: 13700, speed: 880, seats: 440, cargo: 45, price: 254000000, fuel: 2.80, wear: 1.8, other: 0.04},
-        {name: "Boeing 787-10", range: 11910, speed: 911, seats: 440, cargo: 40, price: 289000000, fuel: 1.75, wear: 1.1, other: 0.18},
-        {name: "Boeing 787-9", range: 14140, speed: 911, seats: 420, cargo: 34, price: 264600000, fuel: 1.80, wear: 1.1, other: 0.18},
-        {name: "Boeing 787-8", range: 13620, speed: 911, seats: 381, cargo: 28, price: 206800000, fuel: 1.85, wear: 1.1, other: 0.18},
-        {name: "Airbus A330-900neo", range: 13334, speed: 880, seats: 440, cargo: 45, price: 272000000, fuel: 1.95, wear: 1.3, other: 0.15},
-        {name: "Airbus A330-800neo", range: 15094, speed: 880, seats: 406, cargo: 40, price: 245000000, fuel: 2.00, wear: 1.3, other: 0.15},
-        {name: "Airbus A330-300", range: 11750, speed: 880, seats: 440, cargo: 45, price: 239400000, fuel: 2.30, wear: 1.8, other: 0.04},
-        {name: "Airbus A330-200", range: 13450, speed: 880, seats: 406, cargo: 40, price: 222000000, fuel: 2.40, wear: 1.8, other: 0.04},
-        {name: "Boeing 767-400ER", range: 10415, speed: 850, seats: 375, cargo: 43, price: 200000000, fuel: 2.45, wear: 1.9, other: 0.02},
+        {name: "Boeing 777-200ER", range: 14305, speed: 898, seats: 440, cargo: 59, price: 261500000, fuel: 2.40, wear: 1.8, other: 0.05},
         {name: "Boeing 767-300ER", range: 11070, speed: 850, seats: 350, cargo: 38, price: 182800000, fuel: 2.50, wear: 2.0, other: 0.01},
-        {name: "Boeing 767-200ER", range: 12220, speed: 850, seats: 290, cargo: 35, price: 160200000, fuel: 2.65, wear: 2.1, other: 0.01},
-        {name: "Boeing 757-300", range: 6287, speed: 850, seats: 295, cargo: 30, price: 105000000, fuel: 2.60, wear: 1.9, other: 0.02},
-        {name: "Boeing 757-200", range: 7222, speed: 850, seats: 239, cargo: 25, price: 85000000, fuel: 2.55, wear: 1.9, other: 0.02},
-        {name: "Airbus A310-300", range: 9540, speed: 850, seats: 275, cargo: 33, price: 157300000, fuel: 2.70, wear: 2.2, other: 0.01},
-        {name: "Airbus A321-200neo-LR", range: 7408, speed: 840, seats: 244, cargo: 5, price: 131500000, fuel: 1.90, wear: 1.2, other: 0.15},
-        {name: "Airbus A321neo", range: 6852, speed: 840, seats: 244, cargo: 5, price: 124000000, fuel: 1.95, wear: 1.2, other: 0.15},
-        {name: "Airbus A320neo", range: 6500, speed: 828, seats: 195, cargo: 4, price: 107000000, fuel: 1.95, wear: 1.2, other: 0.15},
-        {name: "Boeing 737-900ER", range: 5925, speed: 839, seats: 220, cargo: 6, price: 101900000, fuel: 2.45, wear: 1.8, other: 0.02},
-        {name: "Boeing 737 MAX 9", range: 6574, speed: 839, seats: 220, cargo: 6, price: 116600000, fuel: 1.95, wear: 1.2, other: 0.15},
-        {name: "Boeing 737 MAX 8", range: 6510, speed: 839, seats: 200, cargo: 5, price: 110000000, fuel: 1.95, wear: 1.2, other: 0.15},
-        {name: "Boeing 737-800", range: 5665, speed: 838, seats: 189, cargo: 5, price: 90000000, fuel: 2.50, wear: 1.8, other: 0.02},
-        {name: "Boeing 737-700ER", range: 10200, speed: 850, seats: 149, cargo: 15, price: 81000000, fuel: 2.60, wear: 1.7, other: 0.02}
+        {name: "Ilyushin Il-96-300", range: 9000, speed: 850, seats: 300, cargo: 40, price: 53000000, fuel: 2.70, wear: 1.8, other: 0.01},
+        {name: "Airbus A321neo", range: 6852, speed: 840, seats: 244, cargo: 5, price: 124000000, fuel: 1.95, wear: 1.2, other: 0.15}
     ].sort((a, b) => b.seats - a.seats);
 
     window.onload = function() {
@@ -305,6 +311,7 @@
         document.getElementById('tab-calc').style.display = tabId === 'calc' ? 'block' : 'none';
         document.getElementById('tab-routes').style.display = tabId === 'routes' ? 'block' : 'none';
         document.getElementById('tab-stats').style.display = tabId === 'stats' ? 'block' : 'none';
+        
         document.getElementById('btn-tab-calc').classList.toggle('active', tabId === 'calc');
         document.getElementById('btn-tab-routes').classList.toggle('active', tabId === 'routes');
         document.getElementById('btn-tab-stats').classList.toggle('active', tabId === 'stats');
@@ -332,7 +339,6 @@
 
     function formatMoney(n) { return "$" + Math.round(n).toLocaleString('en-US'); }
 
-    // --- FİYAT BULUCU SİMÜLATÖR ---
     function openSimulatorModal() {
         updateSimFields();
         document.getElementById('sim-target-cap').value = "";
@@ -418,7 +424,7 @@
                 let carried = Math.min(cap, total_d);
                 let fill_rate = carried / cap;
                 
-                // BOŞLUK TOLERANSI %85'e YÜKSELTİLDİ (Daha verimli uçak seçimi için)
+                // TOLERANS YÜKSELTİLDİ: Uçak artık en az %85 dolu olmalı
                 if(fill_rate < 0.85) continue; 
                 
                 let rev = carried * p_e; 
@@ -546,7 +552,6 @@
         resDiv.innerHTML = html;
     }
 
-    // --- ROTALARIM (VERİTABANI VE KADEMELİ GÖRÜNÜM) ---
     function openModal(id) { document.getElementById(id).style.display = 'flex'; }
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
     
