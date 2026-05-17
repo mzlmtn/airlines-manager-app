@@ -208,7 +208,7 @@
             </div>
             
             <div class="divider"></div>
-            <label style="color: var(--text-main);">Hedeflenen Kapasite (Uçaktaki Koltuk Sayısı)</label>
+            <label style="color: var(--text-main);">Hedeflenen Kapasite (Uçaktaki Toplam Koltuk Sayısı)</label>
             <input type="number" id="sim-target-cap" placeholder="Örn: 550" oninput="calcSimPrice()">
             
             <div class="sim-result-box">
@@ -220,10 +220,16 @@
     </div>
 
 <script>
+    // Global Değişkenler
     let AIRCRAFT_DB = [];
     let ROUTES_DB = [];
     window.currentSimData = null;
 
+    // Modal Yönetimi (Önceki iterasyonda kaybolan fonksiyonlar geri eklendi)
+    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+    // Temizleme fonksiyonu: Binlik boşlukları ve virgülleri siler, sayıya çevirir.
     function cleanNum(val) {
         if (val === undefined || val === null || val === '') return 0;
         let str = String(val).replace(/\s+/g, '').replace(/,/g, '');
@@ -233,7 +239,7 @@
 
     function forceRefresh() { window.location.reload(true); }
 
-    // Bulletproof JSON Key Normalizer Map
+    // Bulletproof JSON Key Normalizer: Keyleri küçük harfe çevirir ve trimler
     function handleFileUpload(event, storageKey) {
         const file = event.target.files[0];
         if (!file) return;
@@ -245,10 +251,12 @@
                 const workbook = XLSX.read(data, {type: 'array'});
                 const firstSheet = workbook.SheetNames[0];
                 
+                // Normalizer Map: Tüm header'lar standartlaştırılır (toLowerCase & trim)
+                // Hata Çözümü: String cast ile tanımsız (undefined) anahtar koruması sağlandı.
                 const rawData = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheet]).map(row => {
                     let newObj = {};
                     for(let key in row) {
-                        newObj[key.trim().toLowerCase()] = row[key];
+                        newObj[String(key).trim().toLowerCase()] = row[key];
                     }
                     return newObj;
                 });
@@ -257,31 +265,36 @@
                 alert("Veriler başarıyla yüklendi!");
                 initData(); 
             } catch (err) {
-                alert("Excel dosyası işlenirken bir hata oluştu.");
+                alert("Dosya okunurken bir hata oluştu. Lütfen Excel formatını kontrol edin.");
                 console.error(err);
             }
         };
         reader.readAsArrayBuffer(file);
     }
 
+    // Başlangıç Verilerini Yükleme ve Kritik Array/Try-Catch Korumaları
     function initData() {
         if(localStorage.getItem('g_fuel')) document.getElementById('g_fuel').value = localStorage.getItem('g_fuel');
         if(localStorage.getItem('g_ngaf')) document.getElementById('g_ngaf').value = localStorage.getItem('g_ngaf');
 
-        let acData = localStorage.getItem('am_aircraft_db');
-        let rtData = localStorage.getItem('am_routes_db');
+        // Uçaklar için güvenli okuma
+        let parsedAc = [];
+        try {
+            let rawAc = JSON.parse(localStorage.getItem('am_aircraft_db'));
+            if (Array.isArray(rawAc)) parsedAc = rawAc;
+        } catch(e) { console.warn("Aircraft DB Parse Hatası", e); }
         
-        if (acData) {
-            AIRCRAFT_DB = JSON.parse(acData).filter(a => a && (a['aircraft name'] || a['aircraft']));
-        } else {
-            AIRCRAFT_DB = [];
-        }
+        AIRCRAFT_DB = parsedAc.filter(a => a && (a['aircraft name'] || a['aircraft']));
+
+        // Rotalar için güvenli okuma
+        let parsedRt = [];
+        try {
+            let rawRt = JSON.parse(localStorage.getItem('am_routes_db'));
+            if (Array.isArray(rawRt)) parsedRt = rawRt;
+        } catch(e) { console.warn("Routes DB Parse Hatası", e); }
         
-        if (rtData) {
-            ROUTES_DB = JSON.parse(rtData).filter(row => row && cleanNum(row['distance']) > 0);
-        } else {
-            ROUTES_DB = [];
-        }
+        // Sadece mesafe (distance) değeri 0'dan büyük olan, gerçek rotaları filtrele
+        ROUTES_DB = parsedRt.filter(row => row && cleanNum(row['distance']) > 0);
         
         populateDropdowns();
         renderHubsList();
@@ -293,10 +306,12 @@
         localStorage.setItem('g_ngaf', document.getElementById('g_ngaf').value);
     }
 
+    // Ana ve Alt Sekme Yönetimi
     function switchTab(tabId) {
         document.getElementById('tab-opt').style.display = tabId === 'opt' ? 'block' : 'none';
         document.getElementById('tab-dash').style.display = tabId === 'dash' ? 'block' : 'none';
         document.getElementById('tab-stats').style.display = tabId === 'stats' ? 'block' : 'none';
+        
         document.getElementById('btn-tab-opt').classList.toggle('active', tabId === 'opt');
         document.getElementById('btn-tab-dash').classList.toggle('active', tabId === 'dash');
         document.getElementById('btn-tab-stats').classList.toggle('active', tabId === 'stats');
@@ -305,6 +320,7 @@
     function switchSubTab(subId) {
         document.getElementById('sub-content-hubs').style.display = subId === 'hubs' ? 'block' : 'none';
         document.getElementById('sub-content-fleet').style.display = subId === 'fleet' ? 'block' : 'none';
+        
         document.getElementById('btn-sub-hubs').classList.toggle('active', subId === 'hubs');
         document.getElementById('btn-sub-fleet').classList.toggle('active', subId === 'fleet');
     }
@@ -315,18 +331,22 @@
         if(view === 'hubs') renderHubsList();
     }
 
+    function formatMoney(n) { return "$" + Math.round(n).toLocaleString('en-US'); }
+
+    // --- KONTROL PANELİ (DASHBOARD) LİSTELEME ---
+    
+    // Rotaları Departure (Hub) Değerine Göre Gruplama
     function getGroupedHubs() {
         let hubs = {};
         ROUTES_DB.forEach(r => {
             if (!r) return;
-            let hName = r['departure'] ? String(r['departure']).trim().toUpperCase() : "BİLİNMEYEN HUB";
+            let hName = r['departure'] ? String(r['departure']).trim().toUpperCase() : "Bilinmeyen Hub";
             if(!hubs[hName]) hubs[hName] = [];
             hubs[hName].push(r);
         });
         return hubs;
     }
 
-    // --- BÖLÜM 2 & 3: KONTROL PANELİ VE COMPACT DASHBOARD TABLOSU ---
     function renderHubsList() {
         let c = document.getElementById('hubs-container');
         c.innerHTML = "";
@@ -342,7 +362,7 @@
             let routes = hubs[hName];
             let totalKm = routes.reduce((sum, r) => sum + cleanNum(r['distance']), 0);
             
-            // Negatif Kalan Talep Kontrolü (Demand - Offer < 0)
+            // Verimsiz uçuş tespiti (Demand - Offer < 0)
             let dangerRoutesCount = routes.filter(r => {
                 let remEco = cleanNum(r['eco demand']) - cleanNum(r['eco offer']);
                 return remEco < 0;
@@ -351,17 +371,21 @@
             c.innerHTML += `
             <div class="list-item" onclick="openHubRoutes('${hName}')">
                 <div style="width: 100%;">
-                    <div class="list-title">🏢 Merkez: ${hName} <span class="btn-small bg-gray">İncele</span></div>
+                    <div class="list-title">
+                        🏢 Merkez: ${hName}
+                        <span class="btn-small bg-gray">Görüntüle</span>
+                    </div>
                     <div class="hub-stats">
                         <div>Rota Sayısı: <span>${routes.length}</span></div>
-                        <div>Toplam Kilometre: <span>${totalKm.toLocaleString('tr-TR')} km</span></div>
-                        <div>Kritik/Sorunlu Uçuş: <span class="${dangerRoutesCount > 0 ? 'text-danger' : 'text-success'}">${dangerRoutesCount}</span></div>
+                        <div>Toplam Menzil: <span>${totalKm.toLocaleString('tr-TR')} km</span></div>
+                        <div>Uyarı / Sorunlu Rota: <span class="${dangerRoutesCount > 0 ? 'text-danger' : 'text-success'}">${dangerRoutesCount}</span></div>
                     </div>
                 </div>
             </div>`;
         });
     }
 
+    // Hub Detayında Rotaların Gelişmiş Izgara Tasarımıyla Listelenmesi
     function openHubRoutes(hubName) {
         document.getElementById('current-hub-title').innerText = "🏢 " + hubName + " Rotaları";
         let c = document.getElementById('routes-container');
@@ -373,7 +397,7 @@
         routes.forEach((r, idx) => {
             if (!r) return;
             
-            let dName = r['arrival'] ? String(r['arrival']).trim().toUpperCase() : "İSİMSİZ";
+            let dName = r['arrival'] ? String(r['arrival']).trim().toUpperCase() : "İSİMSİZ ROTA";
             let dDist = cleanNum(r['distance']);
             
             let eDem = cleanNum(r['eco demand']), eOff = cleanNum(r['eco offer']), eRem = eDem - eOff;
@@ -385,7 +409,7 @@
             let cacheKey = hubName + "_" + dName + "_" + idx;
             window.routeRefCache[cacheKey] = r;
 
-            // Atanmış Uçakların Virgül ve Slash İle Parçalanma Mantığı
+            // Atanmış Uçakların Ayrıştırılması (Virgül ve Slash Mantığı)
             let aircraftsString = r['aircrafts model/aircrafts name on route'] || "";
             let badgesHtml = "";
             if(aircraftsString.trim() !== "") {
@@ -461,7 +485,7 @@
         navTo('routes');
     }
 
-    // Uçak Filosu Sekmesinin Çıktılanması (Ters Arama İle Rota Bağlama)
+    // Uçak Veritabanının (Uçak Filosu Sekmesi) Listelenmesi
     function renderFleetList() {
         let c = document.getElementById('fleet-container');
         c.innerHTML = "";
@@ -480,10 +504,10 @@
             let acSpeed = cleanNum(a['speed']);
             let acCap = cleanNum(a['capacity pax']);
             let acFuel = cleanNum(a['consumption']);
-            let acWear = cleanNum(a['wear']); // Güncel aşınmışlık durumu
+            let acWear = cleanNum(a['wear']); 
             let acCost = cleanNum(a['purchase price']);
 
-            // Ters Arama: Bu uçağın adının geçtiği rotayı bulma işlemi
+            // Ters Arama: Bu uçağın adının geçtiği rotayı bulma
             let assignedRouteHtml = `<span class="text-muted" style="font-size:11.5px;">Herhangi bir rotaya atanmamış.</span>`;
             for (let i = 0; i < ROUTES_DB.length; i++) {
                 let r = ROUTES_DB[i];
@@ -497,7 +521,6 @@
                 }
             }
 
-            // Element ID'si atayarak goToAircraft navigasyon odağı sağlanıyor
             c.innerHTML += `
             <div class="card card-highlight" id="ac-card-node-${acCustomName.replace(/\s+/g, '_')}" style="padding:10px 12px;">
                 <h4 style="color:var(--text-main); text-transform:uppercase; font-size:14.5px; margin-bottom:2px;">📛 ${acCustomName}</h4>
@@ -520,7 +543,7 @@
         });
     }
 
-    // --- BÖLÜM 2: ÇİFT YÖNLÜ DİNAMİK NAVİGASYON FONKSİYONLARI ---
+    // --- BÖLÜM 2: ÇİFT YÖNLÜ DİNAMİK NAVİGASYON ---
     function goToAircraft(aircraftName) {
         switchTab('dash');
         switchSubTab('fleet');
@@ -533,7 +556,7 @@
                 setTimeout(() => el.style.boxShadow = "none", 2000);
             }, 150);
         } else {
-            alert("Uçak bulunamadı veya bu isimde bir uçak veritabanında mevcut değil.");
+            alert("Uçak bulunamadı veya veritabanında mevcut değil.");
         }
     }
 
@@ -552,32 +575,50 @@
         }
     }
 
+    // Dropdownları Doldurma
     function populateDropdowns() {
         let hSelect = document.getElementById('opt-hub');
         let aSelect = document.getElementById('opt-ac');
+        
         hSelect.innerHTML = ""; aSelect.innerHTML = "";
         let hubs = Object.keys(getGroupedHubs());
-        if(!hubs.length) { hSelect.innerHTML = `<option>Önce Rota Yükleyin</option>`; } 
-        else { hubs.forEach(h => hSelect.innerHTML += `<option value="${h}">${h}</option>`); }
+        
+        if(hubs.length === 0) {
+            hSelect.innerHTML = `<option value="">Veri Bekleniyor...</option>`;
+        } else {
+            hubs.forEach(h => { hSelect.innerHTML += `<option value="${h}">${h}</option>`; });
+        }
 
-        // Dropdown içinde benzersiz modelleri (aircraft) tekilleştirerek listeleme
-        let modelList = [];
-        AIRCRAFT_DB.forEach(a => {
-            if(a && a['aircraft'] && !modelList.includes(a['aircraft'])) modelList.push(a['aircraft']);
-        });
-        if(!modelList.length) { aSelect.innerHTML = `<option>Önce Uçak Yükleyin</option>`; } 
-        else { modelList.forEach(m => aSelect.innerHTML += `<option value="${m}">${m}</option>`); }
+        if(AIRCRAFT_DB.length === 0) {
+            aSelect.innerHTML = `<option value="">Veri Bekleniyor...</option>`;
+        } else {
+            let modelList = [];
+            AIRCRAFT_DB.forEach(a => {
+                if(a && a['aircraft'] && !modelList.includes(a['aircraft'])) modelList.push(a['aircraft']);
+            });
+            modelList.forEach(m => aSelect.innerHTML += `<option value="${m}">${m}</option>`);
+        }
     }
 
     // --- 168 SAATLİK MOTOR KÂR SİMÜLASYONU ---
     function getEstimatedProfitForCircuit(r, ac) {
         if (!r || !ac) return -1;
+        
         let rDist = cleanNum(r['distance']);
         let acRange = cleanNum(ac['range']);
-        if (rDist > acRange) return -1; // Sadece menzil denetimi devrede (Kategori kontrolü istek üzerine silindi)
         
-        let p_e = cleanNum(r['eco ticket']), p_b = cleanNum(r['bus ticket']), p_f = cleanNum(r['first ticket']), p_c = cleanNum(r['cargo ticket']);
-        let d_e = cleanNum(r['eco demand']), d_b = cleanNum(r['bus demand']), d_f = cleanNum(r['first demand']), d_c = cleanNum(r['cargo demand']);
+        // Sadece menzil kontrolü (Kategori kuralı kaldırıldı)
+        if (rDist > acRange) return -1;
+        
+        let p_e = cleanNum(r['eco ticket']);
+        let p_b = cleanNum(r['bus ticket']);
+        let p_f = cleanNum(r['first ticket']);
+        let p_c = cleanNum(r['cargo ticket']);
+        
+        let d_e = cleanNum(r['eco demand']);
+        let d_b = cleanNum(r['bus demand']);
+        let d_f = cleanNum(r['first demand']);
+        let d_c = cleanNum(r['cargo demand']);
         
         let ac_seats = cleanNum(ac['capacity pax']);
         let ac_cargo = cleanNum(ac['cargo capacity'] || 0); 
@@ -587,16 +628,18 @@
         let takeB = Math.min(d_b, Math.floor(remSpace / 2)); remSpace -= takeB * 2;
         let takeE = Math.min(d_e, remSpace); remSpace -= takeE;
         if(remSpace > 0) { takeE += remSpace; } 
-        let takeC = Math.min(d_c, ac_cargo);
         
+        let takeC = Math.min(d_c, ac_cargo);
         let rev = (takeE * p_e) + (takeB * p_b) + (takeF * p_f) + (takeC * p_c);
+        
         let fuelPrice = parseFloat(document.getElementById('g_fuel').value) || 750;
         let ngafLevel = parseInt(document.getElementById('g_ngaf').value) || 0;
         let ngafMultiplier = 1 - (ngafLevel * 0.25);
         
         let fuel_c = ((rDist * 2)/100) * cleanNum(ac['consumption']) * (takeE + takeB + takeF) * (fuelPrice/1000) * 0.85;
         let tax_c = (rDist >= 5000 ? 70000 : 40000);
-        let other_c = rev * (cleanNum(ac['other'] || 0.10) * ngafMultiplier);
+        let other_c = rev * (0.10 * ngafMultiplier); // Default 10% base other costs
+        
         let fl_time = (rDist * 2) / cleanNum(ac['speed']);
         let maint_c = (cleanNum(ac['wear']) / 100) * (fl_time / 100) * (cleanNum(ac['purchase price']) * 0.01);
         
@@ -606,7 +649,7 @@
 
     function runOptimization() {
         let resDiv = document.getElementById('opt-results');
-        if (!AIRCRAFT_DB.length || !ROUTES_DB.length) {
+        if (AIRCRAFT_DB.length === 0 || ROUTES_DB.length === 0) {
             resDiv.innerHTML = `<div class="card text-danger">⚠️ Lütfen Ayarlar sekmesinden Excel veritabanlarını yükleyin.</div>`;
             return;
         }
@@ -615,10 +658,9 @@
         let selAcModel = document.getElementById('opt-ac').value;
         
         let routes = getGroupedHubs()[selHub] || [];
-        // Model bazlı arama yapılıyor
         let ac = AIRCRAFT_DB.find(a => a && a['aircraft'] === selAcModel);
 
-        if(!ac || !routes.length) return;
+        if(!ac || routes.length === 0) return;
         let acSpeed = cleanNum(ac['speed']);
         
         let validRoutes = [];
@@ -631,15 +673,21 @@
             if(profit > 0 && acSpeed > 0) {
                 let timeMins = Math.round(((dist / acSpeed) * 2) * 60);
                 if(!isNaN(timeMins) && timeMins > 0) {
-                    let rName = r['arrival'] ? String(r['arrival']).trim().toUpperCase() : `ROTA ${idx+1}`;
-                    validRoutes.push({ name: rName, dist: dist, time: timeMins, profit: profit });
+                    let rName = r['arrival'] || `Rota ${idx+1}`;
+                    validRoutes.push({
+                        name: rName,
+                        dist: dist,
+                        time: timeMins,
+                        profit: profit,
+                        rawRow: r
+                    });
                     window.circuitCache[rName] = r;
                 }
             }
         });
 
-        if (!validRoutes.length) {
-            resDiv.innerHTML = `<div class="card text-danger">⚠️ Bu merkezde seçilen uçağın menziline uygun veya kâr getiren rota bulunamadı.</div>`;
+        if (validRoutes.length === 0) {
+            resDiv.innerHTML = `<div class="card text-danger">⚠️ Bu merkezde uçağın menziline uygun rota bulunamadı.</div>`;
             return;
         }
 
@@ -661,9 +709,13 @@
             }
         }
 
-        let bestTime = 0, bestProfit = -1;
+        let bestTime = 0;
+        let bestProfit = -1;
         for (let w = maxTime; w >= maxTime - 240; w--) {
-            if (dp[w] > bestProfit) { bestProfit = dp[w]; bestTime = w; }
+            if (dp[w] > bestProfit) {
+                bestProfit = dp[w];
+                bestTime = w;
+            }
         }
 
         if (bestProfit <= 0) {
@@ -674,7 +726,8 @@
         let circuitCounts = {};
         let curr = bestTime;
         while (curr > 0) {
-            let step = choice[curr]; if(!step) break;
+            let step = choice[curr];
+            if(!step) break;
             let rName = validRoutes[step.routeIdx].name;
             circuitCounts[rName] = (circuitCounts[rName] || 0) + 1;
             curr = step.prevTime;
@@ -684,39 +737,52 @@
         
         let html = `
         <div class="card" style="border-color: var(--accent); padding:0; overflow:hidden;">
-            <div style="background: var(--input-bg); padding: 15px; text-align: center; border-bottom: 1px solid var(--border);">
-                <div style="font-size: 13px; color: var(--accent); margin-bottom: 5px; font-weight:bold;">✨ EN UYUMLU 168H DÖNGÜSÜ OLUŞTURULDU</div>
-                <div style="font-size: 28px; color: var(--success); font-weight: bold;">${formatMoney(bestProfit)} <span style="font-size:16px; color:var(--text-muted);">/ Günlük: ${formatMoney(bestProfit/7)}</span></div>
+            <div style="background: var(--input-bg); padding: 20px; text-align: center; border-bottom: 1px solid var(--border);">
+                <div style="font-size: 14px; color: var(--accent); margin-bottom: 5px; font-weight:bold;">✨ OPTİMUM 168H DEVRESİ OLUŞTURULDU</div>
+                <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">Döngü Net Kazanımı (Haftalık / Günlük)</div>
+                <div style="font-size: 32px; color: var(--success); font-weight: bold;">${formatMoney(bestProfit)} <span style="font-size:18px; color:var(--text-muted);">/ ${formatMoney(bestProfit/7)}</span></div>
             </div>
-            <div class="grid-2" style="background: var(--bg-dark); padding: 12px; text-align:center; font-size:13px;">
-                <div style="border-right: 1px solid var(--border);">Toplam Hava Süresi: <b>${totalHrs} Saat</b></div>
-                <div>Gerekli Eş Zamanlı Filo: <b style="color:var(--accent-blue)">7 Adet Uçak</b></div>
+            
+            <div class="grid-2" style="background: var(--bg-dark); padding: 15px; text-align:center;">
+                <div style="border-right: 1px solid var(--border);">
+                    <div style="font-size: 12px; color: var(--text-muted);">TOPLAM HAVA SÜRESİ</div>
+                    <div style="font-size: 18px; color: white; font-weight: bold;">${totalHrs} Saat</div>
+                </div>
+                <div>
+                    <div style="font-size: 12px; color: var(--text-muted);">GEREKLİ UÇAK</div>
+                    <div style="font-size: 18px; color: var(--accent-blue); font-weight: bold;">7 Adet</div>
+                </div>
             </div>
-        </div>`;
+        </div>
+        <h4 style="margin-top:20px; margin-bottom:10px;">🔄 Döngü Rotaları ve Akıllı Fiyatlandırma</h4>`;
 
         Object.keys(circuitCounts).forEach(rName => {
+            let cCount = circuitCounts[rName];
             html += `
             <div class="circuit-route">
                 <div>
-                    <div style="color:var(--text-main); font-weight:bold; font-size:14px;">📍 Rota: ${rName}</div>
-                    <div style="color:var(--text-muted); font-size:11.5px;">Döngü Frekansı: <b>Haftada ${circuitCounts[rName]} Sefer</b></div>
+                    <div style="color:var(--text-main); font-weight:bold; font-size:15px;">📍 Rota: ${rName}</div>
+                    <div style="color:var(--text-muted); font-size:12px;">Döngüdeki Frekans: <b>${cCount} Sefer</b></div>
                 </div>
                 <button class="btn-blue" onclick="openCircuitSim('${rName}', ${cleanNum(ac['capacity pax'])})">Fiyatlandır</button>
             </div>`;
         });
+
         resDiv.innerHTML = html;
     }
 
+    // --- SİMÜLATÖR MODALI ---
     function openCircuitSim(rName, acSeats) {
         let r = window.circuitCache ? window.circuitCache[rName] : null;
-        if(!r) r = ROUTES_DB.find(item => item && String(item['arrival']).trim().toUpperCase() === rName);
+        if(!r) r = ROUTES_DB.find(item => item && item['arrival'] === rName);
         if(!r) return alert("Hata: Rota verileri bulunamadı.");
         bindSimModal(r, rName, acSeats);
     }
 
     function openCustomSim(cacheKey) {
-        let r = window.routeRefCache[cacheKey]; if(!r) return;
-        let rName = r['arrival'] ? String(r['arrival']).trim().toUpperCase() : "ROTA";
+        let r = window.routeRefCache[cacheKey];
+        if(!r) return;
+        let rName = r['arrival'] || "Rota";
         bindSimModal(r, rName, "");
     }
 
@@ -751,7 +817,12 @@
         let p = parseFloat(document.getElementById('sim-audit-price').value) || 0;
         let d = parseFloat(document.getElementById('sim-audit-demand').value) || 0;
         let cap = parseFloat(document.getElementById('sim-target-cap').value) || 0;
-        if (d === 0 || cap === 0) { document.getElementById('sim-new-price').innerText = "-"; return; }
+
+        if (d === 0 || cap === 0) {
+            document.getElementById('sim-new-price').innerText = "-";
+            return;
+        }
+
         let newPrice = p * (2 - (cap / d));
         if (newPrice < 0) newPrice = 0;
         document.getElementById('sim-new-price').innerText = "$" + Math.round(newPrice).toLocaleString('en-US');
