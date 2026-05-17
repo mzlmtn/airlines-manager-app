@@ -46,7 +46,6 @@
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
         .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; }
-        .grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
         
         label { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 4px; font-weight: 600;}
         input, select { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border); background-color: var(--input-bg); color: white; box-sizing: border-box; font-size: 14px; margin-bottom: 8px; font-family: inherit;}
@@ -56,16 +55,14 @@
         .btn-main { width: 100%; padding: 12px; border-radius: 6px; border: none; background-color: var(--accent); color: #000; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 5px; margin-bottom: 15px; transition: 0.2s;}
         .btn-main:active { opacity: 0.8; transform: scale(0.98); }
         
-        .btn-blue { background-color: var(--accent-blue); color: white; border-radius: 4px; border: none; cursor: pointer; font-weight: bold;}
-        .btn-orange { background-color: #f97316; color: white; border-radius: 4px; border: none; cursor: pointer; font-weight: bold;}
-        .btn-purple { background-color: #8b5cf6; color: white; border-radius: 4px; border: none; cursor: pointer; font-weight: bold;}
-        .btn-small { padding: 5px 8px; font-size: 11px;}
-        
+        .btn-blue { background-color: var(--accent-blue); color: white; margin: 0; padding: 6px 10px; font-size: 12px; border-radius: 4px; border: none; cursor: pointer; font-weight: bold;}
+        .btn-purple { background-color: #8b5cf6; color: white; margin: 0; padding: 6px 10px; font-size: 12px; border-radius: 4px; border: none; cursor: pointer; font-weight: bold;}
+        .btn-small { padding: 4px 8px; font-size: 11px; border-radius: 4px; border: none; cursor: pointer; font-weight: bold; color: white;}
         .btn-danger { background-color: var(--danger); color: white; }
         .btn-success { background-color: var(--success); color: black; }
-        .bg-gray { background-color: var(--input-bg); border: 1px solid var(--text-muted); color: var(--text-main); }
+        .bg-gray { background-color: var(--input-bg); border: 1px solid var(--text-muted); }
         
-        .link-badge { display: inline-block; background: var(--input-bg); border: 1px solid var(--accent-blue); color: var(--accent-blue); padding: 3px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; margin: 2px; cursor: pointer; transition: 0.2s; text-transform: uppercase;}
+        .link-badge { display: inline-block; background: var(--input-bg); border: 1px solid var(--accent-blue); color: var(--accent-blue); padding: 3px 8px; border-radius: 4px; font-size: 11.5px; font-weight: 600; margin: 2px; cursor: pointer; transition: 0.2s; text-transform: uppercase;}
         .link-badge:hover { background: var(--accent-blue); color: white; }
         .link-badge-route { border-color: var(--accent); color: var(--accent); }
         .link-badge-route:hover { background: var(--accent); color: black; }
@@ -85,15 +82,13 @@
         .mini-stats b { color: var(--text-main); font-weight: 600; opacity: 1; }
 
         .dashboard-table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 12px; text-align: left; }
-        .dashboard-table th { background: var(--bg-dark); color: var(--text-muted); padding: 5px 6px; font-weight: 600; border: 1px solid var(--border); text-transform: uppercase; font-size: 10.5px; }
-        .dashboard-table td { padding: 5px 6px; border: 1px solid var(--border); font-weight: 600; }
+        .dashboard-table th { background: var(--bg-dark); color: var(--text-muted); padding: 6px 8px; font-weight: 600; border: 1px solid var(--border); text-transform: uppercase; font-size: 10.5px; text-align: center; }
+        .dashboard-table td { padding: 6px 8px; border: 1px solid var(--border); font-weight: 500; text-align: center; }
         .dashboard-table tr:nth-child(even) { background: rgba(255,255,255,0.01); }
 
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: flex-start; overflow-y: auto; padding: 20px 0; }
-        .modal-content { background-color: var(--card-bg); width: 94%; border-radius: 8px; padding: 16px; border: 1px solid var(--border); }
-        .modal-sm { max-width: 480px; }
-        .modal-lg { max-width: 850px; }
-        
+        .modal-content { background-color: var(--card-bg); width: 96%; max-width: 600px; border-radius: 8px; padding: 16px; border: 1px solid var(--border); }
+        .modal-lg { max-width: 900px; }
         .back-btn { background: none; border: none; color: var(--accent); font-size: 14px; cursor: pointer; padding: 0; margin-bottom: 12px; font-weight: bold; display: flex; align-items: center; gap: 5px;}
         
         .list-item { background-color: var(--input-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 10px; cursor: pointer; transition: 0.2s; position: relative; }
@@ -105,14 +100,12 @@
         
         .circuit-route { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 6px; margin-bottom: 6px;}
         .circuit-route:hover { border-color: var(--accent); }
-
-        .btn-group { display: flex; gap: 6px; }
     </style>
 </head>
 <body>
 
     <div class="header-bar">
-        <h2 style="margin: 0; font-size: 18px;">✈️ AM Control Pro v5</h2>
+        <h2 style="margin: 0; font-size: 18px;">✈️ AM Control Pro v6</h2>
         <button class="refresh-btn" onclick="forceRefresh()">🔄 Yenile</button>
     </div>
 
@@ -167,6 +160,7 @@
     <div id="tab-stats" style="display: none;">
         <div class="card">
             <h3>📂 Veritabanı Yükleme (Excel)</h3>
+            <p class="text-muted" style="font-size: 12px;">Web Scraper'dan alınan ham dosyalar doğrudan desteklenir.</p>
             <label>✈️ Uçaklar (aircrafts.xlsx) Yükle</label>
             <input type="file" accept=".xlsx, .xls" onchange="handleFileUpload(event, 'am_aircraft_db')">
             <label>📍 Rotalar (routes.xlsx) Yükle</label>
@@ -195,41 +189,81 @@
             <h3>💾 Güncel Veritabanını İndir</h3>
             <p class="text-muted" style="margin-top:-5px; font-size:11.5px;">Sistemde yaptığınız uçak atamaları ve kapasite değişimleri dahil güncel tabloları indirin.</p>
             <div class="grid-2">
-                <button class="btn-main btn-blue" style="margin:0;" onclick="exportDatabase('aircraft')">Uçakları İndir</button>
-                <button class="btn-main btn-blue" style="margin:0;" onclick="exportDatabase('routes')">Rotaları İndir</button>
+                <button class="btn-main btn-blue" style="margin:0;" onclick="exportDatabase('aircraft')">Uçakları İndir (xlsx)</button>
+                <button class="btn-main btn-blue" style="margin:0;" onclick="exportDatabase('routes')">Rotaları İndir (xlsx)</button>
             </div>
         </div>
     </div>
 
-    <div class="modal-overlay" id="modal-simulator">
-        <div class="modal-content modal-sm" style="border-color: var(--accent-blue);">
-            <h3 style="color: var(--accent-blue); margin-bottom: 5px;" id="sim-title">🎯 Fiyat Bulucu</h3>
-            <label>Yolcu Sınıfı</label>
-            <select id="sim-class" onchange="updateSimFields()">
-                <option value="E">Economy Class</option>
-                <option value="B">Business Class</option>
-                <option value="F">First Class</option>
-                <option value="C">Kargo</option>
-            </select>
-            <div class="grid-2">
-                <div><label>Mevcut Bilet Fiyatı ($)</label><input type="text" id="sim-audit-price" readonly></div>
-                <div><label>Brüt Talep (Kişi)</label><input type="text" id="sim-audit-demand" readonly></div>
+    <div class="modal-overlay" id="modal-price-management">
+        <div class="modal-content" style="border-color: var(--accent-blue);">
+            <h3 style="color: var(--accent-blue); margin-bottom: 5px;" id="pm-title">🎛️ Fiyat ve Talep Yönetimi</h3>
+            <p class="text-muted" style="font-size: 11.5px; margin-top: 0; margin-bottom: 12px;">Yeni fiyat girdikçe kalan talep otonom olarak simüle edilir.</p>
+            
+            <table class="dashboard-table" style="text-align:center;">
+                <thead>
+                    <tr>
+                        <th>Sınıf</th>
+                        <th>Mevcut Fiyat</th>
+                        <th>Audit (İdeal)</th>
+                        <th style="color:var(--accent-blue);">YENİ FİYAT ($)</th>
+                        <th>Brüt Talep</th>
+                        <th>Arz</th>
+                        <th>Kalan Talep</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><b>Eco</b></td>
+                        <td id="pm-cur-pe">-</td>
+                        <td id="pm-aud-pe" style="color:var(--text-muted);">-</td>
+                        <td><input type="number" id="pm-new-pe" style="padding:4px; font-size:13px; text-align:center;" oninput="updatePriceSim()"></td>
+                        <td id="pm-dem-e">-</td>
+                        <td id="pm-off-e">-</td>
+                        <td id="pm-rem-e" style="font-weight:bold;">-</td>
+                    </tr>
+                    <tr>
+                        <td><b>Bus</b></td>
+                        <td id="pm-cur-pb">-</td>
+                        <td id="pm-aud-pb" style="color:var(--text-muted);">-</td>
+                        <td><input type="number" id="pm-new-pb" style="padding:4px; font-size:13px; text-align:center;" oninput="updatePriceSim()"></td>
+                        <td id="pm-dem-b">-</td>
+                        <td id="pm-off-b">-</td>
+                        <td id="pm-rem-b" style="font-weight:bold;">-</td>
+                    </tr>
+                    <tr>
+                        <td><b>First</b></td>
+                        <td id="pm-cur-pf">-</td>
+                        <td id="pm-aud-pf" style="color:var(--text-muted);">-</td>
+                        <td><input type="number" id="pm-new-pf" style="padding:4px; font-size:13px; text-align:center;" oninput="updatePriceSim()"></td>
+                        <td id="pm-dem-f">-</td>
+                        <td id="pm-off-f">-</td>
+                        <td id="pm-rem-f" style="font-weight:bold;">-</td>
+                    </tr>
+                    <tr>
+                        <td><b>Cargo</b></td>
+                        <td id="pm-cur-pc">-</td>
+                        <td id="pm-aud-pc" style="color:var(--text-muted);">-</td>
+                        <td><input type="number" id="pm-new-pc" style="padding:4px; font-size:13px; text-align:center;" oninput="updatePriceSim()"></td>
+                        <td id="pm-dem-c">-</td>
+                        <td id="pm-off-c">-</td>
+                        <td id="pm-rem-c" style="font-weight:bold;">-</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <input type="hidden" id="pm-route-key">
+            <div class="grid-2" style="margin-top: 15px;">
+                <button class="btn-main bg-gray" style="margin:0;" onclick="closeModal('modal-price-management')">İptal</button>
+                <button class="btn-main btn-success" style="margin:0;" onclick="applyPriceManagement()">Değişiklikleri Uygula</button>
             </div>
-            <div class="divider"></div>
-            <label style="color: var(--text-main);">Hedeflenen Kapasite (Uçaktaki Koltuk Sayısı)</label>
-            <input type="number" id="sim-target-cap" placeholder="Örn: 550" oninput="calcSimPrice()">
-            <div style="background-color: var(--bg-dark); padding: 12px; text-align: center; border-radius: 6px; border: 1px dashed var(--accent-blue); margin-top: 12px;">
-                <h4 style="margin: 0 0 4px 0; color: var(--text-muted); font-size: 11px;">YENİ BİLET FİYATI</h4>
-                <h2 id="sim-new-price" style="margin: 0; font-size: 28px; color: var(--accent-blue);">-</h2>
-            </div>
-            <button class="btn-main bg-gray" style="margin-top: 15px; margin-bottom: 0;" onclick="closeModal('modal-simulator')">Kapat</button>
         </div>
     </div>
 
     <div class="modal-overlay" id="modal-recommendation">
         <div class="modal-content modal-lg" style="border-color: var(--accent);">
             <h3 style="color: var(--accent); margin-bottom: 5px;">✈️ En Kârlı Uçak Önerileri (Top 3)</h3>
-            <p class="text-muted" style="margin-top:0; font-size:12px; margin-bottom:15px;">Simüle edilmiş talebe göre Golden Fleet arasından seçilen en kârlı 3 konfigürasyon.</p>
+            <p class="text-muted" style="margin-top:0; font-size:12px; margin-bottom:15px;">Mevcut kalan talebe en iyi uyan Golden Fleet konfigürasyonları.</p>
             
             <div class="grid-3" id="rec-container">
                 </div>
@@ -241,7 +275,7 @@
     </div>
 
 <script>
-    // BÖLÜM 2 / ADIM 3: GOLDEN FLEET
+    // GOLDEN FLEET
     const GOLDEN_FLEET = [
         {name: "Airbus A380-800", range: 15556, speed: 903, seats: 853, cargo: 84, price: 403000000, fuel: 2.05, wear: 1.2, other: 0.10},
         {name: "Boeing 747-400", range: 13450, speed: 903, seats: 660, cargo: 65, price: 296300000, fuel: 2.65, wear: 2.1, other: 0.02},
@@ -257,14 +291,13 @@
     let ROUTES_DB = [];
     let AIRPORTS_DB = [];
 
-    // Modal Yönetimi
     function openModal(id) { document.getElementById(id).style.display = 'flex'; }
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
-    // BÖLÜM 1 / GÖREV 1: KRİTİK SAYI TEMİZLEYİCİ
+    // Regex bug temizleyici: $, virgül, boşluk yok eder
     function cleanNum(val) {
         if (val === undefined || val === null || val === '') return 0;
-        let str = String(val).replace(/[\s$,€£]/g, ''); // Tüm boşluk ve para birimlerini atar
+        let str = String(val).replace(/[\s$,€£]/g, '');
         let parsed = parseFloat(str);
         return isNaN(parsed) ? 0 : parsed;
     }
@@ -302,7 +335,6 @@
         reader.readAsArrayBuffer(file);
     }
 
-    // Try-Catch Korumalı Yüklemeler
     function initData() {
         if(localStorage.getItem('g_comf')) document.getElementById('g_comf').value = localStorage.getItem('g_comf');
         if(localStorage.getItem('g_fuel')) document.getElementById('g_fuel').value = localStorage.getItem('g_fuel');
@@ -319,9 +351,6 @@
         let parsedAp = [];
         try { let rawAp = JSON.parse(localStorage.getItem('am_airports_db')); if (Array.isArray(rawAp)) parsedAp = rawAp; } catch(e) {}
         AIRPORTS_DB = parsedAp.filter(ap => ap && ap['iata']);
-        
-        // Simülasyon bellek durumunu sıfırla
-        window.simState = {};
         
         populateDropdowns();
         renderHubsList();
@@ -369,7 +398,7 @@
         return hubs;
     }
 
-    // --- KONTROL PANELİ ---
+    // --- DASHBOARD (KONTROL PANELİ) LİSTELEME ---
     function renderHubsList() {
         try {
             let c = document.getElementById('hubs-container');
@@ -380,6 +409,7 @@
             hubNames.forEach(hName => {
                 let routes = hubs[hName];
                 let totalKm = routes.reduce((sum, r) => sum + cleanNum(r['distance']), 0);
+                // Uyarı: Simüle edilmemiş Excel datasındaki Kalan Talebi baz alır.
                 let dangerCount = routes.filter(r => (cleanNum(r['eco demand']) - cleanNum(r['eco offer'])) < 0).length;
                 htmlBuffer += `
                 <div class="list-item" onclick="openHubRoutes('${hName}')">
@@ -407,18 +437,25 @@
                 let cacheKey = hubName + "_" + dName + "_" + idx;
                 window.routeRefCache[cacheKey] = r;
 
-                // State denetimi (Önceden simüle edilmiş mi?)
-                let sim = window.simState && window.simState[cacheKey] ? window.simState[cacheKey] : null;
+                // Veritabanındaki Fiyatları Baz Alır (Eğer Price Management ile güncellendiyse yeni fiyatları okur)
+                let pE = cleanNum(r['eco ticket']), pB = cleanNum(r['bus ticket']), pF = cleanNum(r['first ticket']), pC = cleanNum(r['cargo ticket']);
+                let eDem = cleanNum(r['eco demand']), eOff = cleanNum(r['eco offer']);
+                let bDem = cleanNum(r['bus demand']), bOff = cleanNum(r['bus offer']);
+                let fDem = cleanNum(r['first demand']), fOff = cleanNum(r['first offer']);
+                let cDem = cleanNum(r['cargo demand']), cOff = cleanNum(r['cargo offer']);
                 
-                let pE = sim ? sim.tE : cleanNum(r['eco ticket']);
-                let pB = sim ? sim.tB : cleanNum(r['bus ticket']);
-                let pF = sim ? sim.tF : cleanNum(r['first ticket']);
-                let pC = sim ? sim.tC : cleanNum(r['cargo ticket']);
+                // Formülle anlık simüle edilen Remaining Demand (Gerçekçi tablo)
+                let comf = cleanNum(document.getElementById('g_comf').value) || 0;
+                let aE = Math.floor(120 + (dDist * 0.2639) * (1 + (comf / 3000)));
+                let aB = Math.floor(160 + (dDist * 0.3509) * (1 + (comf / 3000)));
+                let aF = Math.floor(276 + (dDist * 0.6068) * (1 + (comf / 3000)));
+                let cCoef = dDist >= 5000 ? 0.47 : (dDist >= 2000 ? 0.52 : 0.56);
+                let aC = Math.floor(200 + (dDist * cCoef));
 
-                let eDem = cleanNum(r['eco demand']), eOff = cleanNum(r['eco offer']), eRem = sim ? sim.rE : eDem - eOff;
-                let bDem = cleanNum(r['bus demand']), bOff = cleanNum(r['bus offer']), bRem = sim ? sim.rB : bDem - bOff;
-                let fDem = cleanNum(r['first demand']), fOff = cleanNum(r['first offer']), fRem = sim ? sim.rF : fDem - fOff;
-                let cDem = cleanNum(r['cargo demand']), cOff = cleanNum(r['cargo offer']), cRem = sim ? sim.rC : cDem - cOff;
+                let eRem = Math.max(0, Math.round(eDem * (2 - (pE / aE)))) - eOff;
+                let bRem = Math.max(0, Math.round(bDem * (2 - (pB / aB)))) - bOff;
+                let fRem = Math.max(0, Math.round(fDem * (2 - (pF / aF)))) - fOff;
+                let cRem = Math.max(0, Math.round(cDem * (2 - (pC / aC)))) - cOff;
                 
                 let isDanger = (eRem < 0 || bRem < 0 || fRem < 0 || cRem < 0);
 
@@ -431,31 +468,30 @@
                         if(subParts.length >= 2) badgesHtml += `<span class="link-badge" onclick="event.stopPropagation(); goToAircraft('${subParts[1].trim()}')">${subParts[0].trim()} (${subParts[1].trim()})</span>`;
                     });
                 }
-                if(badgesHtml === "") badgesHtml = `<span class="text-muted" style="font-size:11px;">Atanmış uçak bulunmamaktadır.</span>`;
+                if(badgesHtml === "") badgesHtml = `<span class="text-muted" style="font-size:11px;">Atanmış uçak yok.</span>`;
 
                 htmlBuffer += `
                 <div class="list-item ${isDanger ? 'danger' : ''}" id="route-node-${dName}" style="cursor:default; padding:10px 12px;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                         <div>
-                            <div class="list-title" style="margin:0; font-size:14px; color:var(--accent-blue);">📍 ${hubName} ➔ ${dName}</div>
+                            <div class="list-title" style="margin:0; font-size:15px; color:var(--accent-blue);">📍 ${hubName} ➔ ${dName}</div>
                             <div class="text-muted" style="font-size:11px; margin-top:2px;">Mesafe: <b>${dDist} km</b></div>
                         </div>
-                        <div class="btn-group">
-                            <button class="btn-small btn-purple" onclick="runAudit('${cacheKey}')">📊 Audit</button>
-                            <button class="btn-small btn-orange" onclick="runSimulate('${cacheKey}')">🔄 Simüle Et</button>
-                            <button class="btn-small btn-success" style="color:white;" onclick="runRecommend('${cacheKey}')">✈️ Uçak Öner</button>
+                        <div style="display:flex; gap:6px;">
+                            <button class="btn-blue" onclick="openPriceManagement('${cacheKey}')">🎛️ Fiyat ve Talep Yönetimi</button>
+                            <button class="btn-purple" style="color:white; border-radius:4px; border:none; padding:6px 10px; font-size:12px; font-weight:bold; cursor:pointer;" onclick="runRecommend('${cacheKey}')">✈️ Uçak Öner</button>
                         </div>
                     </div>
-                    <table class="dashboard-table">
-                        <thead><tr><th>Sınıf</th><th>Fiyat</th><th>Talep</th><th>Arz</th><th>Kalan</th></tr></thead>
+                    <table class="dashboard-table" style="text-align:center;">
+                        <thead><tr><th>Sınıf</th><th>Güncel Fiyat</th><th>Orijinal Talep</th><th>Arz (Offer)</th><th>Simüle Kalan Talep</th></tr></thead>
                         <tbody>
-                            <tr><td><b>Eco</b></td><td class="text-success" id="tick-e-${cacheKey}">$${pE}</td><td>${eDem}</td><td>${eOff}</td><td id="rem-e-${cacheKey}" class="${eRem < 0 ? 'text-danger' : 'text-success'}"><b>${eRem}</b></td></tr>
-                            <tr><td><b>Bus</b></td><td class="text-success" id="tick-b-${cacheKey}">$${pB}</td><td>${bDem}</td><td>${bOff}</td><td id="rem-b-${cacheKey}" class="${bRem < 0 ? 'text-danger' : 'text-success'}"><b>${bRem}</b></td></tr>
-                            <tr><td><b>First</b></td><td class="text-success" id="tick-f-${cacheKey}">$${pF}</td><td>${fDem}</td><td>${fOff}</td><td id="rem-f-${cacheKey}" class="${fRem < 0 ? 'text-danger' : 'text-success'}"><b>${fRem}</b></td></tr>
-                            <tr><td><b>Kargo</b></td><td class="text-success" id="tick-c-${cacheKey}">$${pC}</td><td>${cDem}</td><td>${cOff}</td><td id="rem-c-${cacheKey}" class="${cRem < 0 ? 'text-danger' : 'text-success'}"><b>${cRem}</b></td></tr>
+                            <tr><td><b>Eco</b></td><td class="text-success">$${pE}</td><td>${eDem}</td><td>${eOff}</td><td class="${eRem < 0 ? 'text-danger' : 'text-success'}"><b>${eRem}</b></td></tr>
+                            <tr><td><b>Bus</b></td><td class="text-success">$${pB}</td><td>${bDem}</td><td>${bOff}</td><td class="${bRem < 0 ? 'text-danger' : 'text-success'}"><b>${bRem}</b></td></tr>
+                            <tr><td><b>First</b></td><td class="text-success">$${pF}</td><td>${fDem}</td><td>${fOff}</td><td class="${fRem < 0 ? 'text-danger' : 'text-success'}"><b>${fRem}</b></td></tr>
+                            <tr><td><b>Kargo</b></td><td class="text-success">$${pC}</td><td>${cDem}</td><td>${cOff}</td><td class="${cRem < 0 ? 'text-danger' : 'text-success'}"><b>${cRem}</b></td></tr>
                         </tbody>
                     </table>
-                    <div style="margin-top:6px; font-size:11px;"><span class="text-muted" style="font-weight:600;">✈️ Atanmış Uçaklar:</span> <div style="margin-left:-2px; margin-top:3px;">${badgesHtml}</div></div>
+                    <div style="margin-top:8px; font-size:11px;"><span class="text-muted" style="font-weight:600;">✈️ Atanmış Uçaklar:</span> <div style="margin-left:-2px; margin-top:3px;">${badgesHtml}</div></div>
                 </div>`;
             });
             c.innerHTML = htmlBuffer;
@@ -486,17 +522,17 @@
                 }
 
                 htmlBuffer += `
-                <div class="card card-highlight" id="ac-card-node-${acCustomName.replace(/\s+/g, '_')}" style="padding:8px 10px;">
-                    <h4 style="color:var(--text-main); text-transform:uppercase; font-size:13.5px; margin-bottom:1px;">📛 ${acCustomName}</h4>
-                    <div class="text-muted" style="font-size:11px; font-weight:600; margin-bottom:6px; color:var(--accent-blue);">Model: ${acModel}</div>
-                    <div class="grid-4" style="font-size:11px; text-align:center; background:var(--bg-dark); padding:5px; border-radius:6px; border:1px solid var(--border);">
+                <div class="card card-highlight" id="ac-card-node-${acCustomName.replace(/\s+/g, '_')}" style="padding:10px 12px;">
+                    <h4 style="color:var(--text-main); text-transform:uppercase; font-size:14px; margin-bottom:2px;">📛 ${acCustomName}</h4>
+                    <div class="text-muted" style="font-size:11.5px; font-weight:600; margin-bottom:6px; color:var(--accent-blue);">Model: ${acModel}</div>
+                    <div class="grid-4" style="font-size:11.5px; text-align:center; background:var(--bg-dark); padding:6px; border-radius:6px; border:1px solid var(--border);">
                         <div><span class="text-muted">Menzil</span><br><b>${cleanNum(a['range'])} km</b></div>
                         <div><span class="text-muted">Hız</span><br><b>${cleanNum(a['speed'])} km/s</b></div>
                         <div><span class="text-muted">Kapasite</span><br><b>${cleanNum(a['capacity pax'] || a['capacity'])} Pax</b></div>
-                        <div><span class="text-muted">Güncel Aşınma</span><br><b class="text-danger">%${cleanNum(a['wear'])}</b></div>
+                        <div><span class="text-muted">Aşınma</span><br><b class="text-danger">%${cleanNum(a['wear'])}</b></div>
                     </div>
-                    <div class="divider" style="margin:6px 0; border-style:solid;"></div>
-                    <div style="font-size:11px;"><span class="text-muted" style="font-weight:600;">Atandığı Rota:</span> ${assignedRouteHtml}</div>
+                    <div class="divider" style="margin:8px 0; border-style:solid;"></div>
+                    <div style="font-size:11.5px;"><span class="text-muted" style="font-weight:600;">Atandığı Rota:</span> ${assignedRouteHtml}</div>
                 </div>`;
             });
             c.innerHTML = htmlBuffer;
@@ -514,10 +550,12 @@
         if(el) { setTimeout(() => { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.style.boxShadow = "0 0 10px #10b981"; setTimeout(() => el.style.boxShadow = "none", 2000); }, 150); }
     }
 
-    // --- BÖLÜM 2: 3 AŞAMALI ROTA ASİSTANI (UI/UX) ---
-    
-    function runAudit(cacheKey) {
-        let r = window.routeRefCache[cacheKey]; if(!r) return;
+
+    // --- FİYAT VE TALEP YÖNETİMİ MODALI ---
+    function openPriceManagement(cacheKey) {
+        let r = window.routeRefCache[cacheKey];
+        if(!r) return;
+        
         let dist = cleanNum(r['distance']);
         let comf = cleanNum(document.getElementById('g_comf').value) || 0;
         
@@ -527,123 +565,200 @@
         let cCoef = dist >= 5000 ? 0.47 : (dist >= 2000 ? 0.52 : 0.56);
         let aC = Math.floor(200 + (dist * cCoef));
 
-        // State kaydet ve DOM Güncelle
-        if(!window.simState) window.simState = {};
-        if(!window.simState[cacheKey]) window.simState[cacheKey] = {};
-        let s = window.simState[cacheKey];
-        s.tE = aE; s.tB = aB; s.tF = aF; s.tC = aC;
+        document.getElementById('pm-title').innerText = `🎛️ Yönetim Paneli: ${r['arrival']}`;
+        document.getElementById('pm-route-key').value = cacheKey;
 
-        document.getElementById(`tick-e-${cacheKey}`).innerText = `$${aE}`;
-        document.getElementById(`tick-b-${cacheKey}`).innerText = `$${aB}`;
-        document.getElementById(`tick-f-${cacheKey}`).innerText = `$${aF}`;
-        document.getElementById(`tick-c-${cacheKey}`).innerText = `$${aC}`;
+        // Current Prices
+        document.getElementById('pm-cur-pe').innerText = `$${cleanNum(r['eco ticket'])}`;
+        document.getElementById('pm-cur-pb').innerText = `$${cleanNum(r['bus ticket'])}`;
+        document.getElementById('pm-cur-pf').innerText = `$${cleanNum(r['first ticket'])}`;
+        document.getElementById('pm-cur-pc').innerText = `$${cleanNum(r['cargo ticket'])}`;
+
+        // Audit Prices
+        document.getElementById('pm-aud-pe').innerText = `$${aE}`;
+        document.getElementById('pm-aud-pb').innerText = `$${aB}`;
+        document.getElementById('pm-aud-pf').innerText = `$${aF}`;
+        document.getElementById('pm-aud-pc').innerText = `$${aC}`;
+
+        // Inputs default to current prices
+        document.getElementById('pm-new-pe').value = cleanNum(r['eco ticket']);
+        document.getElementById('pm-new-pb').value = cleanNum(r['bus ticket']);
+        document.getElementById('pm-new-pf').value = cleanNum(r['first ticket']);
+        document.getElementById('pm-new-pc').value = cleanNum(r['cargo ticket']);
+
+        // Base Demands
+        document.getElementById('pm-dem-e').innerText = cleanNum(r['eco demand']);
+        document.getElementById('pm-dem-b').innerText = cleanNum(r['bus demand']);
+        document.getElementById('pm-dem-f').innerText = cleanNum(r['first demand']);
+        document.getElementById('pm-dem-c').innerText = cleanNum(r['cargo demand']);
+
+        // Offers
+        document.getElementById('pm-off-e').innerText = cleanNum(r['eco offer']);
+        document.getElementById('pm-off-b').innerText = cleanNum(r['bus offer']);
+        document.getElementById('pm-off-f').innerText = cleanNum(r['first offer']);
+        document.getElementById('pm-off-c').innerText = cleanNum(r['cargo offer']);
+
+        // Caching global sim variables
+        window.activePmData = {
+            aE: aE, aB: aB, aF: aF, aC: aC,
+            dE: cleanNum(r['eco demand']), dB: cleanNum(r['bus demand']), dF: cleanNum(r['first demand']), dC: cleanNum(r['cargo demand']),
+            oE: cleanNum(r['eco offer']), oB: cleanNum(r['bus offer']), oF: cleanNum(r['first offer']), oC: cleanNum(r['cargo offer'])
+        };
+
+        updatePriceSim();
+        openModal('modal-price-management');
     }
 
-    function runSimulate(cacheKey) {
-        let r = window.routeRefCache[cacheKey]; if(!r) return;
-        if(!window.simState || !window.simState[cacheKey] || !window.simState[cacheKey].tE) runAudit(cacheKey); // Eğer Audit yapılmadıysa önce onu yap
+    function updatePriceSim() {
+        let pm = window.activePmData;
+        if(!pm) return;
+
+        let nE = parseFloat(document.getElementById('pm-new-pe').value) || 0;
+        let nB = parseFloat(document.getElementById('pm-new-pb').value) || 0;
+        let nF = parseFloat(document.getElementById('pm-new-pf').value) || 0;
+        let nC = parseFloat(document.getElementById('pm-new-pc').value) || 0;
+
+        let simDemE = pm.aE > 0 && nE > 0 ? Math.round(pm.dE * (2 - (nE / pm.aE))) : pm.dE;
+        let simDemB = pm.aB > 0 && nB > 0 ? Math.round(pm.dB * (2 - (nB / pm.aB))) : pm.dB;
+        let simDemF = pm.aF > 0 && nF > 0 ? Math.round(pm.dF * (2 - (nF / pm.aF))) : pm.dF;
+        let simDemC = pm.aC > 0 && nC > 0 ? Math.round(pm.dC * (2 - (nC / pm.aC))) : pm.dC;
+
+        let remE = Math.max(0, simDemE) - pm.oE;
+        let remB = Math.max(0, simDemB) - pm.oB;
+        let remF = Math.max(0, simDemF) - pm.oF;
+        let remC = Math.max(0, simDemC) - pm.oC;
+
+        document.getElementById('pm-rem-e').innerText = remE; document.getElementById('pm-rem-e').style.color = remE < 0 ? 'var(--danger)' : 'var(--success)';
+        document.getElementById('pm-rem-b').innerText = remB; document.getElementById('pm-rem-b').style.color = remB < 0 ? 'var(--danger)' : 'var(--success)';
+        document.getElementById('pm-rem-f').innerText = remF; document.getElementById('pm-rem-f').style.color = remF < 0 ? 'var(--danger)' : 'var(--success)';
+        document.getElementById('pm-rem-c').innerText = remC; document.getElementById('pm-rem-c').style.color = remC < 0 ? 'var(--danger)' : 'var(--success)';
+    }
+
+    function applyPriceManagement() {
+        let cacheKey = document.getElementById('pm-route-key').value;
+        let r = window.routeRefCache[cacheKey];
+        if(!r) return;
+
+        let matchedRoute = ROUTES_DB.find(item => item && item['departure'] === r['departure'] && item['arrival'] === r['arrival']);
+        if(matchedRoute) {
+            matchedRoute['eco ticket'] = parseFloat(document.getElementById('pm-new-pe').value) || cleanNum(matchedRoute['eco ticket']);
+            matchedRoute['bus ticket'] = parseFloat(document.getElementById('pm-new-pb').value) || cleanNum(matchedRoute['bus ticket']);
+            matchedRoute['first ticket'] = parseFloat(document.getElementById('pm-new-pf').value) || cleanNum(matchedRoute['first ticket']);
+            matchedRoute['cargo ticket'] = parseFloat(document.getElementById('pm-new-pc').value) || cleanNum(matchedRoute['cargo ticket']);
+            localStorage.setItem('am_routes_db', JSON.stringify(ROUTES_DB));
+        }
+
+        closeModal('modal-price-management');
+        openHubRoutes(r['departure']); // Listeyi yeni verilerle tazeler
+    }
+
+    // --- BÖLÜM 3: UÇAK ÖNERİSİ (RECOMMENDATION) VE TEKİL UÇUŞ MANTIĞI ---
+    function runRecommend(cacheKey) {
+        let r = window.routeRefCache[cacheKey]; 
+        if(!r) return;
         
-        let s = window.simState[cacheKey];
+        let dist = cleanNum(r['distance']);
+        let comf = cleanNum(document.getElementById('g_comf').value) || 0;
+        
+        let aE = Math.floor(120 + (dist * 0.2639) * (1 + (comf / 3000)));
+        let aB = Math.floor(160 + (dist * 0.3509) * (1 + (comf / 3000)));
+        let aF = Math.floor(276 + (dist * 0.6068) * (1 + (comf / 3000)));
+        let cCoef = dist >= 5000 ? 0.47 : (dist >= 2000 ? 0.52 : 0.56);
+        let aC = Math.floor(200 + (dist * cCoef));
+
         let cE = cleanNum(r['eco ticket']), cB = cleanNum(r['bus ticket']), cF = cleanNum(r['first ticket']), cC = cleanNum(r['cargo ticket']);
         
-        // Simüle Edilmiş Kalan Talep Hesaplaması = Base Demand * (2 - CurrentPrice/AuditPrice) - Offer
-        let rE = Math.max(0, Math.round(cleanNum(r['eco demand']) * (2 - (cE / s.tE))) - cleanNum(r['eco offer']));
-        let rB = Math.max(0, Math.round(cleanNum(r['bus demand']) * (2 - (cB / s.tB))) - cleanNum(r['bus offer']));
-        let rF = Math.max(0, Math.round(cleanNum(r['first demand']) * (2 - (cF / s.tF))) - cleanNum(r['first offer']));
-        let rC = Math.max(0, Math.round(cleanNum(r['cargo demand']) * (2 - (cC / s.tC))) - cleanNum(r['cargo offer']));
-
-        s.rE = rE; s.rB = rB; s.rF = rF; s.rC = rC;
-
-        document.getElementById(`rem-e-${cacheKey}`).innerText = rE; document.getElementById(`rem-e-${cacheKey}`).className = rE < 0 ? 'text-danger' : 'text-success';
-        document.getElementById(`rem-b-${cacheKey}`).innerText = rB; document.getElementById(`rem-b-${cacheKey}`).className = rB < 0 ? 'text-danger' : 'text-success';
-        document.getElementById(`rem-f-${cacheKey}`).innerText = rF; document.getElementById(`rem-f-${cacheKey}`).className = rF < 0 ? 'text-danger' : 'text-success';
-        document.getElementById(`rem-c-${cacheKey}`).innerText = rC; document.getElementById(`rem-c-${cacheKey}`).className = rC < 0 ? 'text-danger' : 'text-success';
-    }
-
-    function runRecommend(cacheKey) {
-        let r = window.routeRefCache[cacheKey]; if(!r) return;
-        if(!window.simState || !window.simState[cacheKey] || window.simState[cacheKey].rE === undefined) runSimulate(cacheKey);
-        
-        let s = window.simState[cacheKey];
-        let dist = cleanNum(r['distance']);
+        let rE = Math.max(0, Math.round(cleanNum(r['eco demand']) * (2 - (cE / aE)))) - cleanNum(r['eco offer']);
+        let rB = Math.max(0, Math.round(cleanNum(r['bus demand']) * (2 - (cB / aB)))) - cleanNum(r['bus offer']);
+        let rF = Math.max(0, Math.round(cleanNum(r['first demand']) * (2 - (cF / aF)))) - cleanNum(r['first offer']);
+        let rC = Math.max(0, Math.round(cleanNum(r['cargo demand']) * (2 - (cC / aC)))) - cleanNum(r['cargo offer']);
         
         let candidatePlanes = [];
         
         GOLDEN_FLEET.forEach(p => {
             if(dist > p.range) return;
             
-            let max_wk = Math.floor(168 / ((dist * 2) / p.speed));
-            let wk_flights = max_wk >= 7 ? Math.floor(max_wk / 7) * 7 : max_wk;
-            if(wk_flights < 1) wk_flights = 1;
+            // GÖREV 3: Düzeltilmiş Tekil Uçuş Kalan Talebi Mantığı
+            let flightTimeHours = (dist / p.speed) * 2;
+            let weeklyFreq = Math.floor(168 / flightTimeHours);
+            if(weeklyFreq < 1) return; // Uçak haftada 1 kez bile uçamıyor
+
+            let singleRemE = rE / weeklyFreq;
+            let singleRemB = rB / weeklyFreq;
+            let singleRemF = rF / weeklyFreq;
+            let singleRemC = rC / weeklyFreq;
+
+            let maxF = Math.max(0, Math.floor(singleRemF));
+            let maxB = Math.max(0, Math.floor(singleRemB));
+            let maxE = Math.max(0, Math.floor(singleRemE));
+            let maxC = Math.max(0, Math.floor(singleRemC));
 
             let remSpace = p.seats;
-            let fS = Math.min(Math.floor(s.rF / wk_flights), Math.floor(remSpace / 3)); remSpace -= fS * 3;
-            let bS = Math.min(Math.floor(s.rB / wk_flights), Math.floor(remSpace / 2)); remSpace -= bS * 2;
-            let eS = Math.min(Math.floor(s.rE / wk_flights), remSpace); remSpace -= eS;
-            if(remSpace > 0) eS += remSpace;
-            let cC = Math.min(s.rC, p.cargo);
+            let fS = Math.min(maxF, Math.floor(remSpace / 3)); remSpace -= fS * 3;
+            let bS = Math.min(maxB, Math.floor(remSpace / 2)); remSpace -= bS * 2;
+            let eS = Math.min(maxE, remSpace); remSpace -= eS;
+            if(remSpace > 0) eS += remSpace; // Boşlukları Eco'ya bas
+            
+            let cS = Math.min(maxC, p.cargo);
 
-            let wkGross = ((eS * s.tE) + (bS * s.tB) + (fS * s.tF) + (cC * s.tC)) * wk_flights;
+            let flightGross = (eS * cE) + (bS * cB) + (fS * cF) + (cS * cC);
+            let wkGross = flightGross * weeklyFreq;
             
             let fuelPrice = parseFloat(document.getElementById('g_fuel').value) || 750;
             let ngafLevel = parseInt(document.getElementById('g_ngaf').value) || 0;
             let ngafMult = 1 - (ngafLevel * 0.25);
 
-            let fuel = ((dist * 2)/100) * p.fuel * (eS+bS+fS) * wk_flights * (fuelPrice/1000) * 0.85;
-            let tax = wk_flights * (dist >= 5000 ? 70000 : 40000);
+            let fuel = ((dist * 2)/100) * p.fuel * (eS+bS+fS) * weeklyFreq * (fuelPrice/1000) * 0.85;
+            let tax = weeklyFreq * (dist >= 5000 ? 70000 : 40000);
             let other = wkGross * (p.other * ngafMult);
-            let maint = (p.wear / 100) * ((wk_flights * ((dist * 2) / p.speed)) / 100) * (p.price * 0.01);
+            let maint = (p.wear / 100) * ((weeklyFreq * flightTimeHours) / 100) * (p.price * 0.01);
 
             let dayNet = (wkGross - fuel - tax - other - maint) / 7;
             
-            // BÖLÜM 1 / GÖREV 1: Kâr Sınırı Esnetildi (maxNetProfit <= 0)
-            if(dayNet > 0) {
-                candidatePlanes.push({ plane: p, config: {e: eS, b: bS, f: fS, c: cC}, profit: dayNet });
-            }
+            candidatePlanes.push({ plane: p, config: {e: eS, b: bS, f: fS, c: cS}, profit: dayNet, freq: weeklyFreq });
         });
 
-        if(candidatePlanes.length === 0) return alert("⚠️ Bu rotada mevcut Kalan Talep ile kâr edebilecek uygun bir Altın Uçak bulunamadı.");
+        if(candidatePlanes.length === 0) return alert("⚠️ Bu rota menziline uygun Altın Filo (Golden Fleet) uçağı bulunamadı.");
 
         candidatePlanes.sort((a,b) => b.profit - a.profit);
         let top3 = candidatePlanes.slice(0, 3);
         window.activeTop3 = top3;
         window.activeRouteKey = cacheKey;
 
-        // BÖLÜM 3: TOP-3 UÇAK ÖNERİ MODALI OLUŞTURMA
         let rc = document.getElementById('rec-container');
         rc.innerHTML = "";
         
         top3.forEach((item, index) => {
             rc.innerHTML += `
-            <div class="card" style="border-color: ${index===0 ? 'var(--accent)' : 'var(--border)'};">
+            <div class="card" style="border-color: ${index===0 ? 'var(--success)' : 'var(--border)'};">
                 <h4 style="color:var(--text-main); margin-bottom:5px;">${index+1}. ${item.plane.name}</h4>
                 <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">Tahmini Kâr: <b class="text-success">${formatMoney(item.profit)} / Gün</b></div>
-                <div class="grid-2" style="font-size:11px; background:var(--bg-dark); padding:6px; border-radius:4px; text-align:center; margin-bottom:10px;">
-                    <div>Eco: <b>${item.config.e}</b></div>
-                    <div>Bus: <b>${item.config.b}</b></div>
-                    <div>First: <b>${item.config.f}</b></div>
-                    <div>Crg: <b>${item.config.c}</b></div>
+                <div style="font-size:11px; color:var(--accent-blue); margin-bottom:10px;">Otonom Haftalık Frekans: <b>${item.freq} Sefer</b></div>
+                <div class="grid-2" style="font-size:12px; background:var(--bg-dark); padding:8px; border-radius:6px; text-align:center; margin-bottom:12px; border:1px solid var(--border);">
+                    <div>Eco:<br><b style="font-size:14px;">${item.config.e}</b></div>
+                    <div>Bus:<br><b style="font-size:14px;">${item.config.b}</b></div>
+                    <div>First:<br><b style="font-size:14px;">${item.config.f}</b></div>
+                    <div>Crg:<br><b style="font-size:14px;">${item.config.c}T</b></div>
                 </div>
                 <label>Uçağa Özel İsim Verin</label>
-                <input type="text" id="rec-name-${index}" placeholder="Örn: Filo ${index+1}">
-                <button class="btn-small btn-success" style="width:100%; margin-top:5px; padding:8px;" onclick="commitRecommendation(${index})">✅ Bunu Seç ve Filoya Kat</button>
+                <input type="text" id="rec-name-${index}" placeholder="Örn: Rota Asistanı ${index+1}">
+                <button class="btn-main btn-success" style="width:100%; margin-top:5px; padding:10px; font-size:13px;" onclick="commitRecommendation(${index})">✅ Bunu Seç ve Filoya Kat</button>
             </div>`;
         });
         
         openModal('modal-recommendation');
     }
 
-    // BÖLÜM 4: STATE MUTATION (VERİTABANINA YAZMA)
+    // BÖLÜM 4: VERİTABANINA YAZMA VE LİNKLEME
     function commitRecommendation(index) {
-        let recNameInput = document.getElementById(`rec-name-${index}`);
-        let customName = recNameInput.value.trim();
+        let customName = document.getElementById(`rec-name-${index}`).value.trim();
         if(!customName) return alert("Lütfen uçağa kaydedilebilmesi için özel bir isim verin.");
         
         let simData = window.activeTop3[index];
         let r = window.routeRefCache[window.activeRouteKey];
         if(!r || !simData) return alert("Hata: Atama verisi kayboldu.");
 
-        // 1. Yeni Uçak Objeni AIRCRAFT_DB'ye Ekle
+        // AIRCRAFT_DB'ye Ekleme
         let newAc = {
             "aircraft": simData.plane.name,
             "aircraft name": customName,
@@ -652,23 +767,19 @@
             "category": 3,
             "capacity pax": simData.config.e + simData.config.b + simData.config.f,
             "consumption": simData.plane.fuel,
-            "wear": 0, // Sıfır km uçak
+            "wear": 0,
             "purchase price": simData.plane.price
         };
         AIRCRAFT_DB.push(newAc);
         localStorage.setItem('am_aircraft_db', JSON.stringify(AIRCRAFT_DB));
 
-        // 2. ROUTES_DB üzerinde Offers Güncelle ve İsim Append Et
+        // ROUTES_DB Güncelleme (Offers ve Link String)
         let matchedRoute = ROUTES_DB.find(item => item && item['departure'] === r['departure'] && item['arrival'] === r['arrival']);
         if(matchedRoute) {
-            let wk_flights = Math.floor(168 / (((cleanNum(r['distance']) * 2) / simData.plane.speed)));
-            wk_flights = wk_flights >= 7 ? Math.floor(wk_flights / 7) * 7 : wk_flights;
-            if(wk_flights < 1) wk_flights = 1;
-
-            matchedRoute['eco offer'] = cleanNum(matchedRoute['eco offer']) + (simData.config.e * wk_flights);
-            matchedRoute['bus offer'] = cleanNum(matchedRoute['bus offer']) + (simData.config.b * wk_flights);
-            matchedRoute['first offer'] = cleanNum(matchedRoute['first offer']) + (simData.config.f * wk_flights);
-            matchedRoute['cargo offer'] = cleanNum(matchedRoute['cargo offer']) + (simData.config.c * wk_flights);
+            matchedRoute['eco offer'] = cleanNum(matchedRoute['eco offer']) + (simData.config.e * simData.freq);
+            matchedRoute['bus offer'] = cleanNum(matchedRoute['bus offer']) + (simData.config.b * simData.freq);
+            matchedRoute['first offer'] = cleanNum(matchedRoute['first offer']) + (simData.config.f * simData.freq);
+            matchedRoute['cargo offer'] = cleanNum(matchedRoute['cargo offer']) + (simData.config.c * simData.freq);
 
             let currAircrafts = matchedRoute['aircrafts model/aircrafts name on route'] || "";
             let appendStr = `${simData.plane.name}/${customName}`;
@@ -676,18 +787,17 @@
         }
         localStorage.setItem('am_routes_db', JSON.stringify(ROUTES_DB));
 
-        alert("Uçak başarıyla filoya eklendi ve rotaya bağlandı!");
+        alert("Uçak başarıyla satın alındı, filoya eklendi ve rotaya bağlandı!");
         closeModal('modal-recommendation');
         
-        // Sim State Temizle ve UI Yenile
-        window.simState = {}; 
+        // RAM ve DOM Tazeleme
         renderHubsList();
         renderFleetList();
         populateDropdowns();
         if(document.getElementById('view-routes').style.display === 'block') openHubRoutes(r['departure']);
     }
 
-    // --- BÖLÜM 5: EXCEL İNDİRME BÖLÜMÜNÜ KORUMA ---
+    // BÖLÜM 5: EXCEL EXPORT FONKSİYONU KORUNDU
     function exportDatabase(type) {
         if(type === 'aircraft') {
             if(!AIRCRAFT_DB.length) return alert("İndirilecek uçak verisi bulunmuyor.");
@@ -704,7 +814,7 @@
         }
     }
 
-    // --- 168H DEVRE (CIRCUIT) MOTORU VE K-BEST ALGORİTMASI (BÖLÜM 1 ONARILDI) ---
+    // --- 168 SAATLİK DP K-BEST (0/1 KNAPSACK) DEVRE MOTORU ---
     function populateDropdowns() {
         try {
             let hSelect = document.getElementById('opt-hub'); let aSelect = document.getElementById('opt-ac');
@@ -719,25 +829,29 @@
         } catch(e) { console.error(e); }
     }
 
-    // BÖLÜM 1: solveCircuitDP Geri Eklendi! (Maliyet Minimizasyonu ile 168h Knapsack)
+    // GÖREV 1: 0/1 Knapsack (Bir rota devrede yalnızca 1 kez kullanılabilir) Algoritması
     function solveCircuitDP(validDestinations, bannedSet) {
         let maxTime = 10080; 
-        let dp = new Array(maxTime + 1).fill(Infinity);
-        let choice = new Int32Array(maxTime + 1).fill(-1);
-        let prev = new Int32Array(maxTime + 1).fill(-1);
-        dp[0] = 0; 
         
-        for (let w = 0; w <= maxTime; w++) {
-            if (dp[w] === Infinity) continue;
-            for (let i = 0; i < validDestinations.length; i++) {
-                if (bannedSet.has(i)) continue; 
-                let dest = validDestinations[i];
-                let nextW = w + dest.time;
-                if (nextW <= maxTime) {
-                    if (dp[w] + dest.cost < dp[nextW]) {
-                        dp[nextW] = dp[w] + dest.cost;
-                        choice[nextW] = i;
-                        prev[nextW] = w;
+        let dp = new Float64Array(maxTime + 1);
+        dp.fill(Infinity);
+        dp[0] = 0;
+        
+        let N = validDestinations.length;
+        // 0/1 Path tracking için 1D Uint8Array Bitmask yöntemi
+        let keep = new Uint8Array(N * (maxTime + 1));
+        
+        for (let i = 0; i < N; i++) {
+            if (bannedSet.has(i)) continue; 
+            let dest = validDestinations[i];
+            let t = dest.time;
+            let c = dest.cost;
+            // 0/1 Knapsack olduğu için geriye doğru iterasyon (Bir rota max 1 kere)
+            for (let w = maxTime; w >= t; w--) {
+                if (dp[w - t] !== Infinity) {
+                    if (dp[w - t] + c < dp[w]) {
+                        dp[w] = dp[w - t] + c;
+                        keep[i * (maxTime + 1) + w] = 1;
                     }
                 }
             }
@@ -751,18 +865,17 @@
         
         if (minCostValue === Infinity || bestTime === 0) return null;
         
-        let circuitCounts = {};
         let routeIndices = new Set();
-        let curr = bestTime;
-        
-        while (curr > 0) {
-            let rIdx = choice[curr];
-            if(rIdx === -1) break;
-            let dest = validDestinations[rIdx];
-            circuitCounts[dest.name] = (circuitCounts[dest.name] || 0) + 1;
-            routeIndices.add(rIdx);
-            curr = prev[curr];
+        let currW = bestTime;
+        for (let i = N - 1; i >= 0; i--) {
+            if (keep[i * (maxTime + 1) + currW]) {
+                routeIndices.add(i);
+                currW -= validDestinations[i].time;
+            }
         }
+        
+        let circuitCounts = {};
+        routeIndices.forEach(idx => { circuitCounts[validDestinations[idx].name] = 1; });
         
         return { time: bestTime, totalCost: minCostValue, counts: circuitCounts, indices: Array.from(routeIndices) };
     }
@@ -802,9 +915,8 @@
             let combinations = [];
             let baseCircuit = solveCircuitDP(validDestinations, new Set());
             
-            // ÇÖZÜM BÖLÜM 1: Motor Donma Koruması
             if (!baseCircuit || baseCircuit.totalCost === Infinity) {
-                resDiv.innerHTML = `<div class="card text-info" style="color:var(--danger); border-color:var(--danger);">❌ Kriterlere uygun 168 saatlik kombinasyon bulunamadı. Daha yüksek menzilli bir uçak deneyin.</div>`;
+                resDiv.innerHTML = `<div class="card text-info" style="color:var(--danger); border-color:var(--danger);">❌ Kriterlere uygun tam 168 saatlik 0/1 kombinasyonu bulunamadı. Daha yüksek menzilli bir uçak deneyin.</div>`;
                 return;
             }
             combinations.push(baseCircuit);
@@ -831,7 +943,7 @@
             }
 
             combinations.sort((a, b) => a.totalCost - b.totalCost);
-            let htmlBuffer = `<h3 style="margin-top:10px; margin-bottom:12px; color:var(--accent-blue);">🌍 Keşfedilen En Ucuz 168s Devre Listesi (Top 5)</h3>`;
+            let htmlBuffer = `<h3 style="margin-top:10px; margin-bottom:12px; color:var(--accent-blue);">🌍 Mükemmel 168s Devreleri (Top ${combinations.length})</h3>`;
 
             combinations.forEach((c, index) => {
                 let totalHrs = (c.time / 60).toFixed(1);
@@ -841,17 +953,17 @@
                 htmlBuffer += `
                 <details ${isDefaultOpen} style="border-color: ${cardBorder}; margin-bottom:12px;">
                     <summary style="display:flex; justify-content:space-between; align-items:center;">
-                        <div>Kombinasyon #${index + 1} | Süre: ${totalHrs}s</div>
-                        <div style="font-size:12.5px; font-weight:normal;">Bütçe: <b style="color:var(--success);">${formatMoney(c.totalCost)}</b></div>
+                        <div>Kombinasyon #${index + 1} | Süre: ${totalHrs} Saat</div>
+                        <div style="font-size:12.5px; font-weight:normal;">Satın Alma Bütçesi: <b style="color:var(--success);">${formatMoney(c.totalCost)}</b></div>
                     </summary>
                     <div class="details-content" style="padding-top:5px;">
                         <table class="dashboard-table">
-                            <thead><tr><th>Potansiyel Rota</th><th>Mesafe</th><th>Uçuş Süresi</th><th>Haftalık Frekans</th></tr></thead>
+                            <thead><tr><th>Potansiyel Rota</th><th>Mesafe</th><th>Uçuş Süresi</th><th>Devre İçi Sefer</th></tr></thead>
                             <tbody>`;
 
                 Object.keys(c.counts).forEach(rName => {
                     let refDest = validDestinations.find(v => v.name === rName);
-                    htmlBuffer += `<tr><td><b>${selHubIata} ➔ ${rName}</b></td><td>${refDest.dist} km</td><td>${(refDest.time / 60).toFixed(1)} s</td><td><b>${c.counts[rName]} Sefer</b></td></tr>`;
+                    htmlBuffer += `<tr><td><b>${selHubIata} ➔ ${rName}</b></td><td>${refDest.dist} km</td><td>${(refDest.time / 60).toFixed(1)} s</td><td><b>1 Sefer</b></td></tr>`;
                 });
                 htmlBuffer += `</tbody></table></div></details>`;
             });
@@ -859,29 +971,9 @@
         } catch(e) { console.error(e); }
     }
 
-    // Basit Simülatör Modalı Kontrolü
-    function openCustomSim(cacheKey) {
-        let r = window.routeRefCache[cacheKey]; if(!r) return;
-        document.getElementById('sim-title').innerText = `🎯 Fiyat Bulucu: ${r['arrival'] || "Rota"}`;
-        document.getElementById('sim-class').value = "E";
-        window.currentSimData = { pE: cleanNum(r['eco ticket']), pB: cleanNum(r['bus ticket']), pF: cleanNum(r['first ticket']), pC: cleanNum(r['cargo ticket']), dE: cleanNum(r['eco demand']), dB: cleanNum(r['bus demand']), dF: cleanNum(r['first demand']), dC: cleanNum(r['cargo demand']) };
-        document.getElementById('sim-audit-price').value = window.currentSimData.pE;
-        document.getElementById('sim-audit-demand').value = window.currentSimData.dE;
-        document.getElementById('sim-target-cap').value = "";
-        calcSimPrice(); openModal('modal-simulator');
-    }
-    function updateSimFields() {
-        if(!window.currentSimData) return;
-        let cls = document.getElementById('sim-class').value;
-        document.getElementById('sim-audit-price').value = cls === 'E' ? window.currentSimData.pE : (cls === 'B' ? window.currentSimData.pB : (cls === 'F' ? window.currentSimData.pF : window.currentSimData.pC));
-        document.getElementById('sim-audit-demand').value = cls === 'E' ? window.currentSimData.dE : (cls === 'B' ? window.currentSimData.dB : (cls === 'F' ? window.currentSimData.dF : window.currentSimData.dC));
-        calcSimPrice();
-    }
-    function calcSimPrice() {
-        let p = parseFloat(document.getElementById('sim-audit-price').value) || 0, d = parseFloat(document.getElementById('sim-audit-demand').value) || 0, cap = parseFloat(document.getElementById('sim-target-cap').value) || 0;
-        if (d === 0 || cap === 0) { document.getElementById('sim-new-price').innerText = "-"; return; }
-        let newPrice = p * (2 - (cap / d));
-        document.getElementById('sim-new-price').innerText = "$" + Math.round(newPrice < 0 ? 0 : newPrice).toLocaleString('en-US');
+    // SİMÜLATÖR MOTOR TETİKLEYİCİSİ
+    function openCircuitSim(rName, acSeats) {
+        alert("Global Motor henüz satın alınmamış rotaları bulduğundan fiyat/talep verisi bulunmamaktadır.");
     }
 
     window.onload = initData;
