@@ -34,7 +34,6 @@
         .tab-btn { flex: 1; padding: 14px; text-align: center; background: none; border: none; color: var(--text-muted); font-weight: bold; font-size: 14px; cursor: pointer; transition: 0.2s; }
         .tab-btn.active { background-color: var(--input-bg); color: var(--text-main); border-bottom: 3px solid var(--accent); }
         
-        /* Dashboard Alt Sekme Butonları */
         .sub-tab-container { display: flex; gap: 10px; margin-bottom: 15px; }
         .sub-tab-btn { padding: 8px 16px; border-radius: 6px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text-muted); font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .sub-tab-btn.active { background: var(--input-bg); color: var(--text-main); border-color: var(--accent); }
@@ -49,12 +48,12 @@
         
         label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 5px; font-weight: 600;}
         input, select { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background-color: var(--input-bg); color: white; box-sizing: border-box; font-size: 15px; margin-bottom: 10px; font-family: inherit;}
+        input[type="file"] { font-size: 13px; padding: 8px; cursor: pointer; }
         input:focus, select:focus { outline: none; border-color: var(--accent); }
         input[readonly] { color: var(--accent); font-weight: bold; background-color: rgba(39, 39, 42, 0.5); }
         
         .btn-main { width: 100%; padding: 14px; border-radius: 8px; border: none; background-color: var(--accent); color: #000; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 5px; margin-bottom: 20px; transition: 0.2s;}
         .btn-main:active { opacity: 0.8; transform: scale(0.98); }
-        
         .btn-blue { background-color: var(--accent-blue); color: white; margin: 0; padding: 8px 12px; font-size: 13px; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2); border-radius: 6px; border: none; cursor: pointer; font-weight: bold;}
         .btn-small { padding: 6px 12px; font-size: 13px; border-radius: 5px; border: none; cursor: pointer; font-weight: bold; color: white;}
         .btn-danger { background-color: var(--danger); color: white; }
@@ -101,7 +100,7 @@
 <body>
 
     <div class="header-bar">
-        <h2 style="margin: 0;">✈️ AM Pro Control Center</h2>
+        <h2 style="margin: 0;">✈️ AM Circuit Pro</h2>
         <button class="refresh-btn" onclick="forceRefresh()">🔄 Yenile</button>
     </div>
 
@@ -114,7 +113,7 @@
     <div id="tab-opt">
         <div class="card">
             <h3>🔄 168 Saatlik Devre (Circuit) Optimizasyonu</h3>
-            <p class="text-muted" style="font-size: 12px; margin-top: -5px;">Seçilen merkezdeki rotaları tarar, uçağa uygun olanları bulur ve 168 saate en yakın mükemmel döngüyü dinamik programlama ile hesaplar.</p>
+            <p class="text-muted" style="font-size: 12px; margin-top: -5px;">Seçilen merkezdeki rotaları tarar, uçağa uygun olanları bulur ve 168 saate en yakın mükemmel döngüyü hesaplar.</p>
             
             <label>Optimizasyon Yapılacak Merkez (Hub)</label>
             <select id="opt-hub"></select>
@@ -143,7 +142,7 @@
             <div id="view-routes" style="display: none;">
                 <button class="back-btn" onclick="navTo('hubs')">⬅ Merkezlere Dön</button>
                 <h3 id="current-hub-title" style="margin-bottom: 15px;"></h3>
-                <p class="text-muted" style="font-size: 12px;">Kırmızı işaretli rotalar, "RemEco" değeri negatif olan veya verimsiz uçuşlardır. Fiyat bulucu ile müdahale edin.</p>
+                <p class="text-muted" style="font-size: 12px;">Kırmızı işaretli rotalar, kalan talebi (Remaining Demand) negatif olan verimsiz uçuşlardır. Fiyat bulucu ile müdahale edin.</p>
                 <div id="routes-container"></div>
             </div>
         </div>
@@ -157,23 +156,20 @@
 
     <div id="tab-stats" style="display: none;">
         <div class="card">
-            <h3>📂 Excel Veritabanı Yükleme</h3>
-            <p class="text-muted" style="font-size: 12px;">Sistem tamamen yüklediğiniz Excel dosyalarına bağlıdır.</p>
+            <h3>📂 Veritabanı Yükleme (Excel)</h3>
+            <p class="text-muted" style="font-size: 12px;">Web Scraper'dan alınan orijinal başlık yapısı desteklenmektedir.</p>
             
             <label>✈️ Uçaklar (aircrafts.xlsx) Yükle</label>
             <input type="file" id="upload-aircraft" accept=".xlsx, .xls" onchange="handleFileUpload(event, 'am_aircraft_db')">
-            <div class="text-muted" style="font-size: 11px; margin-bottom: 15px;">Beklenen Başlıklar: Aircraft, Range, Speed, Cat, Capacity, Fuel, Wear, Purchase price</div>
+            <div class="text-muted" style="font-size: 11px; margin-bottom: 15px;">Beklenen Başlıklar: aircraft name, range, speed, capacity pax, consumption, wear, purchase price vb.</div>
             
             <label>📍 Rotalar (routes.xlsx) Yükle</label>
             <input type="file" id="upload-routes" accept=".xlsx, .xls" onchange="handleFileUpload(event, 'am_routes_db')">
-            <div class="text-muted" style="font-size: 11px; margin-bottom: 15px;">Beklenen Başlıklar: Departure, Arrival, Distance, Cat, Eco demand, Bus demand, First demand, Cargo demand, Eco price...</div>
+            <div class="text-muted" style="font-size: 11px; margin-bottom: 15px;">Beklenen Başlıklar: departure, arrival, distance, eco demand, eco offer, eco ticket vb.</div>
         </div>
 
         <div class="card">
             <h3>⚙️ Genel Havayolu İstatistikleri</h3>
-            <label>Comfort (Konfor) İstatistiği</label>
-            <input type="number" id="g_comf" value="0" oninput="saveGlobalStats()">
-            
             <label>Ortalama Yakıt Fiyatı ($/1000L)</label>
             <input type="number" id="g_fuel" value="750" oninput="saveGlobalStats()">
             
@@ -202,7 +198,7 @@
             </select>
             
             <div class="grid-2">
-                <div><label>Audit Fiyat ($)</label><input type="number" id="sim-audit-price" readonly></div>
+                <div><label>Mevcut Bilet Fiyatı ($)</label><input type="number" id="sim-audit-price" readonly></div>
                 <div><label>Brüt Talep (Kişi)</label><input type="number" id="sim-audit-demand" readonly></div>
             </div>
             
@@ -211,7 +207,7 @@
             <input type="number" id="sim-target-cap" placeholder="Örn: 550" oninput="calcSimPrice()">
             
             <div class="sim-result-box">
-                <h4>OYUN İÇİ YENİ BİLET FİYATI</h4>
+                <h4>YENİ BİLET FİYATI</h4>
                 <h2 id="sim-new-price">-</h2>
             </div>
             <button class="btn-main bg-gray" style="margin-top: 15px; margin-bottom: 0;" onclick="closeModal('modal-simulator')">Kapat</button>
@@ -219,12 +215,12 @@
     </div>
 
 <script>
-    // Global Veri Yapısı
+    // Global Değişkenler
     let AIRCRAFT_DB = [];
     let ROUTES_DB = [];
     window.currentSimData = null;
 
-    // Sayı Temizleyici Güvenlik Fonksiyonu
+    // Sıkı Temizleme Fonksiyonu: Her türlü boşluk ve virgülü ayıklar.
     function cleanNum(val) {
         if (val === undefined || val === null || val === '') return 0;
         let str = String(val).replace(/\s+/g, '').replace(/,/g, '');
@@ -234,7 +230,7 @@
 
     function forceRefresh() { window.location.reload(true); }
 
-    // Excel Dosya Okuma ve Belleğe Kaydetme Sistemi
+    // Bulletproof JSON Key Normalizer: Keyleri küçük harfe çevirir ve trimler
     function handleFileUpload(event, storageKey) {
         const file = event.target.files[0];
         if (!file) return;
@@ -245,42 +241,54 @@
                 const data = new Uint8Array(e.target.result);
                 const workbook = XLSX.read(data, {type: 'array'});
                 const firstSheet = workbook.SheetNames[0];
-                const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheet]);
                 
-                localStorage.setItem(storageKey, JSON.stringify(jsonData));
+                // Normalizer Map: Tüm header'lar standartlaştırılır (toLowerCase & trim)
+                const rawData = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheet]).map(row => {
+                    let newObj = {};
+                    for(let key in row) {
+                        newObj[key.trim().toLowerCase()] = row[key];
+                    }
+                    return newObj;
+                });
+                
+                localStorage.setItem(storageKey, JSON.stringify(rawData));
                 alert("Veriler başarıyla yüklendi!");
-                initData();
+                initData(); 
             } catch (err) {
-                alert("Dosya okunurken bir hata oluştu. Lütfen Excel yapısını kontrol edin.");
+                alert("Dosya okunurken bir hata oluştu. Lütfen Excel formatını kontrol edin.");
                 console.error(err);
             }
         };
         reader.readAsArrayBuffer(file);
     }
 
-    // Uygulama Başlangıcında Veri Yükleme ve Güvenlik Denetimleri
+    // Başlangıç Verilerini Yükleme ve Güvenlik Filtreleri
     function initData() {
-        if(localStorage.getItem('g_comf')) document.getElementById('g_comf').value = localStorage.getItem('g_comf');
         if(localStorage.getItem('g_fuel')) document.getElementById('g_fuel').value = localStorage.getItem('g_fuel');
         if(localStorage.getItem('g_ngaf')) document.getElementById('g_ngaf').value = localStorage.getItem('g_ngaf');
 
         let acData = localStorage.getItem('am_aircraft_db');
         let rtData = localStorage.getItem('am_routes_db');
         
+        // Aircraft DB Yükleme
         if (acData) {
             let rawAircrafts = JSON.parse(acData);
-            AIRCRAFT_DB = rawAircrafts.filter(a => a && a['Aircraft'] !== undefined);
+            AIRCRAFT_DB = rawAircrafts.filter(a => {
+                if (!a) return false;
+                let name = a['aircraft name'] || a['aircraft'];
+                return name !== undefined && name !== null && String(name).trim() !== '';
+            });
         } else {
             AIRCRAFT_DB = [];
         }
         
+        // Route DB Yükleme ve Kritik "Distance" Filtresi (Bozuk satırları temizler)
         if (rtData) {
             let rawRoutes = JSON.parse(rtData);
-            // Kritik Hata Çözümü: Tanımsız satırları atla ve sadece gerçek rotaları (Mesafe hücresi dolu olanları) filtrele
             ROUTES_DB = rawRoutes.filter(row => {
                 if (!row) return false;
-                let distVal = row['Distance'];
-                return distVal !== undefined && distVal !== null && String(distVal).trim() !== '';
+                let distVal = cleanNum(row['distance']);
+                return distVal > 0;
             });
         } else {
             ROUTES_DB = [];
@@ -291,14 +299,12 @@
         renderFleetList();
     }
 
-    // Genel Ayarları Kaydetme
     function saveGlobalStats() {
-        localStorage.setItem('g_comf', document.getElementById('g_comf').value);
         localStorage.setItem('g_fuel', document.getElementById('g_fuel').value);
         localStorage.setItem('g_ngaf', document.getElementById('g_ngaf').value);
     }
 
-    // Ana Sekme Değişimi
+    // Ana ve Alt Sekme Yönetimi
     function switchTab(tabId) {
         document.getElementById('tab-opt').style.display = tabId === 'opt' ? 'block' : 'none';
         document.getElementById('tab-dash').style.display = tabId === 'dash' ? 'block' : 'none';
@@ -309,7 +315,6 @@
         document.getElementById('btn-tab-stats').classList.toggle('active', tabId === 'stats');
     }
 
-    // Kontrol Paneli Alt Sekme Değişimi (Hublar ve Uçaklar)
     function switchSubTab(subId) {
         document.getElementById('sub-content-hubs').style.display = subId === 'hubs' ? 'block' : 'none';
         document.getElementById('sub-content-fleet').style.display = subId === 'fleet' ? 'block' : 'none';
@@ -324,19 +329,22 @@
         if(view === 'hubs') renderHubsList();
     }
 
-    // Rotaları Hub (Departure) Değerine Göre Gruplama
+    function formatMoney(n) { return "$" + Math.round(n).toLocaleString('en-US'); }
+
+    // --- KONTROL PANELİ (DASHBOARD) LİSTELEME ---
+    
+    // Rotaları Departure (Hub) Değerine Göre Gruplama
     function getGroupedHubs() {
         let hubs = {};
         ROUTES_DB.forEach(r => {
             if (!r) return;
-            let hName = r['Departure'] ? String(r['Departure']).trim() : "Bilinmeyen Hub";
+            let hName = r['departure'] ? String(r['departure']).trim() : "Bilinmeyen Hub";
             if(!hubs[hName]) hubs[hName] = [];
             hubs[hName].push(r);
         });
         return hubs;
     }
 
-    // Hub Kontrol Panelinin Çıktılanması
     function renderHubsList() {
         let c = document.getElementById('hubs-container');
         c.innerHTML = "";
@@ -350,10 +358,13 @@
 
         hubNames.forEach(hName => {
             let routes = hubs[hName];
-            let totalKm = routes.reduce((sum, r) => sum + (r ? cleanNum(r['Distance']) : 0), 0);
+            let totalKm = routes.reduce((sum, r) => sum + cleanNum(r['distance']), 0);
             
-            // Verimsiz uçuş tespiti denetimi (RemEco sütunu varsa)
-            let dangerRoutesCount = routes.filter(r => r && cleanNum(r['RemEco'] || r['remeco'] || r['Remeco']) < 0).length;
+            // Verimsiz uçuş tespiti: RemEco (Kod içinde hesaplanıyor: eco demand - eco offer)
+            let dangerRoutesCount = routes.filter(r => {
+                let remEco = cleanNum(r['eco demand']) - cleanNum(r['eco offer']);
+                return remEco < 0;
+            }).length;
 
             c.innerHTML += `
             <div class="list-item" onclick="openHubRoutes('${hName}')">
@@ -364,39 +375,39 @@
                     </div>
                     <div class="hub-stats">
                         <div>Rota Sayısı: <span>${routes.length}</span></div>
-                        <div>Toplam Kilometre: <span>${totalKm.toLocaleString('tr-TR')} km</span></div>
-                        <div>Sorunlu Rota Frekansı: <span class="${dangerRoutesCount > 0 ? 'text-danger' : 'text-success'}">${dangerRoutesCount}</span></div>
+                        <div>Toplam Menzil: <span>${totalKm.toLocaleString('tr-TR')} km</span></div>
+                        <div>Verimsiz/Kritik Rota: <span class="${dangerRoutesCount > 0 ? 'text-danger' : 'text-success'}">${dangerRoutesCount}</span></div>
                     </div>
                 </div>
             </div>`;
         });
     }
 
-    // Hub Detayında Rotaların Gelişmiş Detay Izgarası (Grid) İle Listelenmesi
     function openHubRoutes(hubName) {
         document.getElementById('current-hub-title').innerText = "🏢 " + hubName + " Rotaları";
         let c = document.getElementById('routes-container');
         c.innerHTML = "";
         
-        let routes = getGroupedHubs()[hubName] || [];
-        
+        let routes = getGroupedHubs()[hubName];
         if(!window.routeRefCache) window.routeRefCache = {};
 
         routes.forEach((r, idx) => {
             if (!r) return;
-            let remEco = cleanNum(r['RemEco'] || r['remeco'] || r['Remeco']);
+            
+            // RemEco Hesaplaması (Demand - Offer)
+            let remEco = cleanNum(r['eco demand']) - cleanNum(r['eco offer']);
             let isDanger = remEco < 0;
             
-            let dName = r['Arrival'] || "İsimsiz Varış Noktası";
-            let dDist = cleanNum(r['Distance']);
-            let dCat = cleanNum(r['Cat']);
-            let dEco = cleanNum(r['Eco demand']);
-            let dBus = cleanNum(r['Bus demand']);
-            let dFirst = cleanNum(r['First demand']);
-            let dCargo = cleanNum(r['Cargo demand']);
-            let pEco = cleanNum(r['Eco price']);
+            let dName = r['arrival'] || "İsimsiz Varış Noktası";
+            let dDist = cleanNum(r['distance']);
+            
+            let dEco = cleanNum(r['eco demand']);
+            let dBus = cleanNum(r['bus demand']);
+            let dFirst = cleanNum(r['first demand']);
+            let dCargo = cleanNum(r['cargo demand']);
+            
+            let pEco = cleanNum(r['eco ticket']);
 
-            // Simülatör buton eşleşmesi için referans hafızaya alınıyor
             let cacheKey = hubName + "_" + dName + "_" + idx;
             window.routeRefCache[cacheKey] = r;
 
@@ -404,10 +415,10 @@
             <div class="list-item ${isDanger ? 'danger' : ''}" style="cursor:default;">
                 <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:10px;">
                     <div>
-                        <div class="list-title" style="margin:0; color:${isDanger ? 'var(--danger)' : 'var(--accent)'}; font-size:17px;">📍 Varış: ${dName}</div>
-                        <div class="text-muted" style="font-size:12px; margin-top:3px;">Mesafe: <b style="color:white">${dDist} km</b> | Pist Kategorisi: <b style="color:white">Cat ${dCat}</b></div>
+                        <div class="list-title" style="margin:0; color:${isDanger ? 'var(--danger)' : 'var(--accent)'}; font-size:18px;">📍 Rota: ${dName}</div>
+                        <div class="text-muted" style="font-size:12px; margin-top:3px;">Mesafe: <b style="color:white">${dDist} km</b></div>
                     </div>
-                    <button class="btn-blue" onclick="openCustomSim('${cacheKey}')">Fiyat Bulucu</button>
+                    <button class="btn-blue" onclick="openCustomSim('${cacheKey}')">Fiyat Bul</button>
                 </div>
                 
                 <div class="grid-5" style="background:var(--bg-dark); padding:8px; border-radius:6px; text-align:center; font-size:12px; border:1px solid var(--border);">
@@ -415,7 +426,7 @@
                     <div><span class="text-muted">Bus Talep</span><br><b>${dBus}</b></div>
                     <div><span class="text-muted">First Talep</span><br><b>${dFirst}</b></div>
                     <div><span class="text-muted">Kargo</span><br><b>${dCargo}T</b></div>
-                    <div><span class="text-muted">Audit Fiyat</span><br><b class="text-success">$${pEco}</b></div>
+                    <div><span class="text-muted">Güncel Bilet</span><br><b class="text-success">$${pEco}</b></div>
                 </div>
                 ${isDanger ? `<div style="font-size:12px; color:var(--danger); font-weight:bold; margin-top:5px;">⚠️ Kritik Uyarı: Kalan Demand Eksiye Düşmüş (${remEco})</div>` : ''}
             </div>`;
@@ -423,7 +434,7 @@
         navTo('routes');
     }
 
-    // Uçak Veritabanı Sekmesinin Tablo/Kart Mimarisi
+    // Uçak Veritabanının Detaylı Listesi
     function renderFleetList() {
         let c = document.getElementById('fleet-container');
         c.innerHTML = "";
@@ -435,14 +446,14 @@
 
         AIRCRAFT_DB.forEach(a => {
             if (!a) return;
-            let acName = a['Aircraft'] || "Bilinmeyen Model";
-            let acRange = cleanNum(a['Range']);
-            let acSpeed = cleanNum(a['Speed']);
-            let acCat = cleanNum(a['Cat']);
-            let acCap = cleanNum(a['Capacity']);
-            let acFuel = cleanNum(a['Fuel']);
-            let acWear = cleanNum(a['Wear']);
-            let acCost = cleanNum(a['Purchase price']);
+            let acName = a['aircraft name'] || a['aircraft'] || "Bilinmeyen Model";
+            let acRange = cleanNum(a['range']);
+            let acSpeed = cleanNum(a['speed']);
+            let acCat = cleanNum(a['category']);
+            let acCap = cleanNum(a['capacity pax']);
+            let acFuel = cleanNum(a['consumption']);
+            let acWear = cleanNum(a['wear']);
+            let acCost = cleanNum(a['purchase price']);
 
             c.innerHTML += `
             <div class="card" style="margin-bottom:12px;">
@@ -450,8 +461,8 @@
                 <div class="grid-4" style="font-size:13px; text-align:center; background:var(--bg-dark); padding:10px; border-radius:6px; border:1px solid var(--border);">
                     <div><span class="text-muted">Menzil</span><br><b>${acRange} km</b></div>
                     <div><span class="text-muted">Hız</span><br><b>${acSpeed} km/s</b></div>
-                    <div><span class="text-muted">Uçak Kategorisi</span><br><b>Cat ${acCat}</b></div>
-                    <div><span class="text-muted">Koltuk Kapasitesi</span><br><b>${acCap} Pax</b></div>
+                    <div><span class="text-muted">Kategori</span><br><b>Cat ${acCat}</b></div>
+                    <div><span class="text-muted">Kapasite</span><br><b>${acCap} Pax</b></div>
                 </div>
                 <div class="grid-3" style="font-size:12px; margin-top:8px; color:var(--text-muted); padding-left:5px;">
                     <div>Tüketim: <b style="color:white">${acFuel} L/100/pax</b></div>
@@ -462,33 +473,56 @@
         });
     }
 
-    // Devre Motoru İçin Net Kâr Hesaplama Matematiği
+    // Optimizasyon İçin Dropdownların Doldurulması
+    function populateDropdowns() {
+        let hSelect = document.getElementById('opt-hub');
+        let aSelect = document.getElementById('opt-ac');
+        
+        hSelect.innerHTML = ""; aSelect.innerHTML = "";
+        let hubs = Object.keys(getGroupedHubs());
+        
+        if(hubs.length === 0) {
+            hSelect.innerHTML = `<option value="">Veri Bekleniyor...</option>`;
+        } else {
+            hubs.forEach(h => { hSelect.innerHTML += `<option value="${h}">${h}</option>`; });
+        }
+
+        if(AIRCRAFT_DB.length === 0) {
+            aSelect.innerHTML = `<option value="">Veri Bekleniyor...</option>`;
+        } else {
+            AIRCRAFT_DB.forEach(a => { 
+                let name = a['aircraft name'] || a['aircraft'];
+                aSelect.innerHTML += `<option value="${name}">${name}</option>`; 
+            });
+        }
+    }
+
+    // --- 168 SAATLİK DEVRE MOTORU (DP ALGORITHM) ---
+    
     function getEstimatedProfitForCircuit(r, ac) {
         if (!r || !ac) return -1;
         
-        let rDist = cleanNum(r['Distance']);
-        let rCat = cleanNum(r['Cat']);
-        let acCat = cleanNum(ac['Cat']);
-        let acRange = cleanNum(ac['Range']);
+        let rDist = cleanNum(r['distance']);
+        let acRange = cleanNum(ac['range']);
         
-        // Kritik Güvenlik Filtresi: Uçağın kategorisi (Cat) rotadan BÜYÜKSE piste inemez!
-        if (rDist > acRange || acCat > rCat) return -1;
+        // Kategori Uyuşmazlığı kontrolü kaldırıldı (Routes dosyasında Cat yok). Sadece Menzil (Range) kontrolü kaldı!
+        if (rDist > acRange) return -1;
         
-        // Fiyatlar ve Talepler Doğrudan Temizleyiciden Geçirilerek Atanıyor
-        let p_e = cleanNum(r['Eco price']);
-        let p_b = cleanNum(r['Bus price']);
-        let p_f = cleanNum(r['First price']);
-        let p_c = cleanNum(r['Cargo price']);
+        let p_e = cleanNum(r['eco ticket']);
+        let p_b = cleanNum(r['bus ticket']);
+        let p_f = cleanNum(r['first ticket']);
+        let p_c = cleanNum(r['cargo ticket']);
         
-        let d_e = cleanNum(r['Eco demand']);
-        let d_b = cleanNum(r['Bus demand']);
-        let d_f = cleanNum(r['First demand']);
-        let d_c = cleanNum(r['Cargo demand']);
+        let d_e = cleanNum(r['eco demand']);
+        let d_b = cleanNum(r['bus demand']);
+        let d_f = cleanNum(r['first demand']);
+        let d_c = cleanNum(r['cargo demand']);
         
-        let ac_seats = cleanNum(ac['Capacity']);
-        let ac_cargo = cleanNum(ac['Cargo'] || ac['cargo'] || 0);
+        let ac_seats = cleanNum(ac['capacity pax']);
+        // Scraper verisinde kargo olmayabiliyor, varsayılan 0
+        let ac_cargo = cleanNum(ac['cargo capacity'] || 0); 
         
-        // Koltuk Yerleşim Optimizasyonu Simülasyonu
+        // Koltuk Yerleşimi
         let remSpace = ac_seats;
         let takeF = Math.min(d_f, Math.floor(remSpace / 3)); remSpace -= takeF * 3;
         let takeB = Math.min(d_b, Math.floor(remSpace / 2)); remSpace -= takeB * 2;
@@ -503,22 +537,24 @@
         let ngafLevel = parseInt(document.getElementById('g_ngaf').value) || 0;
         let ngafMultiplier = 1 - (ngafLevel * 0.25);
         
-        let fuel_c = ((rDist * 2)/100) * cleanNum(ac['Fuel']) * (takeE + takeB + takeF) * (fuelPrice/1000) * 0.85;
-        let tax_c = (rDist >= 5000 ? 70000 : 40000);
-        let other_c = rev * (cleanNum(ac['Other'] || ac['other'] || 0.10) * ngafMultiplier);
+        // Other Costs scraper'da olmadığı için standart %10 kabul ediliyor (0.10)
+        let otherCostRate = 0.10;
         
-        let fl_time = (rDist * 2) / cleanNum(ac['Speed']);
-        let maint_c = (cleanNum(ac['Wear']) / 100) * (fl_time / 100) * (cleanNum(ac['Purchase price']) * 0.01);
+        let fuel_c = ((rDist * 2)/100) * cleanNum(ac['consumption']) * (takeE + takeB + takeF) * (fuelPrice/1000) * 0.85;
+        let tax_c = (rDist >= 5000 ? 70000 : 40000);
+        let other_c = rev * (otherCostRate * ngafMultiplier);
+        
+        let fl_time = (rDist * 2) / cleanNum(ac['speed']);
+        let maint_c = (cleanNum(ac['wear']) / 100) * (fl_time / 100) * (cleanNum(ac['purchase price']) * 0.01);
         
         let netProfit = rev - fuel_c - tax_c - other_c - maint_c;
         return isNaN(netProfit) ? 0 : netProfit;
     }
 
-    // 168 Saatlik Devre Motoru (Knapsack Algoritması)
     function runOptimization() {
         let resDiv = document.getElementById('opt-results');
         if (AIRCRAFT_DB.length === 0 || ROUTES_DB.length === 0) {
-            resDiv.innerHTML = `<div class="card text-danger">⚠️ Lütfen Ayarlar sekmesinden gerekli veritabanlarını yükleyin.</div>`;
+            resDiv.innerHTML = `<div class="card text-danger">⚠️ Lütfen Ayarlar sekmesinden Excel veritabanlarını yükleyin.</div>`;
             return;
         }
 
@@ -526,11 +562,11 @@
         let selAcName = document.getElementById('opt-ac').value;
         
         let routes = getGroupedHubs()[selHub] || [];
-        // Güvenlik Düzeltmesi: Uçak eşleşmesi null denetimi altında aranıyor
-        let ac = AIRCRAFT_DB.find(a => a && a['Aircraft'] === selAcName);
+        // Yeni Key mantığıyla Uçak Arama
+        let ac = AIRCRAFT_DB.find(a => a && (a['aircraft name'] || a['aircraft']) === selAcName);
 
         if(!ac || routes.length === 0) return;
-        let acSpeed = cleanNum(ac['Speed']);
+        let acSpeed = cleanNum(ac['speed']);
         
         let validRoutes = [];
         if(!window.circuitCache) window.circuitCache = {};
@@ -538,11 +574,11 @@
         routes.forEach((r, idx) => {
             if (!r) return;
             let profit = getEstimatedProfitForCircuit(r, ac);
-            let dist = cleanNum(r['Distance']);
+            let dist = cleanNum(r['distance']);
             if(profit > 0 && acSpeed > 0) {
                 let timeMins = Math.round(((dist / acSpeed) * 2) * 60);
                 if(!isNaN(timeMins) && timeMins > 0) {
-                    let rName = r['Arrival'] || `Rota ${idx+1}`;
+                    let rName = r['arrival'] || `Rota ${idx+1}`;
                     validRoutes.push({
                         name: rName,
                         dist: dist,
@@ -556,7 +592,7 @@
         });
 
         if (validRoutes.length === 0) {
-            resDiv.innerHTML = `<div class="card text-danger">⚠️ Bu merkezde seçilen uçağın pist kategorisine (Cat) veya menziline uygun rota bulunamadı.</div>`;
+            resDiv.innerHTML = `<div class="card text-danger">⚠️ Bu merkezde seçilen uçağın menziline uygun veya kâr getiren rota bulunamadı.</div>`;
             return;
         }
 
@@ -607,7 +643,7 @@
         let html = `
         <div class="card" style="border-color: var(--accent); padding:0; overflow:hidden;">
             <div style="background: var(--input-bg); padding: 20px; text-align: center; border-bottom: 1px solid var(--border);">
-                <div style="font-size: 14px; color: var(--accent); margin-bottom: 5px; font-weight:bold;">✨ EN SEYALAT UYUMLU 168H DÖNGÜSÜ OLUŞTURULDU</div>
+                <div style="font-size: 14px; color: var(--accent); margin-bottom: 5px; font-weight:bold;">✨ OPTİMUM 168H DEVRESİ OLUŞTURULDU</div>
                 <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">Döngü Net Kazanımı (Haftalık / Günlük)</div>
                 <div style="font-size: 32px; color: var(--success); font-weight: bold;">${formatMoney(bestProfit)} <span style="font-size:18px; color:var(--text-muted);">/ ${formatMoney(bestProfit/7)}</span></div>
             </div>
@@ -622,6 +658,7 @@
                     <div style="font-size: 18px; color: var(--accent-blue); font-weight: bold;">7 Adet Uçak</div>
                 </div>
             </div>
+            <div style="padding:10px 15px; font-size:12px; color:var(--text-muted); text-align:center;">*Bu döngüyü haftanın tüm günlerinde kesintisiz işletmek için 7 adet <b>${selAcName}</b> satın alıp her güne birer adet kaydırmalısınız.</div>
         </div>
         <h4 style="margin-top:20px; margin-bottom:10px;">🔄 Döngü Rotaları ve Akıllı Fiyatlandırma</h4>`;
 
@@ -633,45 +670,46 @@
                     <div style="color:var(--text-main); font-weight:bold; font-size:15px;">📍 Rota: ${rName}</div>
                     <div style="color:var(--text-muted); font-size:12px;">Haftalık Frekans Döngüsü: <b>${cCount} Sefer</b></div>
                 </div>
-                <button class="btn-blue" onclick="openCircuitSim('${rName}', ${cleanNum(ac['Capacity'])})">Fiyatlandır</button>
+                <button class="btn-blue" onclick="openCircuitSim('${rName}', ${cleanNum(ac['capacity pax'])})">Fiyatlandır</button>
             </div>`;
         });
 
         resDiv.innerHTML = html;
     }
 
-    // Devre Motoru İçin Fiyat Penceresini Açan Tetikleyici
+    // --- SİMÜLATÖR MODALI & FONKSİYONLARI ---
+    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
     function openCircuitSim(rName, acSeats) {
         let r = window.circuitCache ? window.circuitCache[rName] : null;
-        if(!r) r = ROUTES_DB.find(item => item && item['Arrival'] === rName);
+        if(!r) r = ROUTES_DB.find(item => item && item['arrival'] === rName);
         if(!r) return alert("Hata: Rota verileri bulunamadı.");
         
         bindSimModal(r, rName, acSeats);
     }
 
-    // Kontrol Panelinden Fiyat Penceresini Açan Tetikleyici
     function openCustomSim(cacheKey) {
         let r = window.routeRefCache[cacheKey];
         if(!r) return;
-        let rName = r['Arrival'] || "Rota";
+        let rName = r['arrival'] || "Rota";
         bindSimModal(r, rName, "");
     }
 
-    // Ortak Simülatör Bağlama ve Form Doldurma Altyapısı
     function bindSimModal(r, rName, targetCapHint) {
         document.getElementById('sim-title').innerText = `🎯 Fiyat Bulucu: ${rName}`;
         document.getElementById('sim-class').value = "E";
         
-        // Hata Düzeltme: Excel verileri Audit olarak doğrudan inputa yazdırılıyor, formülle hesaplanmıyor!
+        // Simülatör doğrudan okunan Excel fiyatlarını/taleplerini baz alır!
         window.currentSimData = {
-            pE: cleanNum(r['Eco price']),
-            pB: cleanNum(r['Bus price']),
-            pF: cleanNum(r['First price']),
-            pC: cleanNum(r['Cargo price']),
-            dE: cleanNum(r['Eco demand']),
-            dB: cleanNum(r['Bus demand']),
-            dF: cleanNum(r['First demand']),
-            dC: cleanNum(r['Cargo demand'])
+            pE: cleanNum(r['eco ticket']),
+            pB: cleanNum(r['bus ticket']),
+            pF: cleanNum(r['first ticket']),
+            pC: cleanNum(r['cargo ticket']),
+            dE: cleanNum(r['eco demand']),
+            dB: cleanNum(r['bus demand']),
+            dF: cleanNum(r['first demand']),
+            dC: cleanNum(r['cargo demand'])
         };
         
         document.getElementById('sim-audit-price').value = window.currentSimData.pE;
@@ -704,7 +742,6 @@
             return;
         }
 
-        // AM Süper Simülasyon Ters Fiyat Katsayı Algoritması
         let newPrice = p * (2 - (cap / d));
         if (newPrice < 0) newPrice = 0;
         document.getElementById('sim-new-price').innerText = "$" + Math.round(newPrice).toLocaleString('en-US');
