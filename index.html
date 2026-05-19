@@ -490,15 +490,15 @@
                 let origD=getOrigDemand(r);
                 let offer={e:cleanNum(r['eco offer']),b:cleanNum(r['bus offer']),f:cleanNum(r['first offer']),c:cleanNum(r['cargo offer'])};
 
-                // Güncel Talep = doğrudan Excel (elastikiyet yok)
-                let curDemE=origD.e, curDemB=origD.b, curDemF=origD.f, curDemC=origD.c;
+                // Güncel Talep = elastikiyet @ güncel fiyat (fiyat değişince talep güncellenir)
+                let curDemE=calcElasticDemand(origD.e,curP.e,aud.e);
+                let curDemB=calcElasticDemand(origD.b,curP.b,aud.b);
+                let curDemF=calcElasticDemand(origD.f,curP.f,aud.f);
+                let curDemC=calcElasticDemand(origD.c,curP.c,aud.c);
                 // Güncel Kalan = Güncel Talep - Arz
                 let curRemE=curDemE-offer.e, curRemB=curDemB-offer.b, curRemF=curDemF-offer.f, curRemC=curDemC-offer.c;
-                // Audit Talep = ters elastikiyet: Excel talep'i güncel fiyat etkisinden arındır
-                let audDemE=calcReverseElastic(origD.e,curP.e,aud.e);
-                let audDemB=calcReverseElastic(origD.b,curP.b,aud.b);
-                let audDemF=calcReverseElastic(origD.f,curP.f,aud.f);
-                let audDemC=calcReverseElastic(origD.c,curP.c,aud.c);
+                // Audit Talep = fiyat audit'te olsaydı talep ne olurdu (= baz talep)
+                let audDemE=origD.e, audDemB=origD.b, audDemF=origD.f, audDemC=origD.c;
                 // Audit Kalan = Audit Talep - Arz
                 let audRemE=audDemE-offer.e, audRemB=audDemB-offer.b, audRemF=audDemF-offer.f, audRemC=audDemC-offer.c;
                 let isDanger=(curRemE<0||curRemB<0||curRemF<0||curRemC<0);
@@ -922,11 +922,11 @@
         let origD=getOrigDemand(r);
         let curP={e:cleanNum(r['eco ticket']),b:cleanNum(r['bus ticket']),f:cleanNum(r['first ticket']),c:cleanNum(r['cargo ticket'])};
         let offer={e:cleanNum(r['eco offer']),b:cleanNum(r['bus offer']),f:cleanNum(r['first offer']),c:cleanNum(r['cargo offer'])};
-        // Güncel kalan talep (günlük): doğrudan Excel talep - arz (elastikiyet yok)
-        let remE=origD.e-offer.e;
-        let remB=origD.b-offer.b;
-        let remF=origD.f-offer.f;
-        let remC=origD.c-offer.c;
+        // Güncel kalan talep (günlük): Güncel Talep - Arz (elastikiyet @ güncel fiyat)
+        let remE=calcElasticDemand(origD.e,curP.e,aud.e)-offer.e;
+        let remB=calcElasticDemand(origD.b,curP.b,aud.b)-offer.b;
+        let remF=calcElasticDemand(origD.f,curP.f,aud.f)-offer.f;
+        let remC=calcElasticDemand(origD.c,curP.c,aud.c)-offer.c;
 
         let candidates=[];
         GOLDEN_FLEET.forEach(p=>{
@@ -1007,7 +1007,7 @@
         let appendArr=[];
         for(let q=1;q<=simData.qty;q++){
             let uName=simData.qty>1?`${customName} - #${q}`:customName;
-            AIRCRAFT_DB.push({"aircraft":simData.plane.name,"aircraft name":uName,"range":simData.plane.range,"speed":simData.plane.speed,"category":3,"capacity pax":simData.plane.seats,"consumption":simData.plane.fuel,"wear":0,"purchase price":simData.plane.price});
+            AIRCRAFT_DB.push({"aircraft":simData.plane.name,"aircraft name":uName,"range":simData.plane.range,"speed":simData.plane.speed,"category":3,"capacity pax":simData.plane.seats,"consumption":simData.plane.fuel,"wear":0,"purchase price":simData.plane.price,"eco_seats":simData.config.e,"business_seats":simData.config.b,"first_seats":simData.config.f,"cargo":simData.config.c+"T","age":"0/5","flight_hours":0,"hub":r['departure']?String(r['departure']).trim().toUpperCase():""});
             appendArr.push(`${simData.plane.name}/${uName}`);
         }
         localStorage.setItem('am_aircraft_db',JSON.stringify(AIRCRAFT_DB));
