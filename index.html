@@ -286,16 +286,23 @@
     function exportDatabase(type) {
         if(type==='aircraft') {
             if(!AIRCRAFT_DB.length) return showToast("İndirilecek uçak verisi yok.","error");
-            let ws = XLSX.utils.json_to_sheet(AIRCRAFT_DB);
-            let wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Filo");
-            XLSX.writeFile(wb, "aircrafts_updated.xlsx");
+            let ws=XLSX.utils.json_to_sheet(AIRCRAFT_DB);
+            let wb=XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb,ws,"Filo");
+            XLSX.writeFile(wb,"aircrafts_updated.xlsx");
         } else {
             if(!ROUTES_DB.length) return showToast("İndirilecek rota verisi yok.","error");
-            let ws = XLSX.utils.json_to_sheet(ROUTES_DB);
-            let wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Rotalar");
-            XLSX.writeFile(wb, "routes_updated.xlsx");
+            // _orig_ dahili alanlarını temizle
+            let cleanRoutes=ROUTES_DB.map(r=>{
+                if(!r) return r;
+                let o={};
+                for(let k in r){ if(!k.startsWith('_orig_')) o[k]=r[k]; }
+                return o;
+            });
+            let ws=XLSX.utils.json_to_sheet(cleanRoutes);
+            let wb=XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb,ws,"Rotalar");
+            XLSX.writeFile(wb,"routes_updated.xlsx");
         }
     }
     // === VERİ BAŞLATMA ===
@@ -431,24 +438,35 @@
     // === FİLO LİSTELEME ===
     function renderFleetList() {
         try {
-            let c = document.getElementById('fleet-container'), html = "";
-            if(!AIRCRAFT_DB.length) { c.innerHTML = '<div class="card text-muted" style="text-align:center;">Veri Yok.</div>'; return; }
-            AIRCRAFT_DB.forEach(a => {
+            let c=document.getElementById('fleet-container'),html="";
+            if(!AIRCRAFT_DB.length){c.innerHTML='<div class="card text-muted" style="text-align:center;">Veri Yok.</div>';return;}
+            AIRCRAFT_DB.forEach((a,acIdx)=>{
                 if(!a) return;
-                let model = a['aircraft']?String(a['aircraft']).trim():"Bilinmeyen";
-                let name = a['aircraft name']?String(a['aircraft name']).trim():"İSİMSİZ";
-                let routeHtml = '<span class="text-muted" style="font-size:11px;">Atanmamış.</span>';
-                for(let i=0;i<ROUTES_DB.length;i++) {
-                    let r = ROUTES_DB[i];
-                    if(r&&r['aircrafts model/aircrafts name on route']&&String(r['aircrafts model/aircrafts name on route']).includes(name)) {
-                        let arr = r['arrival']?String(r['arrival']).trim().toUpperCase():"?";
-                        let dep = r['departure']?String(r['departure']).trim().toUpperCase():"?";
-                        routeHtml = `<span class="link-badge link-badge-route" onclick="goToRoute('${arr}','${dep}')">📍 ${dep} ➔ ${arr}</span>`;
+                let model=a['aircraft']?String(a['aircraft']).trim():"Bilinmeyen";
+                let name=a['aircraft name']?String(a['aircraft name']).trim():"İSİMSİZ";
+                let safeN=name.replace(/'/g,"\\'");
+                let routeHtml='<span class="text-muted" style="font-size:11px;">Atanmamış.</span>';
+                let isAssigned=false;
+                for(let i=0;i<ROUTES_DB.length;i++){
+                    let r=ROUTES_DB[i];
+                    if(r&&r['aircrafts model/aircrafts name on route']&&String(r['aircrafts model/aircrafts name on route']).includes(name)){
+                        let arr=r['arrival']?String(r['arrival']).trim().toUpperCase():"?";
+                        let dep=r['departure']?String(r['departure']).trim().toUpperCase():"?";
+                        routeHtml=`<span class="link-badge link-badge-route" onclick="goToRoute('${arr}','${dep}')">📍 ${dep} ➔ ${arr}</span>`;
+                        isAssigned=true;
                         break;
                     }
                 }
-                html += `<div class="card card-highlight" id="ac-card-node-${name.replace(/\s+/g,'_')}" style="padding:8px 10px;">
-                    <h4 style="color:var(--text-main);text-transform:uppercase;font-size:13.5px;margin-bottom:1px;">📛 ${name}</h4>
+                let removeBtn=isAssigned?`<button class="btn-small" style="background:#f59e0b;" onclick="event.stopPropagation();removeFromRoute('${safeN}')">🔗 Rotadan Çıkar</button>`:'';
+                html+=`<div class="card card-highlight" id="ac-card-node-${name.replace(/\s+/g,'_')}" style="padding:8px 10px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                        <h4 style="color:var(--text-main);text-transform:uppercase;font-size:13.5px;margin:0;">📛 ${name}</h4>
+                        <div style="display:flex;gap:4px;">
+                            <button class="btn-small" style="background:#3b82f6;" onclick="event.stopPropagation();renameAircraft('${safeN}')">✏️ İsim</button>
+                            ${removeBtn}
+                            <button class="btn-small btn-danger" onclick="event.stopPropagation();deleteAircraft('${safeN}')">🗑️ Sil</button>
+                        </div>
+                    </div>
                     <div class="text-muted" style="font-size:11px;font-weight:600;margin-bottom:6px;color:var(--accent-blue);">Model: ${model}</div>
                     <div class="grid-4" style="font-size:11px;text-align:center;background:var(--bg-dark);padding:5px;border-radius:6px;border:1px solid var(--border);">
                         <div><span class="text-muted">Menzil</span><br><b>${cleanNum(a['range'])} km</b></div>
@@ -460,18 +478,109 @@
                     <div style="font-size:11px;"><span class="text-muted" style="font-weight:600;">Atandığı Rota:</span> ${routeHtml}</div>
                 </div>`;
             });
-            c.innerHTML = html;
-        } catch(e) { console.error(e); }
+            c.innerHTML=html;
+        } catch(e){ console.error(e); }
+    }
+    // === FİLO YÖNETİM FONKSİYONLARI ===
+    function calcAircraftOfferContrib(ac, route) {
+        let dist=cleanNum(route['distance']),speed=cleanNum(ac['speed']);
+        let seats=cleanNum(ac['capacity pax']||ac['capacity']);
+        if(!speed||!dist) return 0;
+        let freq=Math.floor(168/calculateFlightTime(dist,speed));
+        return Math.round(seats*freq*2/7);
+    }
+    function removeFromRoute(acName) {
+        let ac=AIRCRAFT_DB.find(a=>a&&String(a['aircraft name']).trim()===acName);
+        if(!ac) return showToast("Uçak bulunamadı.","error");
+        let route=ROUTES_DB.find(r=>r&&r['aircrafts model/aircrafts name on route']&&String(r['aircrafts model/aircrafts name on route']).includes(acName));
+        if(!route) return showToast("Bu uçak bir rotaya atanmamış.","error");
+        if(!confirm(`"${acName}" uçağını rotadan çıkarmak istediğinize emin misiniz?`)) return;
+        // Offer katkısını hesapla ve orantılı olarak düş
+        let contrib=calcAircraftOfferContrib(ac,route);
+        let totOff=cleanNum(route['eco offer'])+cleanNum(route['bus offer'])+cleanNum(route['first offer']);
+        if(totOff>0&&contrib>0){
+            let eR=cleanNum(route['eco offer'])/totOff, bR=cleanNum(route['bus offer'])/totOff, fR=cleanNum(route['first offer'])/totOff;
+            route['eco offer']=Math.max(0,cleanNum(route['eco offer'])-Math.round(contrib*eR));
+            route['bus offer']=Math.max(0,cleanNum(route['bus offer'])-Math.round(contrib*bR));
+            route['first offer']=Math.max(0,cleanNum(route['first offer'])-Math.round(contrib*fR));
+        }
+        // Aircraft string'den çıkar
+        let parts=(route['aircrafts model/aircrafts name on route']||"").split(',').filter(p=>!p.includes(acName));
+        route['aircrafts model/aircrafts name on route']=parts.join(',');
+        localStorage.setItem('am_routes_db',JSON.stringify(ROUTES_DB));
+        showToast(`"${acName}" rotadan çıkarıldı.`,"success");
+        renderHubsList();renderFleetList();
+        if(document.getElementById('view-routes').style.display==='block'){
+            let dep=route['departure']?String(route['departure']).trim().toUpperCase():"";
+            if(dep) openHubRoutes(dep);
+        }
+    }
+    function deleteAircraft(acName) {
+        if(!confirm(`"${acName}" uçağını tamamen silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`)) return;
+        // Önce rotadan çıkar (offer güncelle)
+        let route=ROUTES_DB.find(r=>r&&r['aircrafts model/aircrafts name on route']&&String(r['aircrafts model/aircrafts name on route']).includes(acName));
+        if(route){
+            let ac=AIRCRAFT_DB.find(a=>a&&String(a['aircraft name']).trim()===acName);
+            if(ac){
+                let contrib=calcAircraftOfferContrib(ac,route);
+                let totOff=cleanNum(route['eco offer'])+cleanNum(route['bus offer'])+cleanNum(route['first offer']);
+                if(totOff>0&&contrib>0){
+                    let eR=cleanNum(route['eco offer'])/totOff,bR=cleanNum(route['bus offer'])/totOff,fR=cleanNum(route['first offer'])/totOff;
+                    route['eco offer']=Math.max(0,cleanNum(route['eco offer'])-Math.round(contrib*eR));
+                    route['bus offer']=Math.max(0,cleanNum(route['bus offer'])-Math.round(contrib*bR));
+                    route['first offer']=Math.max(0,cleanNum(route['first offer'])-Math.round(contrib*fR));
+                }
+            }
+            let parts=(route['aircrafts model/aircrafts name on route']||"").split(',').filter(p=>!p.includes(acName));
+            route['aircrafts model/aircrafts name on route']=parts.join(',');
+        }
+        // AIRCRAFT_DB'den sil
+        AIRCRAFT_DB=AIRCRAFT_DB.filter(a=>!(a&&String(a['aircraft name']).trim()===acName));
+        localStorage.setItem('am_aircraft_db',JSON.stringify(AIRCRAFT_DB));
+        localStorage.setItem('am_routes_db',JSON.stringify(ROUTES_DB));
+        showToast(`"${acName}" tamamen silindi.`,"success");
+        renderHubsList();renderFleetList();populateDropdowns();
+        if(document.getElementById('view-routes').style.display==='block'&&route){
+            let dep=route['departure']?String(route['departure']).trim().toUpperCase():"";
+            if(dep) openHubRoutes(dep);
+        }
+    }
+    function renameAircraft(oldName) {
+        let newName=prompt(`"${oldName}" için yeni isim girin:`,oldName);
+        if(!newName||!newName.trim()||newName.trim()===oldName) return;
+        newName=newName.trim();
+        // İsim çakışması kontrolü
+        if(AIRCRAFT_DB.find(a=>a&&String(a['aircraft name']).trim()===newName)){
+            return showToast("Bu isimde bir uçak zaten mevcut.","error");
+        }
+        // AIRCRAFT_DB güncelle
+        let ac=AIRCRAFT_DB.find(a=>a&&String(a['aircraft name']).trim()===oldName);
+        if(ac) ac['aircraft name']=newName;
+        // Tüm rotalarda güncelle
+        ROUTES_DB.forEach(r=>{
+            if(r&&r['aircrafts model/aircrafts name on route']){
+                r['aircrafts model/aircrafts name on route']=String(r['aircrafts model/aircrafts name on route']).split(oldName).join(newName);
+            }
+        });
+        localStorage.setItem('am_aircraft_db',JSON.stringify(AIRCRAFT_DB));
+        localStorage.setItem('am_routes_db',JSON.stringify(ROUTES_DB));
+        showToast(`"${oldName}" → "${newName}" olarak değiştirildi.`,"success");
+        renderHubsList();renderFleetList();
+        if(document.getElementById('view-routes').style.display==='block') {
+            // Açık olan hub'ı yeniden render et
+            let title=document.getElementById('current-hub-title').innerText.replace("🏢 ","").replace(" Rotaları","").trim();
+            if(title) openHubRoutes(title);
+        }
     }
     // === ÇAPRAZ NAVİGASYON ===
     function goToAircraft(n) {
-        switchTab('dash'); switchSubTab('fleet');
-        let el = document.getElementById("ac-card-node-"+n.replace(/\s+/g,'_'));
+        switchTab('dash');switchSubTab('fleet');
+        let el=document.getElementById("ac-card-node-"+n.replace(/\s+/g,'_'));
         if(el) setTimeout(()=>{el.scrollIntoView({behavior:'smooth',block:'center'});el.style.boxShadow="0 0 10px #3b82f6";setTimeout(()=>el.style.boxShadow="none",2000);},150);
     }
-    function goToRoute(rn, hn) {
-        switchTab('dash'); switchSubTab('hubs'); openHubRoutes(hn);
-        let el = document.getElementById("route-node-"+rn);
+    function goToRoute(rn,hn) {
+        switchTab('dash');switchSubTab('hubs');openHubRoutes(hn);
+        let el=document.getElementById("route-node-"+rn);
         if(el) setTimeout(()=>{el.scrollIntoView({behavior:'smooth',block:'center'});el.style.boxShadow="0 0 10px #10b981";setTimeout(()=>el.style.boxShadow="none",2000);},150);
     }
     // === DROPDOWN DOLDURMA ===
