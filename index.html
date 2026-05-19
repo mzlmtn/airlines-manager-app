@@ -92,7 +92,7 @@
         .dashboard-table tr:nth-child(even) { background: rgba(255,255,255,0.01); }
 
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: flex-start; overflow-y: auto; padding: 20px 0; }
-        .modal-content { background-color: var(--card-bg); width: 96%; max-width: 600px; border-radius: 8px; padding: 16px; border: 1px solid var(--border); }
+        .modal-content { background-color: var(--card-bg); width: 96%; max-width: 600px; border-radius: 8px; padding: 16px; border: 1px solid var(--border); margin: 0 auto;}
         .modal-lg { max-width: 900px; }
         .modal-xl { max-width: 1000px; }
         .back-btn { background: none; border: none; color: var(--accent); font-size: 14px; cursor: pointer; padding: 0; margin-bottom: 12px; font-weight: bold; display: flex; align-items: center; gap: 5px;}
@@ -109,6 +109,52 @@
         .toast-info { background: #2563eb; }
         @keyframes toastIn { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
         @keyframes toastOut { from { opacity:1; } to { opacity:0; transform:translateY(-10px); } }
+
+        /* ========================================================= */
+        /* MOBİL VE DİKEY EKRAN UYUM (RESPONSIVE) KODLARI BURADA BAŞLAR */
+        /* ========================================================= */
+        @media (max-width: 768px) {
+            body { padding: 8px; padding-bottom: 60px; }
+            
+            /* Inputların iOS/Android cihazlarda otomatik zoom yapmasını engeller */
+            input, select { font-size: 16px !important; }
+            
+            .header-bar { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .header-bar button { width: 100%; padding: 10px; font-size: 14px; }
+            
+            .db-status { gap: 5px; justify-content: center; width: 100%; }
+            .db-badge { flex: 1; text-align: center; font-size: 10px; }
+
+            .tab-container { flex-direction: column; }
+            .tab-btn { border-bottom: 1px solid var(--border); padding: 10px; font-size: 13px; }
+            .tab-btn.active { border-bottom: none; border-left: 4px solid var(--accent); background-color: var(--bg-dark); }
+            
+            .sub-tab-container { flex-wrap: wrap; }
+            .sub-tab-btn { flex: 1; min-width: 45%; text-align: center; }
+
+            .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr !important; }
+            .grid-4-to-2 { grid-template-columns: 1fr 1fr !important; }
+            .hub-stats { grid-template-columns: 1fr; }
+
+            /* Tabloların taşmasını engeller, sağa sola kaydırılabilir yapar */
+            .dashboard-table { display: block; overflow-x: auto; white-space: nowrap; width: 100%; }
+            .table-wrapper { width: 100%; overflow-x: auto; }
+
+            /* Dinamik oluşturulan karmaşık Flex yapıları için dikey yığılım sınıfları */
+            .resp-flex { flex-direction: column !important; align-items: flex-start !important; gap: 10px !important; }
+            .resp-flex-end { align-items: flex-start !important; width: 100%; text-align: left !important; }
+            .resp-flex-end > div { justify-content: flex-start !important; flex-wrap: wrap; }
+            
+            /* Modal ekranının telefonlara sığması için */
+            .modal-content { width: 95%; margin: 10px auto; padding: 12px; max-height: 95vh; overflow-y: auto; }
+            
+            /* Bildirimlerin tam ortalanması */
+            .toast-container { right: 50%; transform: translateX(50%); width: 90%; align-items: center; }
+            .toast { width: 100%; text-align: center; max-width: 100%; }
+
+            /* Uçak iç tablo input boyut garantisi */
+            #pm-new-pe, #pm-new-pb, #pm-new-pf, #pm-new-pc { min-width: 60px; }
+        }
     </style>
 </head>
 <body>
@@ -204,25 +250,27 @@
         <div class="modal-content modal-lg" style="border-color: var(--accent-blue);">
             <h3 style="color: #93c5fd; margin-bottom: 5px;" id="pm-title">🎛️ Fiyat ve Talep Yönetimi</h3>
             <p class="text-muted" style="font-size: 11.5px; margin-top: 0; margin-bottom: 12px;">YENİ FİYAT değiştirdikçe simülasyon otomatik güncellenir. "Uygula" demeden kayıt olmaz.</p>
-            <div style="display: flex; gap: 8px; justify-content: center; margin-bottom: 12px; padding: 8px; background-color: var(--bg-dark); border-radius: 6px;">
-                <button class="btn-small btn-purple" style="padding: 7px 12px; font-size: 12px;" onclick="setAllSimPrices('audit')">📋 Audit Fiyatlarını Yükle</button>
-                <button class="btn-small bg-gray" style="padding: 7px 12px; font-size: 12px;" onclick="setAllSimPrices('current')">↩️ Güncel'e Dön</button>
+            <div style="display: flex; gap: 8px; justify-content: center; margin-bottom: 12px; padding: 8px; background-color: var(--bg-dark); border-radius: 6px; flex-wrap: wrap;">
+                <button class="btn-small btn-purple" style="padding: 7px 12px; font-size: 12px; flex: 1;" onclick="setAllSimPrices('audit')">📋 Audit Fiyatlarını Yükle</button>
+                <button class="btn-small bg-gray" style="padding: 7px 12px; font-size: 12px; flex: 1;" onclick="setAllSimPrices('current')">↩️ Güncel'e Dön</button>
             </div>
-            <table class="dashboard-table" style="text-align:center;font-size:11.5px;">
-                <thead>
-                    <tr>
-                        <th>Sınıf</th><th>Güncel Fiyat</th><th style="color:#a78bfa;">Audit Fiyat</th>
-                        <th style="color:#60a5fa;width:100px;">YENİ FİYAT</th>
-                        <th>Arz</th><th>Simüle Talep</th><th>Simüle Kalan</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr><td><b>Eco</b></td><td id="pm-cur-pe" style="color:#94a3b8;">-</td><td id="pm-aud-pe" style="color:#c4b5fd;">-</td><td><input type="number" id="pm-new-pe" style="padding:5px;font-size:12px;text-align:center;margin-bottom:0;" oninput="updatePriceSim()"></td><td id="pm-off-e" style="color:#94a3b8;">-</td><td id="pm-sim-tot-e" style="color:#60a5fa;font-weight:bold;">-</td><td id="pm-sim-rem-e" style="font-weight:bold;">-</td></tr>
-                    <tr><td><b>Bus</b></td><td id="pm-cur-pb" style="color:#94a3b8;">-</td><td id="pm-aud-pb" style="color:#c4b5fd;">-</td><td><input type="number" id="pm-new-pb" style="padding:5px;font-size:12px;text-align:center;margin-bottom:0;" oninput="updatePriceSim()"></td><td id="pm-off-b" style="color:#94a3b8;">-</td><td id="pm-sim-tot-b" style="color:#60a5fa;font-weight:bold;">-</td><td id="pm-sim-rem-b" style="font-weight:bold;">-</td></tr>
-                    <tr><td><b>First</b></td><td id="pm-cur-pf" style="color:#94a3b8;">-</td><td id="pm-aud-pf" style="color:#c4b5fd;">-</td><td><input type="number" id="pm-new-pf" style="padding:5px;font-size:12px;text-align:center;margin-bottom:0;" oninput="updatePriceSim()"></td><td id="pm-off-f" style="color:#94a3b8;">-</td><td id="pm-sim-tot-f" style="color:#60a5fa;font-weight:bold;">-</td><td id="pm-sim-rem-f" style="font-weight:bold;">-</td></tr>
-                    <tr><td><b>Cargo</b></td><td id="pm-cur-pc" style="color:#94a3b8;">-</td><td id="pm-aud-pc" style="color:#c4b5fd;">-</td><td><input type="number" id="pm-new-pc" style="padding:5px;font-size:12px;text-align:center;margin-bottom:0;" oninput="updatePriceSim()"></td><td id="pm-off-c" style="color:#94a3b8;">-</td><td id="pm-sim-tot-c" style="color:#60a5fa;font-weight:bold;">-</td><td id="pm-sim-rem-c" style="font-weight:bold;">-</td></tr>
-                </tbody>
-            </table>
+            <div class="table-wrapper">
+                <table class="dashboard-table" style="text-align:center;font-size:11.5px;">
+                    <thead>
+                        <tr>
+                            <th>Sınıf</th><th>Güncel Fiyat</th><th style="color:#a78bfa;">Audit Fiyat</th>
+                            <th style="color:#60a5fa;width:100px;">YENİ FİYAT</th>
+                            <th>Arz</th><th>Simüle Talep</th><th>Simüle Kalan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><b>Eco</b></td><td id="pm-cur-pe" style="color:#94a3b8;">-</td><td id="pm-aud-pe" style="color:#c4b5fd;">-</td><td><input type="number" id="pm-new-pe" style="padding:5px;font-size:12px;text-align:center;margin-bottom:0;" oninput="updatePriceSim()"></td><td id="pm-off-e" style="color:#94a3b8;">-</td><td id="pm-sim-tot-e" style="color:#60a5fa;font-weight:bold;">-</td><td id="pm-sim-rem-e" style="font-weight:bold;">-</td></tr>
+                        <tr><td><b>Bus</b></td><td id="pm-cur-pb" style="color:#94a3b8;">-</td><td id="pm-aud-pb" style="color:#c4b5fd;">-</td><td><input type="number" id="pm-new-pb" style="padding:5px;font-size:12px;text-align:center;margin-bottom:0;" oninput="updatePriceSim()"></td><td id="pm-off-b" style="color:#94a3b8;">-</td><td id="pm-sim-tot-b" style="color:#60a5fa;font-weight:bold;">-</td><td id="pm-sim-rem-b" style="font-weight:bold;">-</td></tr>
+                        <tr><td><b>First</b></td><td id="pm-cur-pf" style="color:#94a3b8;">-</td><td id="pm-aud-pf" style="color:#c4b5fd;">-</td><td><input type="number" id="pm-new-pf" style="padding:5px;font-size:12px;text-align:center;margin-bottom:0;" oninput="updatePriceSim()"></td><td id="pm-off-f" style="color:#94a3b8;">-</td><td id="pm-sim-tot-f" style="color:#60a5fa;font-weight:bold;">-</td><td id="pm-sim-rem-f" style="font-weight:bold;">-</td></tr>
+                        <tr><td><b>Cargo</b></td><td id="pm-cur-pc" style="color:#94a3b8;">-</td><td id="pm-aud-pc" style="color:#c4b5fd;">-</td><td><input type="number" id="pm-new-pc" style="padding:5px;font-size:12px;text-align:center;margin-bottom:0;" oninput="updatePriceSim()"></td><td id="pm-off-c" style="color:#94a3b8;">-</td><td id="pm-sim-tot-c" style="color:#60a5fa;font-weight:bold;">-</td><td id="pm-sim-rem-c" style="font-weight:bold;">-</td></tr>
+                    </tbody>
+                </table>
+            </div>
             <input type="hidden" id="pm-route-key">
             <div class="grid-2" style="margin-top: 15px;">
                 <button class="btn-main bg-gray" style="margin:0;" onclick="closeModal('modal-price-management')">İptal</button>
@@ -234,7 +282,7 @@
     <!-- MODAL: Uçak Önerisi -->
     <div class="modal-overlay" id="modal-recommendation">
         <div class="modal-content modal-lg" style="border-color: var(--accent);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 5px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 5px; flex-wrap: wrap; gap: 8px;">
                 <h3 style="color: var(--accent); margin:0;">✈️ En Kârlı Uçak Önerileri (Top 3)</h3>
                 <div style="display:flex; gap:4px;">
                     <button class="btn-small btn-blue" id="rec-tab-current" style="padding:5px 10px;" onclick="runRecommendTab('current')">Güncel Öneri</button>
@@ -471,7 +519,7 @@
                 let totalKm = routes.reduce((s,r) => s+cleanNum(r['distance']),0);
                 let danger = routes.filter(r => (cleanNum(r['eco demand'])-cleanNum(r['eco offer']))<0).length;
                 html += `<div class="list-item" onclick="openHubRoutes('${h}')">
-                    <div class="list-title">🏢 Merkez: ${h} <span class="btn-small bg-gray">Aç</span></div>
+                    <div class="list-title resp-flex"><div>🏢 Merkez: ${h}</div> <span class="btn-small bg-gray">Aç</span></div>
                     <div class="hub-stats"><div>Rota: <span>${routes.length}</span></div><div>Kilometre: <span>${totalKm.toLocaleString()} km</span></div>
                     <div>Verimsiz: <span class="${danger>0?'text-danger':'text-success'}">${danger}</span></div></div></div>`;
             });
@@ -565,7 +613,7 @@
                 if(!badges) badges='<span class="text-muted" style="font-size:11px;">Atanmış uçak yok.</span>';
 
                 html+=`<div class="list-item ${isDanger?'danger':''}" id="route-node-${dName}" style="cursor:default;padding:10px 12px;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                    <div class="resp-flex" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
                         <div>
                             <div class="list-title" style="margin:0;font-size:15px;color:#93c5fd;">📍 ${hubName} ➔ ${dName}</div>
                             <div style="display:flex;gap:8px;margin-top:3px;font-size:10px;flex-wrap:wrap;">
@@ -576,7 +624,7 @@
                                 ${acCount?`<span class="text-muted">Uçak: <b style="color:#60a5fa;">${acCount}</b></span>`:''}
                             </div>
                         </div>
-                        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+                        <div class="resp-flex-end" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
                             <div style="display:flex;gap:6px;">
                                 <button class="btn-blue" onclick="openPriceManagement('${cacheKey}')" style="padding:4px 8px;font-size:11px;">🎛️ Fiyat</button>
                                 <button class="btn-purple" onclick="runRecommend('${cacheKey}')" style="padding:4px 8px;font-size:11px;">✈️ Öner</button>
@@ -584,15 +632,17 @@
                             <div style="font-size:10px;text-align:right;"><span style="color:#34d399;font-weight:700;">💰 ${formatMoney(rev.daily)}/gün</span> <span class="text-muted">|</span> <span style="color:#10b981;font-weight:700;">${formatMoney(rev.weekly)}/hf</span></div>
                         </div>
                     </div>
-                    <table class="dashboard-table" style="text-align:center;font-size:11px;">
-                        <thead><tr><th>Sınıf</th><th>Fiyat</th><th style="color:#a78bfa;">Audit Fiyat</th><th>Güncel Talep</th><th style="color:#a78bfa;">Audit Talep</th><th>Arz</th><th>Güncel Kalan</th><th style="color:#a78bfa;">Audit Kalan</th></tr></thead>
-                        <tbody>
-                            <tr><td><b>Eco</b></td><td style="color:#94a3b8;">$${curP.e}</td><td style="color:#c4b5fd;">$${aud.e}</td><td>${curDemE}</td><td style="color:#c4b5fd;">${audDemE}</td><td style="color:#94a3b8;">${offer.e}</td><td class="${curRemE<0?'text-danger':'text-success'}"><b>${curRemE}</b></td><td class="${audRemE<0?'text-danger':''}" style="${audRemE>=0?'color:#a78bfa':''}"><b>${audRemE}</b></td></tr>
-                            <tr><td><b>Bus</b></td><td style="color:#94a3b8;">$${curP.b}</td><td style="color:#c4b5fd;">$${aud.b}</td><td>${curDemB}</td><td style="color:#c4b5fd;">${audDemB}</td><td style="color:#94a3b8;">${offer.b}</td><td class="${curRemB<0?'text-danger':'text-success'}"><b>${curRemB}</b></td><td class="${audRemB<0?'text-danger':''}" style="${audRemB>=0?'color:#a78bfa':''}"><b>${audRemB}</b></td></tr>
-                            <tr><td><b>First</b></td><td style="color:#94a3b8;">$${curP.f}</td><td style="color:#c4b5fd;">$${aud.f}</td><td>${curDemF}</td><td style="color:#c4b5fd;">${audDemF}</td><td style="color:#94a3b8;">${offer.f}</td><td class="${curRemF<0?'text-danger':'text-success'}"><b>${curRemF}</b></td><td class="${audRemF<0?'text-danger':''}" style="${audRemF>=0?'color:#a78bfa':''}"><b>${audRemF}</b></td></tr>
-                            <tr><td><b>Kargo</b></td><td style="color:#94a3b8;">$${curP.c}</td><td style="color:#c4b5fd;">$${aud.c}</td><td>${curDemC}</td><td style="color:#c4b5fd;">${audDemC}</td><td style="color:#94a3b8;">${offer.c}</td><td class="${curRemC<0?'text-danger':'text-success'}"><b>${curRemC}</b></td><td class="${audRemC<0?'text-danger':''}" style="${audRemC>=0?'color:#a78bfa':''}"><b>${audRemC}</b></td></tr>
-                        </tbody>
-                    </table>
+                    <div class="table-wrapper">
+                        <table class="dashboard-table" style="text-align:center;font-size:11px;">
+                            <thead><tr><th>Sınıf</th><th>Fiyat</th><th style="color:#a78bfa;">Audit Fiyat</th><th>Güncel Talep</th><th style="color:#a78bfa;">Audit Talep</th><th>Arz</th><th>Güncel Kalan</th><th style="color:#a78bfa;">Audit Kalan</th></tr></thead>
+                            <tbody>
+                                <tr><td><b>Eco</b></td><td style="color:#94a3b8;">$${curP.e}</td><td style="color:#c4b5fd;">$${aud.e}</td><td>${curDemE}</td><td style="color:#c4b5fd;">${audDemE}</td><td style="color:#94a3b8;">${offer.e}</td><td class="${curRemE<0?'text-danger':'text-success'}"><b>${curRemE}</b></td><td class="${audRemE<0?'text-danger':''}" style="${audRemE>=0?'color:#a78bfa':''}"><b>${audRemE}</b></td></tr>
+                                <tr><td><b>Bus</b></td><td style="color:#94a3b8;">$${curP.b}</td><td style="color:#c4b5fd;">$${aud.b}</td><td>${curDemB}</td><td style="color:#c4b5fd;">${audDemB}</td><td style="color:#94a3b8;">${offer.b}</td><td class="${curRemB<0?'text-danger':'text-success'}"><b>${curRemB}</b></td><td class="${audRemB<0?'text-danger':''}" style="${audRemB>=0?'color:#a78bfa':''}"><b>${audRemB}</b></td></tr>
+                                <tr><td><b>First</b></td><td style="color:#94a3b8;">$${curP.f}</td><td style="color:#c4b5fd;">$${aud.f}</td><td>${curDemF}</td><td style="color:#c4b5fd;">${audDemF}</td><td style="color:#94a3b8;">${offer.f}</td><td class="${curRemF<0?'text-danger':'text-success'}"><b>${curRemF}</b></td><td class="${audRemF<0?'text-danger':''}" style="${audRemF>=0?'color:#a78bfa':''}"><b>${audRemF}</b></td></tr>
+                                <tr><td><b>Kargo</b></td><td style="color:#94a3b8;">$${curP.c}</td><td style="color:#c4b5fd;">$${aud.c}</td><td>${curDemC}</td><td style="color:#c4b5fd;">${audDemC}</td><td style="color:#94a3b8;">${offer.c}</td><td class="${curRemC<0?'text-danger':'text-success'}"><b>${curRemC}</b></td><td class="${audRemC<0?'text-danger':''}" style="${audRemC>=0?'color:#a78bfa':''}"><b>${audRemC}</b></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                     <div style="margin-top:6px;font-size:11px;"><span class="text-muted" style="font-weight:600;">✈️ Uçaklar:</span><div style="margin-left:-2px;margin-top:3px;">${badges}</div></div>
                 </div>`;
             });
@@ -694,8 +744,8 @@
                 if(rev.amortWeeks===Infinity) amortColor='#64748b';
 
                 html+=`<div class="card card-highlight" id="ac-card-node-${name.replace(/\s+/g,'_')}" style="padding:8px 10px;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-                        <div style="display:flex;align-items:center;gap:6px;">
+                    <div class="resp-flex" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
                             <h4 style="color:#e2e8f0;text-transform:uppercase;font-size:13px;margin:0;">📛 ${name}</h4>
                             ${hub?`<span style="background:#1e293b;color:#93c5fd;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:600;">📍${hub}</span>`:''}
                         </div>
@@ -705,29 +755,29 @@
                             <button class="btn-small btn-danger" onclick="event.stopPropagation();deleteAircraft('${safeN}')">🗑️</button>
                         </div>
                     </div>
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                    <div class="resp-flex" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
                         <span style="font-size:11px;font-weight:600;color:#60a5fa;">Model: ${model} <span style="color:#94a3b8;font-weight:400;">• $${cleanNum(a['purchase price']||a['purchase_price']).toLocaleString()}</span></span>
                         ${useVal?`<div style="display:flex;align-items:center;gap:4px;"><span style="font-size:10px;color:${useColor};font-weight:700;">%${useVal}</span><div style="width:50px;height:5px;background:#1e293b;border-radius:3px;overflow:hidden;"><div style="width:${useVal}%;height:100%;background:${useColor};border-radius:3px;"></div></div></div>`:''}
                     </div>
-                    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:3px;font-size:10px;text-align:center;background:var(--bg-dark);padding:5px;border-radius:6px;border:1px solid var(--border);margin-bottom:4px;">
+                    <div class="grid-4-to-2" style="display:grid;grid-template-columns:repeat(4,1fr);gap:3px;font-size:10px;text-align:center;background:var(--bg-dark);padding:5px;border-radius:6px;border:1px solid var(--border);margin-bottom:4px;">
                         <div><span class="text-muted">Menzil</span><br><b style="color:#e2e8f0;">${cleanNum(a['range'])} km</b></div>
                         <div><span class="text-muted">Hız</span><br><b style="color:#e2e8f0;">${cleanNum(a['speed'])} km/s</b></div>
                         <div><span class="text-muted">Kapasite</span><br><b style="color:#e2e8f0;">${cleanNum(a['capacity pax']||a['capacity'])} Pax</b></div>
                         <div><span class="text-muted">Aşınma</span><br><b class="text-danger">%${cleanNum(a['wear'])}</b></div>
                     </div>
-                    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:3px;font-size:10px;text-align:center;background:var(--bg-dark);padding:5px;border-radius:6px;border:1px solid var(--border);margin-bottom:4px;">
+                    <div class="grid-4-to-2" style="display:grid;grid-template-columns:repeat(4,1fr);gap:3px;font-size:10px;text-align:center;background:var(--bg-dark);padding:5px;border-radius:6px;border:1px solid var(--border);margin-bottom:4px;">
                         <div><span class="text-muted">Eco</span><br><b style="color:#34d399;">${ecoS||'-'}</b></div>
                         <div><span class="text-muted">Bus</span><br><b style="color:#60a5fa;">${busS||'-'}</b></div>
                         <div><span class="text-muted">First</span><br><b style="color:#c084fc;">${firstS||'-'}</b></div>
                         <div><span class="text-muted">Kargo</span><br><b style="color:#94a3b8;">${cargoVal}</b></div>
                     </div>
-                    <div style="display:flex;justify-content:space-between;align-items:center;font-size:10px;padding:3px 0;">
+                    <div class="resp-flex" style="display:flex;justify-content:space-between;align-items:center;font-size:10px;padding:3px 0;flex-direction:row!important;">
                         <span class="text-muted">Yaş: <b style="color:#e2e8f0;">${ageVal}</b></span>
                         <span class="text-muted">Uçuş: <b style="color:#e2e8f0;">${fh}s</b></span>
                         ${cumRes?`<span class="text-muted">Kümülatif: <b style="color:${cumColor};">${cumRes}</b></span>`:''}
                     </div>
                     <div class="divider" style="margin:4px 0;border-style:solid;"></div>
-                    <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;">
+                    <div class="resp-flex" style="display:flex;justify-content:space-between;align-items:center;font-size:11px;">
                         <div><span class="text-muted" style="font-weight:600;">Rota:</span> ${routeHtml}</div>
                         <div style="font-size:10px;text-align:right;">
                             ${rev.daily>0?`<span style="color:#34d399;font-weight:700;">💰 ${formatMoney(rev.daily)}/g</span> <span class="text-muted">|</span> <span style="color:#10b981;font-weight:700;">${formatMoney(rev.weekly)}/hf</span>`:'<span class="text-muted">💰 -</span>'}
@@ -1274,15 +1324,16 @@
                                 <div style="font-size:15px;color:var(--accent-blue);font-weight:bold;">7x ${selAc}</div>
                             </div>
                         </div>
-                        <table class="dashboard-table">
-                            <thead><tr><th>Rota</th><th>Mesafe</th><th>Uçuş Süresi</th><th>Frekans</th></tr></thead>
-                            <tbody>`;
+                        <div class="table-wrapper">
+                            <table class="dashboard-table">
+                                <thead><tr><th>Rota</th><th>Mesafe</th><th>Uçuş Süresi</th><th>Frekans</th></tr></thead>
+                                <tbody>`;
 
                 c.indices.forEach(i => {
                     let d = validDests[i];
                     html += `<tr><td><b>${selHub} ➔ ${d.name}</b></td><td>${d.dist} km</td><td>${d.hours.toFixed(2)} Saat</td><td><b>Günde 1 Sefer</b></td></tr>`;
                 });
-                html += `</tbody></table></div></details>`;
+                html += `</tbody></table></div></div></details>`;
             });
             resDiv.innerHTML = html;
             showToast(`${top5.length} adet devre kombinasyonu bulundu.`,"info");
