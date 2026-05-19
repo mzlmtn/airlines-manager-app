@@ -490,13 +490,17 @@
                 let origD=getOrigDemand(r);
                 let offer={e:cleanNum(r['eco offer']),b:cleanNum(r['bus offer']),f:cleanNum(r['first offer']),c:cleanNum(r['cargo offer'])};
 
-                let curDemE=calcElasticDemand(origD.e,curP.e,aud.e);
-                let curDemB=calcElasticDemand(origD.b,curP.b,aud.b);
-                let curDemF=calcElasticDemand(origD.f,curP.f,aud.f);
-                let curDemC=calcElasticDemand(origD.c,curP.c,aud.c);
-                let audDemE=origD.e,audDemB=origD.b,audDemF=origD.f,audDemC=origD.c;
-                let curRemE=curDemE-offer.e,curRemB=curDemB-offer.b,curRemF=curDemF-offer.f,curRemC=curDemC-offer.c;
-                let audRemE=audDemE-offer.e,audRemB=audDemB-offer.b,audRemF=audDemF-offer.f,audRemC=audDemC-offer.c;
+                // Güncel Talep = doğrudan Excel (elastikiyet yok)
+                let curDemE=origD.e, curDemB=origD.b, curDemF=origD.f, curDemC=origD.c;
+                // Güncel Kalan = Güncel Talep - Arz
+                let curRemE=curDemE-offer.e, curRemB=curDemB-offer.b, curRemF=curDemF-offer.f, curRemC=curDemC-offer.c;
+                // Audit Talep = ters elastikiyet: Excel talep'i güncel fiyat etkisinden arındır
+                let audDemE=calcReverseElastic(origD.e,curP.e,aud.e);
+                let audDemB=calcReverseElastic(origD.b,curP.b,aud.b);
+                let audDemF=calcReverseElastic(origD.f,curP.f,aud.f);
+                let audDemC=calcReverseElastic(origD.c,curP.c,aud.c);
+                // Audit Kalan = Audit Talep - Arz
+                let audRemE=audDemE-offer.e, audRemB=audDemB-offer.b, audRemF=audDemF-offer.f, audRemC=audDemC-offer.c;
                 let isDanger=(curRemE<0||curRemB<0||curRemF<0||curRemC<0);
 
                 // Yeni rota bilgileri
@@ -533,12 +537,12 @@
                         </div>
                     </div>
                     <table class="dashboard-table" style="text-align:center;font-size:11px;">
-                        <thead><tr><th>Sınıf</th><th>Fiyat</th><th>Güncel Talep</th><th style="color:#a78bfa;">Audit Talep</th><th>Arz</th><th>Güncel Kalan</th><th style="color:#a78bfa;">Audit Kalan</th></tr></thead>
+                        <thead><tr><th>Sınıf</th><th>Fiyat</th><th style="color:#a78bfa;">Audit Fiyat</th><th>Güncel Talep</th><th style="color:#a78bfa;">Audit Talep</th><th>Arz</th><th>Güncel Kalan</th><th style="color:#a78bfa;">Audit Kalan</th></tr></thead>
                         <tbody>
-                            <tr><td><b>Eco</b></td><td style="color:#94a3b8;">$${curP.e}</td><td>${curDemE}</td><td style="color:#c4b5fd;">${audDemE}</td><td style="color:#94a3b8;">${offer.e}</td><td class="${curRemE<0?'text-danger':'text-success'}"><b>${curRemE}</b></td><td class="${audRemE<0?'text-danger':''}" style="${audRemE>=0?'color:#a78bfa':''}"><b>${audRemE}</b></td></tr>
-                            <tr><td><b>Bus</b></td><td style="color:#94a3b8;">$${curP.b}</td><td>${curDemB}</td><td style="color:#c4b5fd;">${audDemB}</td><td style="color:#94a3b8;">${offer.b}</td><td class="${curRemB<0?'text-danger':'text-success'}"><b>${curRemB}</b></td><td class="${audRemB<0?'text-danger':''}" style="${audRemB>=0?'color:#a78bfa':''}"><b>${audRemB}</b></td></tr>
-                            <tr><td><b>First</b></td><td style="color:#94a3b8;">$${curP.f}</td><td>${curDemF}</td><td style="color:#c4b5fd;">${audDemF}</td><td style="color:#94a3b8;">${offer.f}</td><td class="${curRemF<0?'text-danger':'text-success'}"><b>${curRemF}</b></td><td class="${audRemF<0?'text-danger':''}" style="${audRemF>=0?'color:#a78bfa':''}"><b>${audRemF}</b></td></tr>
-                            <tr><td><b>Kargo</b></td><td style="color:#94a3b8;">$${curP.c}</td><td>${curDemC}</td><td style="color:#c4b5fd;">${audDemC}</td><td style="color:#94a3b8;">${offer.c}</td><td class="${curRemC<0?'text-danger':'text-success'}"><b>${curRemC}</b></td><td class="${audRemC<0?'text-danger':''}" style="${audRemC>=0?'color:#a78bfa':''}"><b>${audRemC}</b></td></tr>
+                            <tr><td><b>Eco</b></td><td style="color:#94a3b8;">$${curP.e}</td><td style="color:#c4b5fd;">$${aud.e}</td><td>${curDemE}</td><td style="color:#c4b5fd;">${audDemE}</td><td style="color:#94a3b8;">${offer.e}</td><td class="${curRemE<0?'text-danger':'text-success'}"><b>${curRemE}</b></td><td class="${audRemE<0?'text-danger':''}" style="${audRemE>=0?'color:#a78bfa':''}"><b>${audRemE}</b></td></tr>
+                            <tr><td><b>Bus</b></td><td style="color:#94a3b8;">$${curP.b}</td><td style="color:#c4b5fd;">$${aud.b}</td><td>${curDemB}</td><td style="color:#c4b5fd;">${audDemB}</td><td style="color:#94a3b8;">${offer.b}</td><td class="${curRemB<0?'text-danger':'text-success'}"><b>${curRemB}</b></td><td class="${audRemB<0?'text-danger':''}" style="${audRemB>=0?'color:#a78bfa':''}"><b>${audRemB}</b></td></tr>
+                            <tr><td><b>First</b></td><td style="color:#94a3b8;">$${curP.f}</td><td style="color:#c4b5fd;">$${aud.f}</td><td>${curDemF}</td><td style="color:#c4b5fd;">${audDemF}</td><td style="color:#94a3b8;">${offer.f}</td><td class="${curRemF<0?'text-danger':'text-success'}"><b>${curRemF}</b></td><td class="${audRemF<0?'text-danger':''}" style="${audRemF>=0?'color:#a78bfa':''}"><b>${audRemF}</b></td></tr>
+                            <tr><td><b>Kargo</b></td><td style="color:#94a3b8;">$${curP.c}</td><td style="color:#c4b5fd;">$${aud.c}</td><td>${curDemC}</td><td style="color:#c4b5fd;">${audDemC}</td><td style="color:#94a3b8;">${offer.c}</td><td class="${curRemC<0?'text-danger':'text-success'}"><b>${curRemC}</b></td><td class="${audRemC<0?'text-danger':''}" style="${audRemC>=0?'color:#a78bfa':''}"><b>${audRemC}</b></td></tr>
                         </tbody>
                     </table>
                     <div style="margin-top:6px;font-size:11px;"><span class="text-muted" style="font-weight:600;">✈️ Uçaklar:</span><div style="margin-left:-2px;margin-top:3px;">${badges}</div></div>
@@ -764,6 +768,15 @@
         if(auditPrice>0&&price>0) return Math.max(0,Math.round(origDem*(2-(price/auditPrice))));
         return origDem;
     }
+    // Ters elastikiyet: Excel talebi güncel fiyattaki taleptir. Audit fiyatındaki talebi bul.
+    // D_excel = D_audit * (2 - P_cur / P_audit) → D_audit = D_excel / (2 - P_cur / P_audit)
+    function calcReverseElastic(excelDem, curPrice, auditPrice) {
+        if(auditPrice>0&&curPrice>0) {
+            let factor=2-(curPrice/auditPrice);
+            if(factor>0) return Math.max(0,Math.round(excelDem/factor));
+        }
+        return excelDem;
+    }
     function calcAuditPrices(dist, comf) {
         let cCoef=dist>=5000?0.47:(dist>=2000?0.52:0.56);
         return {
@@ -909,11 +922,11 @@
         let origD=getOrigDemand(r);
         let curP={e:cleanNum(r['eco ticket']),b:cleanNum(r['bus ticket']),f:cleanNum(r['first ticket']),c:cleanNum(r['cargo ticket'])};
         let offer={e:cleanNum(r['eco offer']),b:cleanNum(r['bus offer']),f:cleanNum(r['first offer']),c:cleanNum(r['cargo offer'])};
-        // Güncel kalan talep (günlük): elastikiyet(origDemand, currentPrice) - offer
-        let remE=calcElasticDemand(origD.e,curP.e,aud.e)-offer.e;
-        let remB=calcElasticDemand(origD.b,curP.b,aud.b)-offer.b;
-        let remF=calcElasticDemand(origD.f,curP.f,aud.f)-offer.f;
-        let remC=calcElasticDemand(origD.c,curP.c,aud.c)-offer.c;
+        // Güncel kalan talep (günlük): doğrudan Excel talep - arz (elastikiyet yok)
+        let remE=origD.e-offer.e;
+        let remB=origD.b-offer.b;
+        let remF=origD.f-offer.f;
+        let remC=origD.c-offer.c;
 
         let candidates=[];
         GOLDEN_FLEET.forEach(p=>{
