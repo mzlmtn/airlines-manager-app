@@ -607,7 +607,7 @@
                         </div>
                     </div>
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-                        <span style="font-size:11px;font-weight:600;color:#60a5fa;">Model: ${model}</span>
+                        <span style="font-size:11px;font-weight:600;color:#60a5fa;">Model: ${model} <span style="color:#94a3b8;font-weight:400;">• $${cleanNum(a['purchase price']||a['purchase_price']).toLocaleString()}</span></span>
                         ${useVal?`<div style="display:flex;align-items:center;gap:4px;"><span style="font-size:10px;color:${useColor};font-weight:700;">%${useVal}</span><div style="width:50px;height:5px;background:#1e293b;border-radius:3px;overflow:hidden;"><div style="width:${useVal}%;height:100%;background:${useColor};border-radius:3px;"></div></div></div>`:''}
                     </div>
                     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:3px;font-size:10px;text-align:center;background:var(--bg-dark);padding:5px;border-radius:6px;border:1px solid var(--border);margin-bottom:4px;">
