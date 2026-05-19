@@ -304,7 +304,18 @@
                 let n={...r};
                 if(r['departure_airport']!==undefined) n['departure']=r['departure_airport'];
                 if(r['arrival_airport']!==undefined) n['arrival']=r['arrival_airport'];
-                if(r['aircrafts_on_route']!==undefined) n['aircrafts model/aircrafts name on route']=r['aircrafts_on_route'];
+                if(r['aircrafts_on_route']!==undefined) {
+                    // "model (name), model2 (name2)" → "model/name,model2/name2"
+                    let raw=String(r['aircrafts_on_route']);
+                    let converted=raw.split(/,\s*/).map(p=>{
+                        let m=p.trim().match(/^(.+?)\s*\((.+)\)$/);
+                        if(m) return m[1].trim()+'/'+m[2].trim();
+                        // Eski format desteği: "model / name"
+                        let s=p.split('/'); if(s.length>=2) return s[0].trim()+'/'+s[1].trim();
+                        return p.trim();
+                    }).filter(x=>x).join(',');
+                    n['aircrafts model/aircrafts name on route']=converted;
+                }
                 // Today/Yesterday max
                 [['eco_demand','eco demand'],['business_demand','bus demand'],['first_demand','first demand'],['cargo_demand','cargo demand'],
                  ['eco_offer','eco offer'],['business_offer','bus offer'],['first_offer','first offer'],['cargo_offer','cargo offer'],
