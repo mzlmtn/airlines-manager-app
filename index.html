@@ -359,7 +359,6 @@
     }
 
     // === GITHUB & BAŞLATMA İŞLEMLERİ ===
-// === GITHUB & BAŞLATMA İŞLEMLERİ ===
     async function initData() {
         // Global Ayarları Çek
         if(localStorage.getItem('g_comf')) document.getElementById('g_comf').value=localStorage.getItem('g_comf');
@@ -379,21 +378,21 @@
         const owner = "mzlmtn";
         const repo = "airlines-manager-app";
 
-        // CORS ve Cache engellerini aşmak için doğrudan GitHub REST API kullanıyoruz
-        // URL sonuna eklenen timestamp API'nin önbellek tutmasını engeller
+        // CORS engellerini aşmak için URL sonuna eklenen timestamp API'nin önbellek tutmasını engeller.
+        // HATA ÇÖZÜMÜ: Cache-Control ve Pragma header'ları CORS politikasına takıldığı için SİLİNDİ. 
+        // "?t=" parametresi zaten önbelleği baypas ettiği için o başlıklara gerek yoktur.
         let cacheBuster = '?t=' + new Date().getTime();
         const aircraftsApiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/aircrafts_output.xlsx${cacheBuster}`;
         const routesApiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/routes_output.xlsx${cacheBuster}`;
 
         let isOnlineDataLoaded = false;
         try {
+            // SADECE GITHUB'IN İZİN VERDİĞİ HEADER'LAR BURADA KALMALI
             const fetchOptions = {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${pat}`,
-                    'Accept': 'application/vnd.github.v3+json',
-                    'Cache-Control': 'no-cache',
-                    'Pragma': 'no-cache'
+                    'Accept': 'application/vnd.github.v3+json'
                 }
             };
 
@@ -401,7 +400,6 @@
             let resAc = await fetch(aircraftsApiUrl, fetchOptions);
             if(resAc.ok) {
                 let jsonAc = await resAc.json();
-                // GitHub API dosyayı base64 string olarak döner. Bunu binary array'e çeviriyoruz.
                 let binaryString = window.atob(jsonAc.content.replace(/\s/g, ''));
                 let len = binaryString.length;
                 let bytes = new Uint8Array(len);
