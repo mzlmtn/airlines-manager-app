@@ -1,1297 +1,268 @@
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
-    <title>Airlines Manager Pro - Exact Meta Engine</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <style>
-        :root {
-            --bg-dark: #09090b;
-            --card-bg: #141417;
-            --input-bg: #222226;
-            --accent: #10b981;
-            --accent-hover: #059669;
-            --accent-blue: #3b82f6;
-            --danger: #ef4444;
-            --danger-muted: rgba(239, 68, 68, 0.12);
-            --success: #22c55e;
-            --text-main: #f4f4f5;
-            --text-muted: #a1a1aa;
-            --border: #2d2d34;
-        }
-        * { box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg-dark); color: var(--text-main); padding: 12px; margin: 0; padding-bottom: 50px; }
-        h2, h3, h4 { margin-top: 0; color: #f4f4f5; font-size: 15px; }
-        h2 { font-size: 18px; }
-
-        .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        .refresh-btn { background: none; border: 1px solid var(--border); color: var(--text-main); padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; transition: 0.2s;}
-        .refresh-btn:active { background: var(--input-bg); }
-
-        .db-status { display: flex; gap: 8px; font-size: 11px; color: var(--text-muted); margin-bottom: 10px; flex-wrap: wrap; }
-        .db-badge { padding: 3px 8px; border-radius: 4px; background: var(--input-bg); border: 1px solid var(--border); }
-        .db-badge.loaded { border-color: var(--accent); color: var(--accent); }
-
-        .tab-container { display: flex; margin-bottom: 15px; background-color: var(--card-bg); border-radius: 8px; overflow: hidden; border: 1px solid var(--border);}
-        .tab-btn { flex: 1; padding: 12px; text-align: center; background: none; border: none; color: var(--text-muted); font-weight: bold; font-size: 14px; cursor: pointer; transition: 0.2s; }
-        .tab-btn.active { background-color: var(--input-bg); color: var(--text-main); border-bottom: 3px solid var(--accent); }
-
-        .sub-tab-container { display: flex; gap: 8px; margin-bottom: 12px; }
-        .sub-tab-btn { padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text-muted); font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .sub-tab-btn.active { background: var(--input-bg); color: var(--text-main); border-color: var(--accent); }
-
-        .card { background-color: var(--card-bg); border-radius: 8px; padding: 12px; margin-bottom: 12px; border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.15); }
-        .card-highlight { border-left: 4px solid var(--accent-blue) !important; }
-
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
-        .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; }
-
-        label { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 4px; font-weight: 600;}
-        input, select { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border); background-color: var(--input-bg); color: white; box-sizing: border-box; font-size: 14px; margin-bottom: 8px; font-family: inherit;}
-        input:focus, select:focus { outline: none; border-color: var(--accent); }
-        input[readonly] { color: var(--accent); font-weight: bold; background-color: rgba(39, 39, 42, 0.3); }
-
-        .btn-main { width: 100%; padding: 12px; border-radius: 6px; border: none; background-color: var(--accent); color: #000; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 5px; margin-bottom: 15px; transition: 0.2s;}
-        .btn-main:active { opacity: 0.8; transform: scale(0.98); }
-
-        .btn-blue { background-color: var(--accent-blue); color: white; border-radius: 4px; border: none; cursor: pointer; font-weight: bold; padding: 6px 10px;}
-        .btn-purple { background-color: #8b5cf6; color: white; border-radius: 4px; border: none; cursor: pointer; font-weight: bold; padding: 6px 10px;}
-        .btn-small { padding: 4px 8px; font-size: 11px; border-radius: 4px; border: none; cursor: pointer; font-weight: bold; color: white; background-color: #475569;}
-        .btn-small:hover { opacity: 0.8; }
-
-        .btn-danger { background-color: var(--danger); color: white; }
-        .btn-success { background-color: var(--success); color: black; }
-        .bg-gray { background-color: var(--input-bg); border: 1px solid var(--text-muted); color: var(--text-main); }
-
-        .link-badge { display: inline-block; background: var(--input-bg); border: 1px solid var(--accent-blue); color: var(--accent-blue); padding: 3px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; margin: 2px; cursor: pointer; transition: 0.2s; text-transform: uppercase;}
-        .link-badge:hover { background: var(--accent-blue); color: white; }
-        .link-badge-route { border-color: var(--accent); color: var(--accent); }
-        .link-badge-route:hover { background: var(--accent); color: black; }
-
-        .text-success { color: var(--success); }
-        .text-danger { color: var(--danger); }
-        .text-muted { color: var(--text-muted); font-size: 12px; }
-        .divider { border-bottom: 1px dashed var(--border); margin: 12px 0; }
-
-        details { background-color: var(--input-bg); border-radius: 6px; padding: 8px 12px; margin-bottom: 8px; border: 1px solid var(--border); }
-        summary { font-weight: bold; font-size: 14px; cursor: pointer; outline: none; list-style: none;}
-        summary::-webkit-details-marker { display: none; }
-        .details-content { margin-top: 10px; font-size: 12.5px; border-top: 1px solid var(--border); padding-top: 10px;}
-
-        .hub-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 11.5px; color: var(--text-muted); background: var(--bg-dark); padding: 8px; border-radius: 6px; margin-bottom: 8px;}
-        .hub-stats div span { color: var(--text-main); font-weight: bold; }
-
-        .dashboard-table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 12px; text-align: left; }
-        .dashboard-table th { background: var(--bg-dark); color: var(--text-muted); padding: 6px 8px; font-weight: 600; border: 1px solid var(--border); text-transform: uppercase; font-size: 10px; text-align: center; }
-        .dashboard-table td { padding: 6px 8px; border: 1px solid var(--border); font-weight: 500; text-align: center; vertical-align: middle; }
-        .dashboard-table tr:nth-child(even) { background: rgba(255,255,255,0.01); }
-
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: flex-start; overflow-y: auto; padding: 20px 0; }
-        .modal-content { background-color: var(--card-bg); width: 96%; max-width: 600px; border-radius: 8px; padding: 16px; border: 1px solid var(--border); }
-        .modal-lg { max-width: 900px; }
-        .modal-xl { max-width: 1000px; }
-        .back-btn { background: none; border: none; color: var(--accent); font-size: 14px; cursor: pointer; padding: 0; margin-bottom: 12px; font-weight: bold; display: flex; align-items: center; gap: 5px;}
-
-        .list-item { background-color: var(--input-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 10px; cursor: pointer; transition: 0.2s; position: relative; }
-        .list-item.danger { border-color: var(--danger) !important; background-color: var(--danger-muted) !important; }
-        .list-title { font-size: 15px; font-weight: bold; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;}
-
-        /* Toast Notification */
-        .toast-container { position: fixed; top: 16px; right: 16px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
-        .toast { padding: 10px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; color: white; animation: toastIn 0.3s ease, toastOut 0.3s ease 2.7s; box-shadow: 0 4px 12px rgba(0,0,0,0.4); max-width: 340px; }
-        .toast-success { background: #16a34a; }
-        .toast-error { background: #dc2626; }
-        .toast-info { background: #2563eb; }
-        @keyframes toastIn { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
-        @keyframes toastOut { from { opacity:1; } to { opacity:0; transform:translateY(-10px); } }
-    </style>
-</head>
-<body>
-
-    <div class="toast-container" id="toast-container"></div>
-
-    <div class="header-bar">
-        <h2 style="margin: 0; font-size: 18px;">✈️ AM Control Pro - Meta Engine</h2>
-        <button class="refresh-btn" onclick="forceRefresh()">🔄 Yenile</button>
-    </div>
-
-    <div class="db-status" id="db-status"></div>
-
-    <div class="tab-container">
-        <button class="tab-btn active" id="btn-tab-opt" onclick="switchTab('opt')">Devre Motoru (168h)</button>
-        <button class="tab-btn" id="btn-tab-dash" onclick="switchTab('dash')">Kontrol Paneli</button>
-        <button class="tab-btn" id="btn-tab-stats" onclick="switchTab('stats')">Ayarlar</button>
-    </div>
-
-    <div id="tab-opt">
-        <div class="card">
-            <h3>🌍 Dünya Çapında 168h Devre Keşif Motoru (DFS Backtracking)</h3>
-            <p class="text-muted" style="font-size: 11.5px; margin-top: -5px;">Seçilen merkezden tam 168 saate yaklaşan, KESİNLİKLE 7 benzersiz uzun mesafe (Long-Haul) rotasından oluşan en verimli 5 devreyi hesaplar.</p>
-            <label>Başlangıç Havalimanı (Hub Seçimi)</label>
-            <select id="opt-hub"></select>
-            <label>Kullanılacak Uçak Modeli</label>
-            <select id="opt-ac"></select>
-            <button class="btn-main" onclick="runOptimization()">168h Pro Meta Devrelerini Bul</button>
-        </div>
-        <div id="opt-results"></div>
-    </div>
-
-    <div id="tab-dash" style="display: none;">
-        <div class="sub-tab-container">
-            <button class="sub-tab-btn active" id="btn-sub-hubs" onclick="switchSubTab('hubs')">Merkezlerim (Hubs)</button>
-            <button class="sub-tab-btn" id="btn-sub-fleet" onclick="switchSubTab('fleet')">Uçak Veritabanım</button>
-        </div>
-        <div id="sub-content-hubs">
-            <div id="view-hubs">
-                <h3 style="margin-bottom: 12px; font-size: 15px;">🌍 Hub Kontrol Paneli</h3>
-                <div id="hubs-container"></div>
-            </div>
-            <div id="view-routes" style="display: none;">
-                <button class="back-btn" onclick="navTo('hubs')">⬅ Merkezlere Dön</button>
-                <h3 id="current-hub-title" style="margin-bottom: 12px; font-size: 15px;"></h3>
-                <div id="routes-container"></div>
-            </div>
-        </div>
-        <div id="sub-content-fleet" style="display: none;">
-            <h3 style="margin-bottom: 12px; font-size: 15px;">✈️ Aktif Havayolu Filosu</h3>
-            <div id="fleet-container"></div>
-        </div>
-    </div>
-
-    <div id="tab-stats" style="display: none;">
-        <div class="card">
-            <h3>📂 Veritabanı Yükleme (Excel)</h3>
-            <p class="text-muted" style="font-size: 12px;">Web Scraper'dan alınan ham dosyalar doğrudan desteklenir.</p>
-            <label>✈️ Uçaklar (aircrafts.xlsx) Yükle</label>
-            <input type="file" accept=".xlsx, .xls" onchange="handleFileUpload(event, 'am_aircraft_db')">
-            <label>📍 Rotalar (routes.xlsx) Yükle</label>
-            <input type="file" accept=".xlsx, .xls" onchange="handleFileUpload(event, 'am_routes_db')">
-            <label>🌍 Dünya Havalimanları (airports.xlsx) Yükle</label>
-            <input type="file" accept=".xlsx, .xls" onchange="handleFileUpload(event, 'am_airports_db')">
-        </div>
-        <div class="card">
-            <h3>⚙️ Genel Havayolu İstatistikleri</h3>
-            <label>Comfort (Konfor) İstatistiği</label>
-            <input type="number" id="g_comf" value="0" oninput="saveGlobalStats()">
-            <label>Ortalama Yakıt Fiyatı ($/1000L)</label>
-            <input type="number" id="g_fuel" value="750" oninput="saveGlobalStats()">
-            <label>NGAF Seviyesi (Masraf Düşüşü)</label>
-            <select id="g_ngaf" onchange="saveGlobalStats()">
-                <option value="0">Seviye 0 (Düşüş Yok)</option>
-                <option value="1">Seviye 1 (%25 Düşüş)</option>
-                <option value="2">Seviye 2 (%50 Düşüş)</option>
-                <option value="3">Seviye 3 (%75 Düşüş)</option>
-                <option value="4">Seviye 4 (%100 Düşüş)</option>
-            </select>
-        </div>
-        <div class="card" style="border-color: var(--accent-blue);">
-            <h3>💾 Güncel Veritabanını İndir</h3>
-            <p class="text-muted" style="margin-top:-5px; font-size:11.5px;">Sistemde yaptığınız uçak atamaları ve fiyat değişimleri dahil güncel tabloları indirin.</p>
-            <div class="grid-2">
-                <button class="btn-main btn-blue" style="margin:0;" onclick="exportDatabase('aircraft')">Uçakları İndir (xlsx)</button>
-                <button class="btn-main btn-blue" style="margin:0;" onclick="exportDatabase('routes')">Rotaları İndir (xlsx)</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL: Fiyat Yönetimi -->
-    <div class="modal-overlay" id="modal-price-management">
-        <div class="modal-content modal-lg" style="border-color: var(--accent-blue);">
-            <h3 style="color: #93c5fd; margin-bottom: 5px;" id="pm-title">🎛️ Fiyat ve Talep Yönetimi</h3>
-            <p class="text-muted" style="font-size: 11.5px; margin-top: 0; margin-bottom: 12px;">YENİ FİYAT değiştirdikçe simülasyon otomatik güncellenir. "Uygula" demeden kayıt olmaz.</p>
-            <div style="display: flex; gap: 8px; justify-content: center; margin-bottom: 12px; padding: 8px; background-color: var(--bg-dark); border-radius: 6px;">
-                <button class="btn-small btn-purple" style="padding: 7px 12px; font-size: 12px;" onclick="setAllSimPrices('audit')">📋 Audit Fiyatlarını Yükle</button>
-                <button class="btn-small bg-gray" style="padding: 7px 12px; font-size: 12px;" onclick="setAllSimPrices('current')">↩️ Güncel'e Dön</button>
-            </div>
-            <table class="dashboard-table" style="text-align:center;font-size:11.5px;">
-                <thead>
-                    <tr>
-                        <th>Sınıf</th><th>Güncel Fiyat</th><th style="color:#a78bfa;">Audit Fiyat</th>
-                        <th style="color:#60a5fa;width:100px;">YENİ FİYAT</th>
-                        <th>Arz</th><th>Simüle Talep</th><th>Simüle Kalan</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr><td><b>Eco</b></td><td id="pm-cur-pe" style="color:#94a3b8;">-</td><td id="pm-aud-pe" style="color:#c4b5fd;">-</td><td><input type="number" id="pm-new-pe" style="padding:5px;font-size:12px;text-align:center;margin-bottom:0;" oninput="updatePriceSim()"></td><td id="pm-off-e" style="color:#94a3b8;">-</td><td id="pm-sim-tot-e" style="color:#60a5fa;font-weight:bold;">-</td><td id="pm-sim-rem-e" style="font-weight:bold;">-</td></tr>
-                    <tr><td><b>Bus</b></td><td id="pm-cur-pb" style="color:#94a3b8;">-</td><td id="pm-aud-pb" style="color:#c4b5fd;">-</td><td><input type="number" id="pm-new-pb" style="padding:5px;font-size:12px;text-align:center;margin-bottom:0;" oninput="updatePriceSim()"></td><td id="pm-off-b" style="color:#94a3b8;">-</td><td id="pm-sim-tot-b" style="color:#60a5fa;font-weight:bold;">-</td><td id="pm-sim-rem-b" style="font-weight:bold;">-</td></tr>
-                    <tr><td><b>First</b></td><td id="pm-cur-pf" style="color:#94a3b8;">-</td><td id="pm-aud-pf" style="color:#c4b5fd;">-</td><td><input type="number" id="pm-new-pf" style="padding:5px;font-size:12px;text-align:center;margin-bottom:0;" oninput="updatePriceSim()"></td><td id="pm-off-f" style="color:#94a3b8;">-</td><td id="pm-sim-tot-f" style="color:#60a5fa;font-weight:bold;">-</td><td id="pm-sim-rem-f" style="font-weight:bold;">-</td></tr>
-                    <tr><td><b>Cargo</b></td><td id="pm-cur-pc" style="color:#94a3b8;">-</td><td id="pm-aud-pc" style="color:#c4b5fd;">-</td><td><input type="number" id="pm-new-pc" style="padding:5px;font-size:12px;text-align:center;margin-bottom:0;" oninput="updatePriceSim()"></td><td id="pm-off-c" style="color:#94a3b8;">-</td><td id="pm-sim-tot-c" style="color:#60a5fa;font-weight:bold;">-</td><td id="pm-sim-rem-c" style="font-weight:bold;">-</td></tr>
-                </tbody>
-            </table>
-            <input type="hidden" id="pm-route-key">
-            <div class="grid-2" style="margin-top: 15px;">
-                <button class="btn-main bg-gray" style="margin:0;" onclick="closeModal('modal-price-management')">İptal</button>
-                <button class="btn-main btn-success" style="margin:0;" onclick="applyPriceManagement()">Değişiklikleri Uygula</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL: Uçak Önerisi -->
-    <div class="modal-overlay" id="modal-recommendation">
-        <div class="modal-content modal-lg" style="border-color: var(--accent);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 5px;">
-                <h3 style="color: var(--accent); margin:0;">✈️ En Kârlı Uçak Önerileri (Top 3)</h3>
-                <div style="display:flex; gap:4px;">
-                    <button class="btn-small btn-blue" id="rec-tab-current" style="padding:5px 10px;" onclick="runRecommendTab('current')">Güncel Öneri</button>
-                    <button class="btn-small bg-gray" id="rec-tab-audit" style="padding:5px 10px;" onclick="runRecommendTab('audit')">Audit Öneri</button>
-                </div>
-            </div>
-            <p class="text-muted" style="margin-top:0; font-size:12px; margin-bottom:15px;">Kapasite hesabı, haftalık uçuş frekanslarına ve oyunun Gidiş-Dönüş (Bölü-2) mantığına tam uyumlu olarak (Tekil Sefer Başına) hesaplanmıştır.</p>
-            <div class="grid-3" id="rec-container"></div>
-            <div style="text-align: center; margin-top: 15px;">
-                <button class="btn-main bg-gray" style="width: auto; padding: 10px 30px;" onclick="closeModal('modal-recommendation')">İptal Et</button>
-            </div>
-        </div>
-    </div>
-
-<script>
-
-    const GOLDEN_FLEET = [
-        {name:"Airbus A380-800",range:15556,speed:903,seats:853,cargo:84,price:403000000,fuel:2.05,wear:1.2,other:0.10},
-        {name:"Boeing 747-400",range:13450,speed:903,seats:660,cargo:65,price:296300000,fuel:2.65,wear:2.1,other:0.02},
-        {name:"Boeing 747-200B",range:12150,speed:890,seats:496,cargo:53,price:213200000,fuel:3.32,wear:2.8,other:0.00},
-        {name:"Boeing 777-300ER",range:14685,speed:898,seats:550,cargo:71,price:330000000,fuel:2.10,wear:1.5,other:0.08},
-        {name:"Airbus A350-1000",range:14750,speed:903,seats:475,cargo:54,price:335000000,fuel:1.65,wear:1.1,other:0.18},
-        {name:"Airbus A330-300",range:11750,speed:880,seats:440,cargo:45,price:239400000,fuel:2.30,wear:1.8,other:0.04},
-        {name:"Ilyushin Il-96-300",range:9000,speed:850,seats:300,cargo:40,price:53000000,fuel:2.70,wear:1.8,other:0.01},
-        {name:"Airbus A321neo",range:6852,speed:840,seats:244,cargo:5,price:124000000,fuel:1.95,wear:1.2,other:0.15}
-    ];
-
-    let AIRCRAFT_DB = [], ROUTES_DB = [], AIRPORTS_DB = [];
-
-    // === TOAST SİSTEMİ ===
-    function showToast(msg, type='success') {
-        let c = document.getElementById('toast-container');
-        let t = document.createElement('div');
-        t.className = 'toast toast-' + type;
-        t.textContent = msg;
-        c.appendChild(t);
-        setTimeout(() => { if(t.parentNode) t.remove(); }, 3000);
-    }
-
-    // === MODAL ===
-    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
-    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-
-    // === YARDIMCI FONKSİYONLAR ===
-    function cleanNum(val) {
-        if (val === undefined || val === null || val === '') return 0;
-        let str = String(val).replace(/[\s$,€£]/g, '');
-        let parsed = parseFloat(str);
-        return isNaN(parsed) ? 0 : parsed;
-    }
-    function formatMoney(v) {
-        if(v===0) return '$0';
-        if(Math.abs(v)>=1e6) return '$'+(v/1e6).toFixed(2)+'M';
-        if(Math.abs(v)>=1e3) return '$'+(v/1e3).toFixed(1)+'K';
-        return '$'+Math.round(v);
-    }
-    function forceRefresh() { window.location.reload(true); }
-
-    // FIX #3: Oyunun gerçek uçuş süresi formülü (çeyrek saat yuvarlama + 2 saat turnaround)
-    function calculateFlightTime(distance, speed) {
-        let roundTripHours = (distance / speed) * 2;
-        let rounded = Math.ceil(roundTripHours * 4) / 4;
-        return rounded + 2;
-    }
-
-    function calculateDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371;
-        const dLat = (lat2-lat1)*Math.PI/180, dLon = (lon2-lon1)*Math.PI/180;
-        const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
-        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    }
-
-    // === VERİ NORMALİZASYONU ===
-    function normalizeData(data, key) {
-        if(key==='am_routes_db') {
-            return data.map(r=>{
-                if(!r) return r;
-                let n={...r};
-                if(r['departure_airport']!==undefined) n['departure']=r['departure_airport'];
-                if(r['arrival_airport']!==undefined) n['arrival']=r['arrival_airport'];
-                if(r['aircrafts_on_route']!==undefined) {
-                    // "model (name), model2 (name2)" → "model/name,model2/name2"
-                    let raw=String(r['aircrafts_on_route']);
-                    let converted=raw.split(/,\s*/).map(p=>{
-                        let m=p.trim().match(/^(.+?)\s*\((.+)\)$/);
-                        if(m) return m[1].trim()+'/'+m[2].trim();
-                        // Eski format desteği: "model / name"
-                        let s=p.split('/'); if(s.length>=2) return s[0].trim()+'/'+s[1].trim();
-                        return p.trim();
-                    }).filter(x=>x).join(',');
-                    n['aircrafts model/aircrafts name on route']=converted;
-                }
-                // Today/Yesterday max
-                [['eco_demand','eco demand'],['business_demand','bus demand'],['first_demand','first demand'],['cargo_demand','cargo demand'],
-                 ['eco_offer','eco offer'],['business_offer','bus offer'],['first_offer','first offer'],['cargo_offer','cargo offer'],
-                 ['eco_price','eco ticket'],['business_price','bus ticket'],['first_price','first ticket'],['cargo_price','cargo ticket']
-                ].forEach(([pfx,internal])=>{
-                    let t=cleanNum(r[pfx+'_today']),y=cleanNum(r[pfx+'_yesterday']);
-                    if(t!==0||y!==0) n[internal]=Math.max(t,y);
-                });
-                return n;
-            });
-        } else if(key==='am_aircraft_db') {
-            return data.map(a=>{
-                if(!a) return a;
-                let n={...a};
-                if(a['aircraft_model']!==undefined) n['aircraft']=a['aircraft_model'];
-                if(a['aircraft_name']!==undefined) n['aircraft name']=a['aircraft_name'];
-                if(a['capacity_pax']!==undefined) n['capacity pax']=a['capacity_pax'];
-                if(a['purchase_price']!==undefined) n['purchase price']=a['purchase_price'];
-                return n;
-            });
-        }
-        return data;
-    }
-
-    // === DOSYA YÜKLEME ===
-    function handleFileUpload(event, storageKey) {
-        const file=event.target.files[0];
-        if(!file) return;
-        const reader=new FileReader();
-        reader.onload=function(e){
-            try {
-                const data=new Uint8Array(e.target.result);
-                const wb=XLSX.read(data,{type:'array'});
-                const rawData=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]).map(row=>{
-                    let o={};
-                    for(let k in row) o[String(k).trim().toLowerCase()]=row[k];
-                    return o;
-                });
-                const normalized=normalizeData(rawData,storageKey);
-                localStorage.setItem(storageKey,JSON.stringify(normalized));
-                showToast(`Veritabanı başarıyla yüklendi (${normalized.length} kayıt).`,"success");
-                initData();
-            } catch(err){ showToast("Dosya hatası!","error"); console.error(err); }
-        };
-        reader.readAsArrayBuffer(file);
-    }
-
-    // === EXCEL EXPORT ===
-    function exportDatabase(type) {
-        if(type==='aircraft') {
-            if(!AIRCRAFT_DB.length) return showToast("İndirilecek uçak verisi yok.","error");
-            let ws=XLSX.utils.json_to_sheet(AIRCRAFT_DB);
-            let wb=XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb,ws,"Filo");
-            XLSX.writeFile(wb,"aircrafts_updated.xlsx");
-        } else {
-            if(!ROUTES_DB.length) return showToast("İndirilecek rota verisi yok.","error");
-            let cleanRoutes=ROUTES_DB.map(r=>{
-                if(!r) return r;
-                let o={};
-                for(let k in r){ if(!k.startsWith('_orig_')) o[k]=r[k]; }
-                return o;
-            });
-            let ws=XLSX.utils.json_to_sheet(cleanRoutes);
-            let wb=XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb,ws,"Rotalar");
-            XLSX.writeFile(wb,"routes_updated.xlsx");
-        }
-    }
-
-    // === VERİ BAŞLATMA ===
-    function initData() {
-        if(localStorage.getItem('g_comf')) document.getElementById('g_comf').value=localStorage.getItem('g_comf');
-        if(localStorage.getItem('g_fuel')) document.getElementById('g_fuel').value=localStorage.getItem('g_fuel');
-        if(localStorage.getItem('g_ngaf')) document.getElementById('g_ngaf').value=localStorage.getItem('g_ngaf');
-
-        try { let r=JSON.parse(localStorage.getItem('am_aircraft_db')); if(Array.isArray(r)) AIRCRAFT_DB=r.filter(a=>a&&(a['aircraft name']||a['aircraft'])); else AIRCRAFT_DB=[]; } catch(e){ AIRCRAFT_DB=[]; }
-        try { let r=JSON.parse(localStorage.getItem('am_routes_db')); if(Array.isArray(r)) ROUTES_DB=r.filter(row=>row&&cleanNum(row['distance'])>0); else ROUTES_DB=[]; } catch(e){ ROUTES_DB=[]; }
-        try { let r=JSON.parse(localStorage.getItem('am_airports_db')); if(Array.isArray(r)) AIRPORTS_DB=r.filter(ap=>ap&&ap['iata']&&(cleanNum(ap['lat'])!==0||cleanNum(ap['lon'])!==0)); else AIRPORTS_DB=[]; } catch(e){ AIRPORTS_DB=[]; }
-
-        if(!window.simState) window.simState = {};
-        updateDbStatus();
-        populateDropdowns();
-        renderHubsList();
-        renderFleetList();
-    }
-
-    function updateDbStatus() {
-        let s = document.getElementById('db-status');
-        s.innerHTML = `
-            <span class="db-badge ${AIRCRAFT_DB.length?'loaded':''}">✈️ Uçak: ${AIRCRAFT_DB.length}</span>
-            <span class="db-badge ${ROUTES_DB.length?'loaded':''}">📍 Rota: ${ROUTES_DB.length}</span>
-            <span class="db-badge ${AIRPORTS_DB.length?'loaded':''}">🌍 Havalimanı: ${AIRPORTS_DB.length}</span>`;
-    }
-
-    function saveGlobalStats() {
-        localStorage.setItem('g_comf', document.getElementById('g_comf').value);
-        localStorage.setItem('g_fuel', document.getElementById('g_fuel').value);
-        localStorage.setItem('g_ngaf', document.getElementById('g_ngaf').value);
-    }
-
-    // === TAB / NAVİGASYON ===
-    function switchTab(t) {
-        document.getElementById('tab-opt').style.display = t==='opt'?'block':'none';
-        document.getElementById('tab-dash').style.display = t==='dash'?'block':'none';
-        document.getElementById('tab-stats').style.display = t==='stats'?'block':'none';
-        document.getElementById('btn-tab-opt').classList.toggle('active',t==='opt');
-        document.getElementById('btn-tab-dash').classList.toggle('active',t==='dash');
-        document.getElementById('btn-tab-stats').classList.toggle('active',t==='stats');
-    }
-    function switchSubTab(s) {
-        document.getElementById('sub-content-hubs').style.display = s==='hubs'?'block':'none';
-        document.getElementById('sub-content-fleet').style.display = s==='fleet'?'block':'none';
-        document.getElementById('btn-sub-hubs').classList.toggle('active',s==='hubs');
-        document.getElementById('btn-sub-fleet').classList.toggle('active',s==='fleet');
-    }
-    function navTo(v) {
-        document.getElementById('view-hubs').style.display = v==='hubs'?'block':'none';
-        document.getElementById('view-routes').style.display = v==='routes'?'block':'none';
-        if(v==='hubs') renderHubsList();
-    }
-
-    function getGroupedHubs() {
-        let hubs = {};
-        ROUTES_DB.forEach(r => {
-            if(!r) return;
-            let h = r['departure'] ? String(r['departure']).trim().toUpperCase() : "HUB";
-            if(!hubs[h]) hubs[h] = [];
-            hubs[h].push(r);
-        });
-        return hubs;
-    }
-
-    // === HUB LİSTELEME ===
-    function renderHubsList() {
-        try {
-            let c = document.getElementById('hubs-container');
-            let hubs = getGroupedHubs(), names = Object.keys(hubs), html = "";
-            if(!names.length) { c.innerHTML = '<div class="card text-muted" style="text-align:center;">Veri Yok.</div>'; return; }
-            names.forEach(h => {
-                let routes = hubs[h];
-                let totalKm = routes.reduce((s,r) => s+cleanNum(r['distance']),0);
-                let danger = routes.filter(r => (cleanNum(r['eco demand'])-cleanNum(r['eco offer']))<0).length;
-                html += `<div class="list-item" onclick="openHubRoutes('${h}')">
-                    <div class="list-title">🏢 Merkez: ${h} <span class="btn-small bg-gray">Aç</span></div>
-                    <div class="hub-stats"><div>Rota: <span>${routes.length}</span></div><div>Kilometre: <span>${totalKm.toLocaleString()} km</span></div>
-                    <div>Verimsiz: <span class="${danger>0?'text-danger':'text-success'}">${danger}</span></div></div></div>`;
-            });
-            c.innerHTML = html;
-        } catch(e) { console.error(e); }
-    }
-
-    // === ROTA LİSTELEME ===
-    function openHubRoutes(hubName,sortMode) {
-        try {
-            hubName=String(hubName).trim().toUpperCase();
-            document.getElementById('current-hub-title').innerText="🏢 "+hubName+" Rotaları";
-            let c=document.getElementById('routes-container'),html="";
-            let routes=getGroupedHubs()[hubName]||[];
-            if(!window.routeRefCache) window.routeRefCache={};
-            let comf=cleanNum(document.getElementById('g_comf').value)||0;
-            if(!sortMode) sortMode=window.routeSortMode||'alpha-asc';
-            window.routeSortMode=sortMode; window.currentHubName=hubName;
-
-            // Pre-calculate for sorting
-            let items=routes.map((r,idx)=>{
-                if(!r) return null;
-                let dName=r['arrival']?String(r['arrival']).trim().toUpperCase():"İSİMSİZ";
-                let origD=getOrigDemand(r);
-                let rev=calcRouteRevenue(r,comf);
-                
-                let dDist=cleanNum(r['distance']);
-                let curP={e:cleanNum(r['eco ticket']),b:cleanNum(r['bus ticket']),f:cleanNum(r['first ticket']),c:cleanNum(r['cargo ticket'])};
-                let aud=calcAuditPrices(dDist,comf);
-                let offer={e:cleanNum(r['eco offer']),b:cleanNum(r['bus offer']),f:cleanNum(r['first offer']),c:cleanNum(r['cargo offer'])};
-                let curDemE=calcElasticDemand(origD.e,curP.e,aud.e),curDemB=calcElasticDemand(origD.b,curP.b,aud.b),curDemF=calcElasticDemand(origD.f,curP.f,aud.f),curDemC=calcElasticDemand(origD.c,curP.c,aud.c);
-                let curRemE=curDemE-offer.e,curRemB=curDemB-offer.b,curRemF=curDemF-offer.f,curRemC=curDemC-offer.c;
-                let audRemE=origD.e-offer.e,audRemB=origD.b-offer.b,audRemF=origD.f-offer.f,audRemC=origD.c-offer.c;
-                let curRemEq = curRemE + (curRemB * 2) + (curRemF * 4) + curRemC;
-                let audRemEq = audRemE + (audRemB * 2) + (audRemF * 4) + audRemC;
-                
-                return {r,idx,dName,rev,curRemEq,audRemEq};
-            }).filter(x=>x);
-
-            // Sort
-            switch(sortMode){
-                case 'alpha-asc': items.sort((a,b)=>a.dName.localeCompare(b.dName));break;
-                case 'alpha-desc': items.sort((a,b)=>b.dName.localeCompare(a.dName));break;
-                case 'currem-desc': items.sort((a,b)=>b.curRemEq-a.curRemEq);break;
-                case 'currem-asc': items.sort((a,b)=>a.curRemEq-b.curRemEq);break;
-                case 'audrem-desc': items.sort((a,b)=>b.audRemEq-a.audRemEq);break;
-                case 'audrem-asc': items.sort((a,b)=>a.audRemEq-b.audRemEq);break;
-                case 'daily-desc': items.sort((a,b)=>b.rev.daily-a.rev.daily);break;
-                case 'daily-asc': items.sort((a,b)=>a.rev.daily-b.rev.daily);break;
-                case 'weekly-desc': items.sort((a,b)=>b.rev.weekly-a.rev.weekly);break;
-                case 'weekly-asc': items.sort((a,b)=>a.rev.weekly-b.rev.weekly);break;
-            }
-            let sb=s=>sortMode===s?'btn-blue':'bg-gray';
-            html+=`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;align-items:center;">
-                <span class="text-muted" style="font-size:10px;font-weight:700;">Sırala:</span>
-                <button class="btn-small ${sb('alpha-asc')}" onclick="openHubRoutes('${hubName}','alpha-asc')" style="padding:2px 7px;font-size:10px;">A→Z</button>
-                <button class="btn-small ${sb('alpha-desc')}" onclick="openHubRoutes('${hubName}','alpha-desc')" style="padding:2px 7px;font-size:10px;">Z→A</button>
-                <button class="btn-small ${sb('currem-desc')}" onclick="openHubRoutes('${hubName}','currem-desc')" style="padding:2px 7px;font-size:10px;">Güncel Kalan ↓</button>
-                <button class="btn-small ${sb('currem-asc')}" onclick="openHubRoutes('${hubName}','currem-asc')" style="padding:2px 7px;font-size:10px;">Güncel Kalan ↑</button>
-                <button class="btn-small ${sb('audrem-desc')}" onclick="openHubRoutes('${hubName}','audrem-desc')" style="padding:2px 7px;font-size:10px;">Audit Kalan ↓</button>
-                <button class="btn-small ${sb('audrem-asc')}" onclick="openHubRoutes('${hubName}','audrem-asc')" style="padding:2px 7px;font-size:10px;">Audit Kalan ↑</button>
-                <button class="btn-small ${sb('daily-desc')}" onclick="openHubRoutes('${hubName}','daily-desc')" style="padding:2px 7px;font-size:10px;">Günlük ↓</button>
-                <button class="btn-small ${sb('daily-asc')}" onclick="openHubRoutes('${hubName}','daily-asc')" style="padding:2px 7px;font-size:10px;">Günlük ↑</button>
-                <button class="btn-small ${sb('weekly-desc')}" onclick="openHubRoutes('${hubName}','weekly-desc')" style="padding:2px 7px;font-size:10px;">Haftalık ↓</button>
-                <button class="btn-small ${sb('weekly-asc')}" onclick="openHubRoutes('${hubName}','weekly-asc')" style="padding:2px 7px;font-size:10px;">Haftalık ↑</button>
-            </div>`;
-
-            items.forEach(({r,idx,dName,rev})=>{
-                let dDist=cleanNum(r['distance']);
-                let cacheKey=hubName+"_"+dName+"_"+idx;
-                window.routeRefCache[cacheKey]=r;
-                let curP={e:cleanNum(r['eco ticket']),b:cleanNum(r['bus ticket']),f:cleanNum(r['first ticket']),c:cleanNum(r['cargo ticket'])};
-                let aud=calcAuditPrices(dDist,comf);
-                let origD=getOrigDemand(r);
-                let offer={e:cleanNum(r['eco offer']),b:cleanNum(r['bus offer']),f:cleanNum(r['first offer']),c:cleanNum(r['cargo offer'])};
-                let curDemE=calcElasticDemand(origD.e,curP.e,aud.e),curDemB=calcElasticDemand(origD.b,curP.b,aud.b);
-                let curDemF=calcElasticDemand(origD.f,curP.f,aud.f),curDemC=calcElasticDemand(origD.c,curP.c,aud.c);
-                let curRemE=curDemE-offer.e,curRemB=curDemB-offer.b,curRemF=curDemF-offer.f,curRemC=curDemC-offer.c;
-                let audDemE=origD.e,audDemB=origD.b,audDemF=origD.f,audDemC=origD.c;
-                let audRemE=audDemE-offer.e,audRemB=audDemB-offer.b,audRemF=audDemF-offer.f,audRemC=audDemC-offer.c;
-                let isDanger=(curRemE<0||curRemB<0||curRemF<0||curRemC<0);
-                let taxes=r['taxes']?String(r['taxes']).trim():'';
-                let wkFlight=cleanNum(r['weekly_flight_count']);
-                let maxCat=cleanNum(r['max_category']);
-                let acCount=cleanNum(r['assigned_aircraft_count']);
-                let acStr=r['aircrafts model/aircrafts name on route']||"";
-                let badges="";
-                if(acStr.trim()!==""){
-                    acStr.split(',').forEach(part=>{let sp=part.split('/');if(sp.length>=2) badges+=`<span class="link-badge" onclick="event.stopPropagation();goToAircraft('${sp[1].trim()}')">${sp[0].trim()} (${sp[1].trim()})</span>`;});
-                }
-                if(!badges) badges='<span class="text-muted" style="font-size:11px;">Atanmış uçak yok.</span>';
-
-                html+=`<div class="list-item ${isDanger?'danger':''}" id="route-node-${dName}" style="cursor:default;padding:10px 12px;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-                        <div>
-                            <div class="list-title" style="margin:0;font-size:15px;color:#93c5fd;">📍 ${hubName} ➔ ${dName}</div>
-                            <div style="display:flex;gap:8px;margin-top:3px;font-size:10px;flex-wrap:wrap;">
-                                <span class="text-muted">Mesafe: <b style="color:#e2e8f0;">${dDist} km</b></span>
-                                ${taxes?`<span class="text-muted">Vergi: <b style="color:#fbbf24;">${taxes}</b></span>`:''}
-                                ${wkFlight?`<span class="text-muted">Haftalık: <b style="color:#34d399;">${wkFlight} sefer</b></span>`:''}
-                                ${maxCat?`<span class="text-muted">Kat: <b style="color:#94a3b8;">${maxCat}</b></span>`:''}
-                                ${acCount?`<span class="text-muted">Uçak: <b style="color:#60a5fa;">${acCount}</b></span>`:''}
-                            </div>
-                        </div>
-                        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
-                            <div style="display:flex;gap:6px;">
-                                <button class="btn-blue" onclick="openPriceManagement('${cacheKey}')" style="padding:4px 8px;font-size:11px;">🎛️ Fiyat</button>
-                                <button class="btn-purple" onclick="runRecommend('${cacheKey}')" style="padding:4px 8px;font-size:11px;">✈️ Öner</button>
-                            </div>
-                            <div style="font-size:10px;text-align:right;"><span style="color:#34d399;font-weight:700;">💰 ${formatMoney(rev.daily)}/gün</span> <span class="text-muted">|</span> <span style="color:#10b981;font-weight:700;">${formatMoney(rev.weekly)}/hf</span></div>
-                        </div>
-                    </div>
-                    <table class="dashboard-table" style="text-align:center;font-size:11px;">
-                        <thead><tr><th>Sınıf</th><th>Fiyat</th><th style="color:#a78bfa;">Audit Fiyat</th><th>Güncel Talep</th><th style="color:#a78bfa;">Audit Talep</th><th>Arz</th><th>Güncel Kalan</th><th style="color:#a78bfa;">Audit Kalan</th></tr></thead>
-                        <tbody>
-                            <tr><td><b>Eco</b></td><td style="color:#94a3b8;">$${curP.e}</td><td style="color:#c4b5fd;">$${aud.e}</td><td>${curDemE}</td><td style="color:#c4b5fd;">${audDemE}</td><td style="color:#94a3b8;">${offer.e}</td><td class="${curRemE<0?'text-danger':'text-success'}"><b>${curRemE}</b></td><td class="${audRemE<0?'text-danger':''}" style="${audRemE>=0?'color:#a78bfa':''}"><b>${audRemE}</b></td></tr>
-                            <tr><td><b>Bus</b></td><td style="color:#94a3b8;">$${curP.b}</td><td style="color:#c4b5fd;">$${aud.b}</td><td>${curDemB}</td><td style="color:#c4b5fd;">${audDemB}</td><td style="color:#94a3b8;">${offer.b}</td><td class="${curRemB<0?'text-danger':'text-success'}"><b>${curRemB}</b></td><td class="${audRemB<0?'text-danger':''}" style="${audRemB>=0?'color:#a78bfa':''}"><b>${audRemB}</b></td></tr>
-                            <tr><td><b>First</b></td><td style="color:#94a3b8;">$${curP.f}</td><td style="color:#c4b5fd;">$${aud.f}</td><td>${curDemF}</td><td style="color:#c4b5fd;">${audDemF}</td><td style="color:#94a3b8;">${offer.f}</td><td class="${curRemF<0?'text-danger':'text-success'}"><b>${curRemF}</b></td><td class="${audRemF<0?'text-danger':''}" style="${audRemF>=0?'color:#a78bfa':''}"><b>${audRemF}</b></td></tr>
-                            <tr><td><b>Kargo</b></td><td style="color:#94a3b8;">$${curP.c}</td><td style="color:#c4b5fd;">$${aud.c}</td><td>${curDemC}</td><td style="color:#c4b5fd;">${audDemC}</td><td style="color:#94a3b8;">${offer.c}</td><td class="${curRemC<0?'text-danger':'text-success'}"><b>${curRemC}</b></td><td class="${audRemC<0?'text-danger':''}" style="${audRemC>=0?'color:#a78bfa':''}"><b>${audRemC}</b></td></tr>
-                        </tbody>
-                    </table>
-                    <div style="margin-top:6px;font-size:11px;"><span class="text-muted" style="font-weight:600;">✈️ Uçaklar:</span><div style="margin-left:-2px;margin-top:3px;">${badges}</div></div>
-                </div>`;
-            });
-            c.innerHTML=html;
-            navTo('routes');
-        } catch(e){ console.error(e); }
-    }
-
-    // === FİLO LİSTELEME ===
-    function renderFleetList(hubFilter,sortMode) {
-        try {
-            let c=document.getElementById('fleet-container'),html="";
-            let list=AIRCRAFT_DB.filter(a=>a);
-            if(hubFilter&&hubFilter!=='all') list=list.filter(a=>{let h=a['hub']?String(a['hub']).trim().toUpperCase():''; return h===hubFilter.toUpperCase();});
-            if(!list.length){c.innerHTML='<div class="card text-muted" style="text-align:center;">Veri Yok.</div>';return;}
-            if(!sortMode) sortMode=window.fleetSortMode||'alpha-asc';
-            window.fleetSortMode=sortMode; window.currentHubFilter=hubFilter||'all';
-
-            let comf=cleanNum(document.getElementById('g_comf').value)||0;
-
-            // Pre-calculate revenue for each aircraft
-            let items=list.map(a=>{
-                let name=a['aircraft name']?String(a['aircraft name']).trim():"İSİMSİZ";
-                let route=null;
-                for(let i=0;i<ROUTES_DB.length;i++){
-                    let r=ROUTES_DB[i];
-                    if(r&&r['aircrafts model/aircrafts name on route']&&String(r['aircrafts model/aircrafts name on route']).includes(name)){route=r;break;}
-                }
-                let rev=calcAircraftRevenue(a,route,comf);
-                let totalPax=cleanNum(a['capacity pax']||a['capacity']);
-                return {a,name,route,rev,totalPax};
-            });
-
-            // Sort
-            switch(sortMode){
-                case 'alpha-asc': items.sort((x,y)=>x.name.localeCompare(y.name));break;
-                case 'alpha-desc': items.sort((x,y)=>y.name.localeCompare(x.name));break;
-                case 'pax-desc': items.sort((x,y)=>y.totalPax-x.totalPax);break;
-                case 'pax-asc': items.sort((x,y)=>x.totalPax-y.totalPax);break;
-                case 'daily-desc': items.sort((x,y)=>y.rev.daily-x.rev.daily);break;
-                case 'daily-asc': items.sort((x,y)=>x.rev.daily-y.rev.daily);break;
-                case 'weekly-desc': items.sort((x,y)=>y.rev.weekly-x.rev.weekly);break;
-                case 'weekly-asc': items.sort((x,y)=>x.rev.weekly-y.rev.weekly);break;
-                case 'amort-asc': items.sort((x,y)=>(x.rev.amortWeeks===Infinity?9e9:x.rev.amortWeeks)-(y.rev.amortWeeks===Infinity?9e9:y.rev.amortWeeks));break;
-                case 'amort-desc': items.sort((x,y)=>(y.rev.amortWeeks===Infinity?9e9:y.rev.amortWeeks)-(x.rev.amortWeeks===Infinity?9e9:x.rev.amortWeeks));break;
-            }
-
-            // Hub filtresi
-            let hubs=new Set(); AIRCRAFT_DB.forEach(a=>{if(a&&a['hub']) hubs.add(String(a['hub']).trim().toUpperCase());});
-            let hf=hubFilter||'all';
-            html+=`<div style="margin-bottom:6px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-                <span class="text-muted" style="font-size:10px;font-weight:700;">Hub:</span>
-                <button class="btn-small ${hf==='all'?'btn-blue':'bg-gray'}" onclick="renderFleetList('all','${sortMode}')" style="padding:2px 7px;font-size:10px;">Tümü (${AIRCRAFT_DB.filter(a=>a).length})</button>`;
-            hubs.forEach(h=>{
-                let cnt=AIRCRAFT_DB.filter(a=>a&&String(a['hub']||'').trim().toUpperCase()===h).length;
-                html+=`<button class="btn-small ${hf===h?'btn-blue':'bg-gray'}" onclick="renderFleetList('${h}','${sortMode}')" style="padding:2px 7px;font-size:10px;">📍${h} (${cnt})</button>`;
-            });
-            html+=`</div>`;
-
-            // Sıralama kontrolleri
-            let sb=s=>sortMode===s?'btn-blue':'bg-gray';
-            html+=`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;align-items:center;">
-                <span class="text-muted" style="font-size:10px;font-weight:700;">Sırala:</span>
-                <button class="btn-small ${sb('alpha-asc')}" onclick="renderFleetList('${hf}','alpha-asc')" style="padding:2px 7px;font-size:10px;">A→Z</button>
-                <button class="btn-small ${sb('alpha-desc')}" onclick="renderFleetList('${hf}','alpha-desc')" style="padding:2px 7px;font-size:10px;">Z→A</button>
-                <button class="btn-small ${sb('daily-desc')}" onclick="renderFleetList('${hf}','daily-desc')" style="padding:2px 7px;font-size:10px;">Günlük ↓</button>
-                <button class="btn-small ${sb('daily-asc')}" onclick="renderFleetList('${hf}','daily-asc')" style="padding:2px 7px;font-size:10px;">Günlük ↑</button>
-                <button class="btn-small ${sb('weekly-desc')}" onclick="renderFleetList('${hf}','weekly-desc')" style="padding:2px 7px;font-size:10px;">Haftalık ↓</button>
-                <button class="btn-small ${sb('weekly-asc')}" onclick="renderFleetList('${hf}','weekly-asc')" style="padding:2px 7px;font-size:10px;">Haftalık ↑</button>
-                <button class="btn-small ${sb('amort-asc')}" onclick="renderFleetList('${hf}','amort-asc')" style="padding:2px 7px;font-size:10px;">Amort ↑</button>
-                <button class="btn-small ${sb('amort-desc')}" onclick="renderFleetList('${hf}','amort-desc')" style="padding:2px 7px;font-size:10px;">Amort ↓</button>
-                <button class="btn-small ${sb('pax-desc')}" onclick="renderFleetList('${hf}','pax-desc')" style="padding:2px 7px;font-size:10px;">Pax ↓</button>
-            </div>`;
-
-            items.forEach(({a,name,route,rev})=>{
-                let model=a['aircraft']?String(a['aircraft']).trim():"Bilinmeyen";
-                let safeN=name.replace(/'/g,"\\'");
-                let hub=a['hub']?String(a['hub']).trim().toUpperCase():'';
-                let useVal=cleanNum(a['use']); let useColor=useVal>=90?'#10b981':(useVal>=70?'#f59e0b':'#ef4444');
-                let ecoS=cleanNum(a['eco_seats']),busS=cleanNum(a['business_seats']),firstS=cleanNum(a['first_seats']);
-                let cargoVal=a['cargo']?String(a['cargo']).trim():'0 T';
-                let ageVal=a['age']?String(a['age']).trim():'-';
-                let fh=cleanNum(a['flight_hours']);
-                let cumRes=a['cumulative_result']?String(a['cumulative_result']).trim():'';
-                let cumColor=cumRes.startsWith('-')?'#ef4444':'#10b981';
-
-                let routeHtml='<span class="text-muted" style="font-size:11px;">Atanmamış</span>';
-                let isAssigned=false;
-                if(route){
-                    let arr=route['arrival']?String(route['arrival']).trim().toUpperCase():"?";
-                    let dep=route['departure']?String(route['departure']).trim().toUpperCase():"?";
-                    routeHtml=`<span class="link-badge link-badge-route" onclick="goToRoute('${arr}','${dep}')">📍 ${dep} ➔ ${arr}</span>`;
-                    isAssigned=true;
-                }
-                let removeBtn=isAssigned?`<button class="btn-small" style="background:#f59e0b;" onclick="event.stopPropagation();removeFromRoute('${safeN}')">🔗 Çıkar</button>`:'';
-
-                let amortStr=rev.amortWeeks===Infinity?'∞':rev.amortWeeks+' hf';
-                let amortColor=rev.amortWeeks<=52?'#10b981':(rev.amortWeeks<=104?'#f59e0b':'#ef4444');
-                if(rev.amortWeeks===Infinity) amortColor='#64748b';
-
-                html+=`<div class="card card-highlight" id="ac-card-node-${name.replace(/\s+/g,'_')}" style="padding:8px 10px;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-                        <div style="display:flex;align-items:center;gap:6px;">
-                            <h4 style="color:#e2e8f0;text-transform:uppercase;font-size:13px;margin:0;">📛 ${name}</h4>
-                            ${hub?`<span style="background:#1e293b;color:#93c5fd;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:600;">📍${hub}</span>`:''}
-                        </div>
-                        <div style="display:flex;gap:4px;">
-                            <button class="btn-small" style="background:#3b82f6;" onclick="event.stopPropagation();renameAircraft('${safeN}')">✏️</button>
-                            ${removeBtn}
-                            <button class="btn-small btn-danger" onclick="event.stopPropagation();deleteAircraft('${safeN}')">🗑️</button>
-                        </div>
-                    </div>
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-                        <span style="font-size:11px;font-weight:600;color:#60a5fa;">Model: ${model} <span style="color:#94a3b8;font-weight:400;">• $${cleanNum(a['purchase price']||a['purchase_price']).toLocaleString()}</span></span>
-                        ${useVal?`<div style="display:flex;align-items:center;gap:4px;"><span style="font-size:10px;color:${useColor};font-weight:700;">%${useVal}</span><div style="width:50px;height:5px;background:#1e293b;border-radius:3px;overflow:hidden;"><div style="width:${useVal}%;height:100%;background:${useColor};border-radius:3px;"></div></div></div>`:''}
-                    </div>
-                    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:3px;font-size:10px;text-align:center;background:var(--bg-dark);padding:5px;border-radius:6px;border:1px solid var(--border);margin-bottom:4px;">
-                        <div><span class="text-muted">Menzil</span><br><b style="color:#e2e8f0;">${cleanNum(a['range'])} km</b></div>
-                        <div><span class="text-muted">Hız</span><br><b style="color:#e2e8f0;">${cleanNum(a['speed'])} km/s</b></div>
-                        <div><span class="text-muted">Kapasite</span><br><b style="color:#e2e8f0;">${cleanNum(a['capacity pax']||a['capacity'])} Pax</b></div>
-                        <div><span class="text-muted">Aşınma</span><br><b class="text-danger">%${cleanNum(a['wear'])}</b></div>
-                    </div>
-                    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:3px;font-size:10px;text-align:center;background:var(--bg-dark);padding:5px;border-radius:6px;border:1px solid var(--border);margin-bottom:4px;">
-                        <div><span class="text-muted">Eco</span><br><b style="color:#34d399;">${ecoS||'-'}</b></div>
-                        <div><span class="text-muted">Bus</span><br><b style="color:#60a5fa;">${busS||'-'}</b></div>
-                        <div><span class="text-muted">First</span><br><b style="color:#c084fc;">${firstS||'-'}</b></div>
-                        <div><span class="text-muted">Kargo</span><br><b style="color:#94a3b8;">${cargoVal}</b></div>
-                    </div>
-                    <div style="display:flex;justify-content:space-between;align-items:center;font-size:10px;padding:3px 0;">
-                        <span class="text-muted">Yaş: <b style="color:#e2e8f0;">${ageVal}</b></span>
-                        <span class="text-muted">Uçuş: <b style="color:#e2e8f0;">${fh}s</b></span>
-                        ${cumRes?`<span class="text-muted">Kümülatif: <b style="color:${cumColor};">${cumRes}</b></span>`:''}
-                    </div>
-                    <div class="divider" style="margin:4px 0;border-style:solid;"></div>
-                    <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;">
-                        <div><span class="text-muted" style="font-weight:600;">Rota:</span> ${routeHtml}</div>
-                        <div style="font-size:10px;text-align:right;">
-                            ${rev.daily>0?`<span style="color:#34d399;font-weight:700;">💰 ${formatMoney(rev.daily)}/g</span> <span class="text-muted">|</span> <span style="color:#10b981;font-weight:700;">${formatMoney(rev.weekly)}/hf</span>`:'<span class="text-muted">💰 -</span>'}
-                        </div>
-                    </div>
-                    ${rev.daily>0?`<div style="display:flex;justify-content:flex-end;font-size:10px;margin-top:2px;"><span class="text-muted">Amortisman: <b style="color:${amortColor};">${amortStr}</b></span></div>`:''}
-                </div>`;
-            });
-            c.innerHTML=html;
-        } catch(e){ console.error(e); }
-    }
-
-    // === FİLO YÖNETİM FONKSİYONLARI ===
-    function calcAircraftOfferContrib(ac, route) {
-        let dist=cleanNum(route['distance']),speed=cleanNum(ac['speed']);
-        let seats=cleanNum(ac['capacity pax']||ac['capacity']);
-        if(!speed||!dist) return 0;
-        let freq=Math.floor(168/calculateFlightTime(dist,speed));
-        return Math.round(seats*freq*2/7);
-    }
-
-    function removeFromRoute(acName) {
-        let ac=AIRCRAFT_DB.find(a=>a&&String(a['aircraft name']).trim()===acName);
-        if(!ac) return showToast("Uçak bulunamadı.","error");
-        let route=ROUTES_DB.find(r=>r&&r['aircrafts model/aircrafts name on route']&&String(r['aircrafts model/aircrafts name on route']).includes(acName));
-        if(!route) return showToast("Bu uçak bir rotaya atanmamış.","error");
-        if(!confirm(`"${acName}" uçağını rotadan çıkarmak istediğinize emin misiniz?`)) return;
-
-        // Offer katkısını hesapla ve orantılı olarak düş
-        let contrib=calcAircraftOfferContrib(ac,route);
-        let totOff=cleanNum(route['eco offer'])+cleanNum(route['bus offer'])+cleanNum(route['first offer']);
-        if(totOff>0&&contrib>0){
-            let eR=cleanNum(route['eco offer'])/totOff, bR=cleanNum(route['bus offer'])/totOff, fR=cleanNum(route['first offer'])/totOff;
-            route['eco offer']=Math.max(0,cleanNum(route['eco offer'])-Math.round(contrib*eR));
-            route['bus offer']=Math.max(0,cleanNum(route['bus offer'])-Math.round(contrib*bR));
-            route['first offer']=Math.max(0,cleanNum(route['first offer'])-Math.round(contrib*fR));
-        }
-        // Aircraft string'den çıkar
-        let parts=(route['aircrafts model/aircrafts name on route']||"").split(',').filter(p=>!p.includes(acName));
-        route['aircrafts model/aircrafts name on route']=parts.join(',');
-        localStorage.setItem('am_routes_db',JSON.stringify(ROUTES_DB));
-        showToast(`"${acName}" rotadan çıkarıldı.`,"success");
-        renderHubsList();renderFleetList();
-        if(document.getElementById('view-routes').style.display==='block'){
-            let dep=route['departure']?String(route['departure']).trim().toUpperCase():"";
-            if(dep) openHubRoutes(dep);
-        }
-    }
-
-    function deleteAircraft(acName) {
-        if(!confirm(`"${acName}" uçağını tamamen silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`)) return;
-        // Önce rotadan çıkar (offer güncelle)
-        let route=ROUTES_DB.find(r=>r&&r['aircrafts model/aircrafts name on route']&&String(r['aircrafts model/aircrafts name on route']).includes(acName));
-        if(route){
-            let ac=AIRCRAFT_DB.find(a=>a&&String(a['aircraft name']).trim()===acName);
-            if(ac){
-                let contrib=calcAircraftOfferContrib(ac,route);
-                let totOff=cleanNum(route['eco offer'])+cleanNum(route['bus offer'])+cleanNum(route['first offer']);
-                if(totOff>0&&contrib>0){
-                    let eR=cleanNum(route['eco offer'])/totOff,bR=cleanNum(route['bus offer'])/totOff,fR=cleanNum(route['first offer'])/totOff;
-                    route['eco offer']=Math.max(0,cleanNum(route['eco offer'])-Math.round(contrib*eR));
-                    route['bus offer']=Math.max(0,cleanNum(route['bus offer'])-Math.round(contrib*bR));
-                    route['first offer']=Math.max(0,cleanNum(route['first offer'])-Math.round(contrib*fR));
-                }
-            }
-            let parts=(route['aircrafts model/aircrafts name on route']||"").split(',').filter(p=>!p.includes(acName));
-            route['aircrafts model/aircrafts name on route']=parts.join(',');
-        }
-        // AIRCRAFT_DB'den sil
-        AIRCRAFT_DB=AIRCRAFT_DB.filter(a=>!(a&&String(a['aircraft name']).trim()===acName));
-        localStorage.setItem('am_aircraft_db',JSON.stringify(AIRCRAFT_DB));
-        localStorage.setItem('am_routes_db',JSON.stringify(ROUTES_DB));
-        showToast(`"${acName}" tamamen silindi.`,"success");
-        renderHubsList();renderFleetList();populateDropdowns();
-        if(document.getElementById('view-routes').style.display==='block'&&route){
-            let dep=route['departure']?String(route['departure']).trim().toUpperCase():"";
-            if(dep) openHubRoutes(dep);
-        }
-    }
-
-    function renameAircraft(oldName) {
-        let newName=prompt(`"${oldName}" için yeni isim girin:`,oldName);
-        if(!newName||!newName.trim()||newName.trim()===oldName) return;
-        newName=newName.trim();
-        // İsim çakışması kontrolü
-        if(AIRCRAFT_DB.find(a=>a&&String(a['aircraft name']).trim()===newName)){
-            return showToast("Bu isimde bir uçak zaten mevcut.","error");
-        }
-        // AIRCRAFT_DB güncelle
-        let ac=AIRCRAFT_DB.find(a=>a&&String(a['aircraft name']).trim()===oldName);
-        if(ac) ac['aircraft name']=newName;
-        // Tüm rotalarda güncelle
-        ROUTES_DB.forEach(r=>{
-            if(r&&r['aircrafts model/aircrafts name on route']){
-                r['aircrafts model/aircrafts name on route']=String(r['aircrafts model/aircrafts name on route']).split(oldName).join(newName);
-            }
-        });
-        localStorage.setItem('am_aircraft_db',JSON.stringify(AIRCRAFT_DB));
-        localStorage.setItem('am_routes_db',JSON.stringify(ROUTES_DB));
-        showToast(`"${oldName}" → "${newName}" olarak değiştirildi.`,"success");
-        renderHubsList();renderFleetList();
-        if(document.getElementById('view-routes').style.display==='block') {
-            // Açık olan hub'ı yeniden render et
-            let title=document.getElementById('current-hub-title').innerText.replace("🏢 ","").replace(" Rotaları","").trim();
-            if(title) openHubRoutes(title);
-        }
-    }
-
-    // === ÇAPRAZ NAVİGASYON ===
-    function goToAircraft(n) {
-        switchTab('dash');switchSubTab('fleet');
-        let el=document.getElementById("ac-card-node-"+n.replace(/\s+/g,'_'));
-        if(el) setTimeout(()=>{el.scrollIntoView({behavior:'smooth',block:'center'});el.style.boxShadow="0 0 10px #3b82f6";setTimeout(()=>el.style.boxShadow="none",2000);},150);
-    }
-    function goToRoute(rn,hn) {
-        switchTab('dash');switchSubTab('hubs');openHubRoutes(hn);
-        let el=document.getElementById("route-node-"+rn);
-        if(el) setTimeout(()=>{el.scrollIntoView({behavior:'smooth',block:'center'});el.style.boxShadow="0 0 10px #10b981";setTimeout(()=>el.style.boxShadow="none",2000);},150);
-    }
-
-    // === DROPDOWN DOLDURMA ===
-    function populateDropdowns() {
-        try {
-            let hS = document.getElementById('opt-hub'), aS = document.getElementById('opt-ac');
-            let hH = "", aH = "";
-            if(!AIRPORTS_DB.length) hH = '<option value="">Önce Havalimanı Yükleyin</option>';
-            else AIRPORTS_DB.forEach(ap => { if(ap&&ap['iata']) hH += `<option value="${String(ap['iata']).trim().toUpperCase()}">${String(ap['iata']).trim().toUpperCase()}</option>`; });
-            hS.innerHTML = hH;
-            let models = [];
-            AIRCRAFT_DB.forEach(a => { if(a&&a['aircraft']&&!models.includes(a['aircraft'])) models.push(a['aircraft']); });
-            if(!models.length) aH = '<option>Önce Uçak Yükleyin</option>';
-            else models.forEach(m => aH += `<option value="${m}">${m}</option>`);
-            aS.innerHTML = aH;
-        } catch(e) { console.error(e); }
-    }
-
-    // === ELASTISITE YARDIMCI ===
-    function calcElasticDemand(origDem, price, auditPrice) {
-        if(auditPrice>0&&price>0) return Math.max(0,Math.round(origDem*(2-(price/auditPrice))));
-        return origDem;
-    }
-    // Ters elastikiyet: Excel talebi güncel fiyattaki taleptir. Audit fiyatındaki talebi bul.
-    // D_excel = D_audit * (2 - P_cur / P_audit) → D_audit = D_excel / (2 - P_cur / P_audit)
-    function calcReverseElastic(excelDem, curPrice, auditPrice) {
-        if(auditPrice>0&&curPrice>0) {
-            let factor=2-(curPrice/auditPrice);
-            if(factor>0) return Math.max(0,Math.round(excelDem/factor));
-        }
-        return excelDem;
-    }
-    function calcAuditPrices(dist, comf) {
-        let cCoef=dist>=5000?0.47:(dist>=2000?0.52:0.56);
-        return {
-            e:Math.floor(120+(dist*0.2639)*(1+(comf/3000))),
-            b:Math.floor(160+(dist*0.3509)*(1+(comf/3000))),
-            f:Math.floor(276+(dist*0.6068)*(1+(comf/3000))),
-            c:Math.floor(200+(dist*cCoef))
-        };
-    }
-    function getOrigDemand(r) {
-        return {
-            e:r['_orig_eco_demand']!==undefined?r['_orig_eco_demand']:cleanNum(r['eco demand']),
-            b:r['_orig_bus_demand']!==undefined?r['_orig_bus_demand']:cleanNum(r['bus demand']),
-            f:r['_orig_first_demand']!==undefined?r['_orig_first_demand']:cleanNum(r['first demand']),
-            c:r['_orig_cargo_demand']!==undefined?r['_orig_cargo_demand']:cleanNum(r['cargo demand'])
-        };
-    }
-    function getOrigPrices(r) {
-        return {
-            e:r['_orig_eco_ticket']!==undefined?r['_orig_eco_ticket']:cleanNum(r['eco ticket']),
-            b:r['_orig_bus_ticket']!==undefined?r['_orig_bus_ticket']:cleanNum(r['bus ticket']),
-            f:r['_orig_first_ticket']!==undefined?r['_orig_first_ticket']:cleanNum(r['first ticket']),
-            c:r['_orig_cargo_ticket']!==undefined?r['_orig_cargo_ticket']:cleanNum(r['cargo ticket'])
-        };
-    }
-
-    // === GELİR HESAPLAMA ===
-    function calcRouteRevenue(r,comf) {
-        let dist=cleanNum(r['distance']);
-        let curP={e:cleanNum(r['eco ticket']),b:cleanNum(r['bus ticket']),f:cleanNum(r['first ticket']),c:cleanNum(r['cargo ticket'])};
-        let aud=calcAuditPrices(dist,comf);let origD=getOrigDemand(r);
-        let offer={e:cleanNum(r['eco offer']),b:cleanNum(r['bus offer']),f:cleanNum(r['first offer']),c:cleanNum(r['cargo offer'])};
-        let dem={e:calcElasticDemand(origD.e,curP.e,aud.e),b:calcElasticDemand(origD.b,curP.b,aud.b),f:calcElasticDemand(origD.f,curP.f,aud.f),c:calcElasticDemand(origD.c,curP.c,aud.c)};
-        let daily=Math.min(dem.e,offer.e)*curP.e+Math.min(dem.b,offer.b)*curP.b+Math.min(dem.f,offer.f)*curP.f+Math.min(dem.c,offer.c)*curP.c;
-        return {daily:daily,weekly:daily*7};
-    }
-    function calcAircraftRevenue(ac,route,comf) {
-        if(!route) return {daily:0,weekly:0,amortWeeks:Infinity};
-        let dist=cleanNum(route['distance']),speed=cleanNum(ac['speed']);
-        let ft=calculateFlightTime(dist,speed);
-        let wf=Math.floor(168/ft); if(wf<1) return {daily:0,weekly:0,amortWeeks:Infinity};
-        let curP={e:cleanNum(route['eco ticket']),b:cleanNum(route['bus ticket']),f:cleanNum(route['first ticket']),c:cleanNum(route['cargo ticket'])};
-        let aud=calcAuditPrices(dist,comf);let origD=getOrigDemand(route);
-        let offer={e:cleanNum(route['eco offer']),b:cleanNum(route['bus offer']),f:cleanNum(route['first offer']),c:cleanNum(route['cargo offer'])};
-        let dem={e:calcElasticDemand(origD.e,curP.e,aud.e),b:calcElasticDemand(origD.b,curP.b,aud.b),f:calcElasticDemand(origD.f,curP.f,aud.f),c:calcElasticDemand(origD.c,curP.c,aud.c)};
-        let fillE=offer.e>0?Math.min(1,dem.e/offer.e):0,fillB=offer.b>0?Math.min(1,dem.b/offer.b):0;
-        let fillF=offer.f>0?Math.min(1,dem.f/offer.f):0,fillC=offer.c>0?Math.min(1,dem.c/offer.c):0;
-        let eS=cleanNum(ac['eco_seats']),bS=cleanNum(ac['business_seats']),fS=cleanNum(ac['first_seats']),cS=cleanNum(ac['cargo']);
-        let adE=Math.round(eS*wf*2/7),adB=Math.round(bS*wf*2/7),adF=Math.round(fS*wf*2/7),adC=Math.round(cS*wf*2/7);
-        let daily=Math.round(adE*fillE)*curP.e+Math.round(adB*fillB)*curP.b+Math.round(adF*fillF)*curP.f+Math.round(adC*fillC)*curP.c;
-        let weekly=daily*7;
-        let price=cleanNum(ac['purchase price']||ac['purchase_price']);
-        let amortWeeks=weekly>0?Math.ceil(price/weekly):Infinity;
-        return {daily,weekly,amortWeeks};
-    }
-
-    // === FİYAT VE TALEP YÖNETİMİ ===
-    function openPriceManagement(cacheKey) {
-        let r=window.routeRefCache[cacheKey]; if(!r) return;
-        let dist=cleanNum(r['distance']),comf=cleanNum(document.getElementById('g_comf').value)||0;
-        let aud=calcAuditPrices(dist,comf);
-        let origD=getOrigDemand(r);
-        let curP={e:cleanNum(r['eco ticket']),b:cleanNum(r['bus ticket']),f:cleanNum(r['first ticket']),c:cleanNum(r['cargo ticket'])};
-        let offer={e:cleanNum(r['eco offer']),b:cleanNum(r['bus offer']),f:cleanNum(r['first offer']),c:cleanNum(r['cargo offer'])};
-
-        document.getElementById('pm-title').innerText=`🎛️ Yönetim: ${r['arrival']}`;
-        document.getElementById('pm-route-key').value=cacheKey;
-        // Güncel Fiyatlar
-        document.getElementById('pm-cur-pe').innerText=`$${curP.e}`;
-        document.getElementById('pm-cur-pb').innerText=`$${curP.b}`;
-        document.getElementById('pm-cur-pf').innerText=`$${curP.f}`;
-        document.getElementById('pm-cur-pc').innerText=`$${curP.c}`;
-        // Audit Fiyatlar
-        document.getElementById('pm-aud-pe').innerText=`$${aud.e}`;
-        document.getElementById('pm-aud-pb').innerText=`$${aud.b}`;
-        document.getElementById('pm-aud-pf').innerText=`$${aud.f}`;
-        document.getElementById('pm-aud-pc').innerText=`$${aud.c}`;
-        // YENİ FİYAT
-        document.getElementById('pm-new-pe').value=curP.e;
-        document.getElementById('pm-new-pb').value=curP.b;
-        document.getElementById('pm-new-pf').value=curP.f;
-        document.getElementById('pm-new-pc').value=curP.c;
-        // Arz
-        document.getElementById('pm-off-e').innerText=offer.e;
-        document.getElementById('pm-off-b').innerText=offer.b;
-        document.getElementById('pm-off-f').innerText=offer.f;
-        document.getElementById('pm-off-c').innerText=offer.c;
-
-        window.activePmData={
-            aE:aud.e,aB:aud.b,aF:aud.f,aC:aud.c,
-            dE:origD.e,dB:origD.b,dF:origD.f,dC:origD.c,
-            oE:offer.e,oB:offer.b,oF:offer.f,oC:offer.c,
-            cE:curP.e,cB:curP.b,cF:curP.f,cC:curP.c
-        };
-        updatePriceSim();
-        openModal('modal-price-management');
-    }
-
-    function setAllSimPrices(type) {
-        let pm=window.activePmData; if(!pm) return;
-        ['e','b','f','c'].forEach(cls=>{
-            document.getElementById(`pm-new-p${cls}`).value=type==='audit'?pm[`a${cls.toUpperCase()}`]:pm[`c${cls.toUpperCase()}`];
-        });
-        updatePriceSim();
-    }
-
-    function updatePriceSim() {
-        let pm=window.activePmData; if(!pm) return;
-        let nE=parseFloat(document.getElementById('pm-new-pe').value)||0;
-        let nB=parseFloat(document.getElementById('pm-new-pb').value)||0;
-        let nF=parseFloat(document.getElementById('pm-new-pf').value)||0;
-        let nC=parseFloat(document.getElementById('pm-new-pc').value)||0;
-        // Simüle Talep (YENİ FİYAT'a göre)
-        let simE=calcElasticDemand(pm.dE,nE,pm.aE);
-        let simB=calcElasticDemand(pm.dB,nB,pm.aB);
-        let simF=calcElasticDemand(pm.dF,nF,pm.aF);
-        let simC=calcElasticDemand(pm.dC,nC,pm.aC);
-        document.getElementById('pm-sim-tot-e').innerText=simE;
-        document.getElementById('pm-sim-tot-b').innerText=simB;
-        document.getElementById('pm-sim-tot-f').innerText=simF;
-        document.getElementById('pm-sim-tot-c').innerText=simC;
-        // Simüle Kalan (simüle talep - arz)
-        let remE=simE-pm.oE, remB=simB-pm.oB, remF=simF-pm.oF, remC=simC-pm.oC;
-        document.getElementById('pm-sim-rem-e').innerText=remE; document.getElementById('pm-sim-rem-e').className=remE<0?'text-danger':'text-success';
-        document.getElementById('pm-sim-rem-b').innerText=remB; document.getElementById('pm-sim-rem-b').className=remB<0?'text-danger':'text-success';
-        document.getElementById('pm-sim-rem-f').innerText=remF; document.getElementById('pm-sim-rem-f').className=remF<0?'text-danger':'text-success';
-        document.getElementById('pm-sim-rem-c').innerText=remC; document.getElementById('pm-sim-rem-c').className=remC<0?'text-danger':'text-success';
-    }
-
-    function applyPriceManagement() {
-        let cacheKey=document.getElementById('pm-route-key').value;
-        let r=window.routeRefCache[cacheKey]; if(!r) return;
-        let matched=ROUTES_DB.find(item=>item&&item['departure']===r['departure']&&item['arrival']===r['arrival']);
-        if(matched) {
-            // Orijinal talep ve fiyatı koru (sadece ilk seferde)
-            if(matched['_orig_eco_demand']===undefined) {
-                matched['_orig_eco_demand']=cleanNum(matched['eco demand']);
-                matched['_orig_bus_demand']=cleanNum(matched['bus demand']);
-                matched['_orig_first_demand']=cleanNum(matched['first demand']);
-                matched['_orig_cargo_demand']=cleanNum(matched['cargo demand']);
-            }
-            if(matched['_orig_eco_ticket']===undefined) {
-                matched['_orig_eco_ticket']=cleanNum(matched['eco ticket']);
-                matched['_orig_bus_ticket']=cleanNum(matched['bus ticket']);
-                matched['_orig_first_ticket']=cleanNum(matched['first ticket']);
-                matched['_orig_cargo_ticket']=cleanNum(matched['cargo ticket']);
-            }
-            let newPE=parseFloat(document.getElementById('pm-new-pe').value);
-            let newPB=parseFloat(document.getElementById('pm-new-pb').value);
-            let newPF=parseFloat(document.getElementById('pm-new-pf').value);
-            let newPC=parseFloat(document.getElementById('pm-new-pc').value);
-            matched['eco ticket']=isNaN(newPE)?cleanNum(matched['eco ticket']):newPE;
-            matched['bus ticket']=isNaN(newPB)?cleanNum(matched['bus ticket']):newPB;
-            matched['first ticket']=isNaN(newPF)?cleanNum(matched['first ticket']):newPF;
-            matched['cargo ticket']=isNaN(newPC)?cleanNum(matched['cargo ticket']):newPC;
-            matched['eco demand']=parseInt(document.getElementById('pm-sim-tot-e').innerText);
-            matched['bus demand']=parseInt(document.getElementById('pm-sim-tot-b').innerText);
-            matched['first demand']=parseInt(document.getElementById('pm-sim-tot-f').innerText);
-            matched['cargo demand']=parseInt(document.getElementById('pm-sim-tot-c').innerText);
-            localStorage.setItem('am_routes_db',JSON.stringify(ROUTES_DB));
-        }
-        closeModal('modal-price-management');
-        openHubRoutes(String(r['departure']).trim().toUpperCase());
-        showToast("Fiyat değişiklikleri uygulandı.","success");
-    }
-
-    // === UÇAK ÖNERİ SİSTEMİ ===
-    function runRecommendTab(mode) {
-        if(window.activeRouteKey) runRecommend(window.activeRouteKey, mode);
-    }
-
-    function runRecommend(cacheKey, mode='current') {
-        let r=window.routeRefCache[cacheKey]; if(!r) return;
-        window.activeRouteKey = cacheKey;
-        
-        let dist=cleanNum(r['distance']);
-        let comf=cleanNum(document.getElementById('g_comf').value)||0;
-        let aud=calcAuditPrices(dist,comf);
-        let origD=getOrigDemand(r);
-        let curP={e:cleanNum(r['eco ticket']),b:cleanNum(r['bus ticket']),f:cleanNum(r['first ticket']),c:cleanNum(r['cargo ticket'])};
-        let offer={e:cleanNum(r['eco offer']),b:cleanNum(r['bus offer']),f:cleanNum(r['first offer']),c:cleanNum(r['cargo offer'])};
-        
-        let remE, remB, remF, remC;
-        let tabCur=document.getElementById('rec-tab-current'), tabAud=document.getElementById('rec-tab-audit');
-        
-        if (mode === 'audit') {
-            remE = origD.e - offer.e;
-            remB = origD.b - offer.b;
-            remF = origD.f - offer.f;
-            remC = origD.c - offer.c;
-            if(tabCur) tabCur.className = 'btn-small bg-gray';
-            if(tabAud) tabAud.className = 'btn-small btn-blue';
-        } else {
-            // Güncel kalan talep (günlük): Güncel Talep - Arz (elastikiyet @ güncel fiyat)
-            remE=calcElasticDemand(origD.e,curP.e,aud.e)-offer.e;
-            remB=calcElasticDemand(origD.b,curP.b,aud.b)-offer.b;
-            remF=calcElasticDemand(origD.f,curP.f,aud.f)-offer.f;
-            remC=calcElasticDemand(origD.c,curP.c,aud.c)-offer.c;
-            if(tabCur) tabCur.className = 'btn-small btn-blue';
-            if(tabAud) tabAud.className = 'btn-small bg-gray';
-        }
-
-        let candidates=[];
-        GOLDEN_FLEET.forEach(p=>{
-            if(dist>p.range) return;
-            let flightTimeHours=calculateFlightTime(dist,p.speed);
-            let weeklyFreq=Math.floor(168/flightTimeHours);
-            if(weeklyFreq<1) return;
-            // Günlük kalan talep → haftalık → tekil sefer başına koltuk ihtiyacı
-            let reqE=(remE*7)/(weeklyFreq*2);
-            let reqB=(remB*7)/(weeklyFreq*2);
-            let reqF=(remF*7)/(weeklyFreq*2);
-            let reqC=(remC*7)/(weeklyFreq*2);
-            let eqEco=reqE+(reqB*2)+(reqF*4);
-            if(eqEco<=0&&reqC<=0) return;
-
-            for(let qty=1;qty<=3;qty++){
-                let availSeats=p.seats*qty,availCargo=p.cargo*qty;
-                let fill=eqEco/availSeats;
-                if(fill<0.85||fill>1.10) continue;
-                let rem2=availSeats;
-                let fS=Math.min(Math.floor(reqF),Math.floor(rem2/4));rem2-=fS*4;
-                let bS=Math.min(Math.floor(reqB),Math.floor(rem2/2));rem2-=bS*2;
-                let eS=Math.min(Math.floor(reqE),rem2);rem2-=eS;
-                if(rem2>0)eS+=rem2;
-                let cS=Math.min(Math.floor(reqC),availCargo);
-                let flightGross=((eS*curP.e)+(bS*curP.b)+(fS*curP.f)+(cS*curP.c))*2;
-                let wkGross=flightGross*weeklyFreq;
-                let fuelPrice=parseFloat(document.getElementById('g_fuel').value)||750;
-                let ngafLevel=parseInt(document.getElementById('g_ngaf').value)||0;
-                let ngafMult=1-(ngafLevel*0.25);
-                let fuel=((dist*2)/100)*p.fuel*(eS+bS+fS)*weeklyFreq*(fuelPrice/1000)*0.85;
-                let tax=weeklyFreq*qty*(dist>=5000?70000:40000);
-                let other=wkGross*(p.other*ngafMult);
-                let maint=(p.wear/100)*((weeklyFreq*flightTimeHours)/100)*(p.price*qty*0.01);
-                let dayNet=(wkGross-fuel-tax-other-maint)/7;
-                if(dayNet>0){
-                    candidates.push({plane:p,qty:qty,config:{e:eS,b:bS,f:fS,c:cS},profit:dayNet,freq:weeklyFreq,fillRate:(fill*100).toFixed(1),flightTime:flightTimeHours});
-                }
-            }
-        });
-
-        if(!candidates.length) return showToast("Kalan talebiniz mevcut uçak boyutlarına (%85-%110) uygun değil veya uçuşlar zarar ediyor.","error");
-        candidates.sort((a,b)=>b.profit-a.profit);
-        let tops=[],seen=new Set();
-        for(let c of candidates){let k=c.qty+"x"+c.plane.name;if(!seen.has(k)){tops.push(c);seen.add(k);if(tops.length>=3)break;}}
-
-        window.activeTop3=tops;
-        window.activeRouteKey=cacheKey;
-        let rc=document.getElementById('rec-container');
-        rc.innerHTML="";
-        tops.forEach((item,i)=>{
-            rc.innerHTML+=`<div class="card" style="border-color:${i===0?'var(--success)':'var(--border)'};">
-                <h4 style="color:var(--text-main);margin-bottom:5px;">${i+1}. ${item.qty}x ${item.plane.name}</h4>
-                <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">Tahmini Kâr: <b class="text-success">${formatMoney(item.profit)} / Gün</b></div>
-                <div style="font-size:11px;color:var(--accent-blue);margin-bottom:4px;">Haftalık Frekans: <b>${item.freq} Sefer</b> | Uçuş Süresi: <b>${item.flightTime.toFixed(2)}s</b></div>
-                <div style="font-size:11px;color:var(--text-muted);margin-bottom:10px;">Hedef Doluluk: <b style="color:white;">%${item.fillRate}</b></div>
-                <div class="grid-2" style="font-size:12px;background:var(--bg-dark);padding:8px;border-radius:6px;text-align:center;margin-bottom:12px;border:1px solid var(--border);">
-                    <div>Eco:<br><b style="font-size:14px;">${item.config.e}</b></div>
-                    <div>Bus:<br><b style="font-size:14px;">${item.config.b}</b></div>
-                    <div>First:<br><b style="font-size:14px;">${item.config.f}</b></div>
-                    <div>Crg:<br><b style="font-size:14px;">${item.config.c}T</b></div>
-                </div>
-                <label>Bu Filoya Ortak Özel İsim Verin</label>
-                <input type="text" id="rec-name-${i}" placeholder="Örn: Asistan Filo ${i+1}">
-                <button class="btn-main btn-success" style="width:100%;margin-top:5px;padding:10px;font-size:13px;" onclick="commitRecommendation(${i})">✅ Bunu Seç ve Filoya Kat</button>
-            </div>`;
-        });
-        openModal('modal-recommendation');
-    }
-
-    function commitRecommendation(index) {
-        let customName=document.getElementById(`rec-name-${index}`).value.trim();
-        if(!customName) return showToast("Lütfen özel bir isim verin.","error");
-        let simData=window.activeTop3[index];
-        let r=window.routeRefCache[window.activeRouteKey];
-        if(!r||!simData) return showToast("Hata: Atama verisi kayboldu.","error");
-
-        let appendArr=[];
-        for(let q=1;q<=simData.qty;q++){
-            let uName=simData.qty>1?`${customName} - #${q}`:customName;
-            AIRCRAFT_DB.push({"aircraft":simData.plane.name,"aircraft name":uName,"range":simData.plane.range,"speed":simData.plane.speed,"category":3,"capacity pax":simData.plane.seats,"consumption":simData.plane.fuel,"wear":0,"purchase price":simData.plane.price,"eco_seats":simData.config.e,"business_seats":simData.config.b,"first_seats":simData.config.f,"cargo":simData.config.c+"T","age":"0/5","flight_hours":0,"hub":r['departure']?String(r['departure']).trim().toUpperCase():""});
-            appendArr.push(`${simData.plane.name}/${uName}`);
-        }
-        localStorage.setItem('am_aircraft_db',JSON.stringify(AIRCRAFT_DB));
-
-        let matched=ROUTES_DB.find(item=>item&&item['departure']===r['departure']&&item['arrival']===r['arrival']);
-        if(matched) {
-            // OFFER FIX: DB günlük değer tutuyor, haftalık offer'ı 7'ye böl
-            matched['eco offer']=cleanNum(matched['eco offer'])+Math.round(simData.config.e*simData.freq*2/7);
-            matched['bus offer']=cleanNum(matched['bus offer'])+Math.round(simData.config.b*simData.freq*2/7);
-            matched['first offer']=cleanNum(matched['first offer'])+Math.round(simData.config.f*simData.freq*2/7);
-            matched['cargo offer']=cleanNum(matched['cargo offer'])+Math.round(simData.config.c*simData.freq*2/7);
-            let curr=matched['aircrafts model/aircrafts name on route']||"";
-            let app=appendArr.join(",");
-            matched['aircrafts model/aircrafts name on route']=curr.trim()!==""?curr+","+app:app;
-        }
-        localStorage.setItem('am_routes_db',JSON.stringify(ROUTES_DB));
-
-        showToast(`✅ ${simData.qty} adet ${simData.plane.name} satın alındı ve rotaya bağlandı!`,"success");
-        closeModal('modal-recommendation');
-        if(window.simState&&window.activeRouteKey) delete window.simState[window.activeRouteKey];
-        renderHubsList();renderFleetList();populateDropdowns();
-        if(document.getElementById('view-routes').style.display==='block') openHubRoutes(String(r['departure']).trim().toUpperCase());
-    }
-
-    // === 168 SAATLİK DFS BACKTRACKING DEVRE MOTORU ===
-    function runOptimization() {
-        try {
-            let resDiv = document.getElementById('opt-results');
-            if(!AIRPORTS_DB.length||!AIRCRAFT_DB.length) { resDiv.innerHTML = '<div class="card text-danger">⚠️ Lütfen veritabanlarını yükleyin.</div>'; return; }
-
-            let selHub = document.getElementById('opt-hub').value;
-            let selAc = document.getElementById('opt-ac').value;
-            let hubAp = AIRPORTS_DB.find(ap=>ap&&String(ap['iata']).trim().toUpperCase()===selHub);
-            let ac = AIRCRAFT_DB.find(a=>a&&a['aircraft']===selAc);
-            if(!hubAp||!ac) return showToast("Seçimler için uygun veri bulunamadı.","error");
-
-            let hubLat=cleanNum(hubAp['lat']),hubLon=cleanNum(hubAp['lon']);
-            let acRange=cleanNum(ac['range']),acSpeed=cleanNum(ac['speed']);
-
-            let validDests = [];
-            AIRPORTS_DB.forEach(ap => {
-                if(!ap||!ap['iata']) return;
-                let iata = String(ap['iata']).trim().toUpperCase();
-                if(iata===selHub) return;
-                let dist = calculateDistance(hubLat,hubLon,cleanNum(ap['lat']),cleanNum(ap['lon']));
-                if(dist<=acRange&&dist>=4000) {
-                    // FIX #3: Doğru uçuş süresi formülü
-                    let flightHours = calculateFlightTime(dist, acSpeed);
-                    let timeMins = Math.round(flightHours*60);
-                    let routeCost = dist*15000;
-                    if(timeMins>0&&!isNaN(timeMins)) validDests.push({name:iata,dist:Math.round(dist),time:timeMins,cost:routeCost,hours:flightHours});
-                }
-            });
-
-            if(!validDests.length) { resDiv.innerHTML = '<div class="card text-danger">⚠️ Uçağın menziline uygun (Min 4000 KM) rota bulunamadı.</div>'; return; }
-
-            validDests.sort((a,b)=>b.time-a.time);
-            let minTime=validDests[validDests.length-1].time, maxTime=validDests[0].time;
-
-            let combinations = [];
-
-            function dfs(startIdx,count,time,cost,indices) {
-                if(combinations.length>=50) return;
-                if(count===7) {
-                    if(time>=10000&&time<=10080) combinations.push({time:time,totalCost:cost,indices:[...indices]});
-                    return;
-                }
-                let rem=7-count;
-                if(time+rem*minTime>10080) return;
-                if(time+rem*maxTime<10000) return;
-                for(let i=startIdx;i<validDests.length;i++) {
-                    let d=validDests[i];
-                    if(time+d.time>10080) continue;
-                    indices.push(i);
-                    dfs(i+1,count+1,time+d.time,cost+d.cost,indices);
-                    indices.pop();
-                }
-            }
-
-            dfs(0,0,0,0,[]);
-
-            if(!combinations.length) {
-                resDiv.innerHTML = '<div class="card" style="color:var(--danger);border-color:var(--danger);">❌ Kriterlere uygun TAM 7 ROTALI VE 168 SAATLİK kombinasyon bulunamadı. Daha yüksek menzilli bir uçak deneyin.</div>';
-                return;
-            }
-
-            let planeCost = cleanNum(ac['purchase price']);
-            combinations.forEach(c => { c.investmentBudget = c.totalCost+(7*planeCost); });
-            combinations.sort((a,b)=>a.investmentBudget-b.investmentBudget);
-            let top5 = combinations.slice(0,5);
-
-            let html = `<h3 style="margin-top:10px;margin-bottom:12px;color:var(--accent-blue);">🌍 Mükemmel 168s Devreleri (Top ${top5.length})</h3>`;
-
-            top5.forEach((c,idx) => {
-                let totalHrs = (c.time/60).toFixed(1);
-                let isOpen = idx===0?"open":"";
-                let border = idx===0?"var(--accent)":"var(--border)";
-
-                html += `<details ${isOpen} style="border-color:${border};margin-bottom:12px;">
-                    <summary style="display:flex;justify-content:space-between;align-items:center;">
-                        <div>Kombinasyon #${idx+1} | Süre: ${totalHrs} Saat</div>
-                        <div style="font-size:12.5px;font-weight:normal;">Yatırım: <b style="color:var(--success);">${formatMoney(c.investmentBudget)}</b></div>
-                    </summary>
-                    <div class="details-content" style="padding-top:5px;">
-                        <div class="grid-2" style="background:var(--bg-dark);padding:10px;border-radius:6px;text-align:center;margin-bottom:10px;">
-                            <div style="border-right:1px solid var(--border);">
-                                <div style="font-size:11px;color:var(--text-muted);">TOPLAM ZİNCİR</div>
-                                <div style="font-size:15px;color:white;font-weight:bold;">7 Rota</div>
-                            </div>
-                            <div>
-                                <div style="font-size:11px;color:var(--text-muted);">GEREKLİ FİLO</div>
-                                <div style="font-size:15px;color:var(--accent-blue);font-weight:bold;">7x ${selAc}</div>
-                            </div>
-                        </div>
-                        <table class="dashboard-table">
-                            <thead><tr><th>Rota</th><th>Mesafe</th><th>Uçuş Süresi</th><th>Frekans</th></tr></thead>
-                            <tbody>`;
-
-                c.indices.forEach(i => {
-                    let d = validDests[i];
-                    html += `<tr><td><b>${selHub} ➔ ${d.name}</b></td><td>${d.dist} km</td><td>${d.hours.toFixed(2)} Saat</td><td><b>Günde 1 Sefer</b></td></tr>`;
-                });
-                html += `</tbody></table></div></details>`;
-            });
-            resDiv.innerHTML = html;
-            showToast(`${top5.length} adet devre kombinasyonu bulundu.`,"info");
-        } catch(e) { console.error("Optimization Fail:",e); }
-    }
-
-
-    window.onload = initData;
-
-</script>
-</body>
-</html>
+import os
+import time
+import random
+import re
+import pandas as pd
+from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
+
+
+def get_info_by_label(container, label_text):
+    """
+    Verilen element içinde belirtilen metni (label_text) arar.
+    O metnin bulunduğu tag'in içindeki veya bir üst kapsayıcısındaki ilk <b> tag'inin metnini döndürür.
+    Böylece tüm div içindeki ilk <b> tag'ini yanlışlıkla çekmesinin önüne geçilir.
+    """
+    if not container:
+        return None
+
+    # Tam metni veya bir parçasını içeren metin düğümünü Regex ile nokta atışı bul
+    text_node = container.find(string=re.compile(label_text, re.IGNORECASE))
+
+    if text_node:
+        parent = text_node.parent
+        # 1. İhtimal: <b> etiketi direkt bu elementin içindedir (Ana sayfadaki Range, Wear vs. gibi)
+        b_tag = parent.find('b')
+        if b_tag:
+            return b_tag.get_text(strip=True)
+
+        # 2. İhtimal: <b> etiketi parent'ın kardeş elementindedir veya dışarıdadır (Detay sayfasındaki yapı)
+        grandparent = parent.parent
+        if grandparent:
+            b_tag = grandparent.find('b')
+            if b_tag:
+                return b_tag.get_text(strip=True)
+
+    return None
+
+
+def main():
+    # --- GITHUB SECRETS KONTROLÜ ---
+    # Ortam değişkenlerinden kullanıcı adı ve şifreyi alıyoruz
+    USER_EMAIL = os.environ.get("AIRLINES_USER")
+    USER_PASS = os.environ.get("AIRLINES_PASS")
+
+    if not USER_EMAIL or not USER_PASS:
+        print("HATA: GitHub Secrets (AIRLINES_USER veya AIRLINES_PASS) bulunamadı. İşlem iptal ediliyor.")
+        return
+
+    # --- TEST / DEBUG AYARI ---
+    # Test için kaç uçağın çekileceğini buradan ayarlayabilirsin. (Şu an ilk 5 uçağı çekecek)
+    # Her şeyin düzgün çalıştığını gördükten sonra tüm filoyu çekmek için bunu None yap. (Örn: TEST_LIMIT = None)
+    TEST_LIMIT = None
+
+    # --- AYARLAR ---
+    base_url = "https://tycoon.airlines-manager.com"
+    output_excel_path = "aircrafts_output.xlsx"
+
+    # Oluşturulacak Excel tablosunun sütun başlıkları
+    columns = [
+        "aircraft_model", "aircraft_name", "range", "use", "cargo",
+        "eco_seats", "business_seats", "first_seats", "hub", "wear",
+        "age", "capacity_pax", "category", "takeoff_distance",
+        "consumption", "speed", "purchase_price", "cumulative_result", "flight_hours"
+    ]
+
+    all_aircrafts = []
+    scraped_count = 0
+
+    # --- GITHUB ACTIONS İÇİN CHROME AYARLARI ---
+    chrome_options = Options()
+    # Sunucuda (Ubuntu runner) ekran kartı ve monitör olmadığı için bu 3 ayar ZORUNLUDUR:
+    chrome_options.add_argument("--headless=new")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    # Headless modda elemanların görünürlüğünü garantiye almak için ekran çözünürlüğünü sabitliyoruz:
+    chrome_options.add_argument("--window-size=1920,1080")
+    
+    driver = webdriver.Chrome(options=chrome_options)
+
+    # --- OTOMATİK GİRİŞ ---
+    print("\n--- OTOMATİK GİRİŞ YAPILIYOR ---")
+    driver.get(base_url)
+    time.sleep(random.uniform(2, 3))
+
+    username_field = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.ID, "username"))
+    )
+    # Şifreyi açık yazmak yerine Secrets'tan gelen değişkeni veriyoruz
+    human_type(username_field, USER_EMAIL)
+
+    time.sleep(random.uniform(0.5, 1.5))
+
+    password_field = driver.find_element(By.ID, "password")
+    # Şifreyi açık yazmak yerine Secrets'tan gelen değişkeni veriyoruz
+    human_type(password_field, USER_PASS)
+
+    time.sleep(random.uniform(0.5, 1.0))
+
+    login_btn = driver.find_element(By.ID, "loginSubmit")
+    login_btn.click()
+
+    WebDriverWait(driver, 15).until(
+        EC.url_contains("/home")
+    )
+    print("Giriş başarılı!")
+    time.sleep(random.uniform(2, 3))
+
+    print("Veri kazıma işlemi başlıyor...\n")
+
+    page_number = 1
+    stop_scraping = False
+
+    while not stop_scraping:
+        list_url = f"{base_url}/aircraft?page={page_number}"
+        print(f"--- SAYFA {page_number} taranıyor: {list_url} ---")
+
+        driver.get(list_url)
+        time.sleep(random.uniform(1.7, 2.3))
+
+        soup = BeautifulSoup(driver.page_source, 'html.parser')
+        aircraft_boxes = soup.find_all('div', class_='aircraftListBox')
+
+        if not aircraft_boxes:
+            print(f"Sayfa {page_number}'de uçak bulunamadı. Tarama tamamlandı!")
+            break
+
+        print(f"Sayfa {page_number} üzerinde {len(aircraft_boxes)} adet uçak bulundu. Bilgiler çekiliyor...")
+
+        # O sayfadaki uçakların detaylarına gitmeden önce ana bilgilerini tuttuğumuz geçici liste
+        page_aircrafts_data = []
+
+        for box in aircraft_boxes:
+            # Test limiti kontrolü
+            if TEST_LIMIT is not None and scraped_count >= TEST_LIMIT:
+                stop_scraping = True
+                break
+
+            aircraft_data = {col: None for col in columns}
+
+            # 1. aircraft_model (Sondaki / işaretini ve boşlukları temizleyerek)
+            title_div = box.find('div', class_='title')
+            if title_div:
+                main_span = title_div.find('span', recursive=False)
+                if main_span and main_span.contents:
+                    aircraft_data["aircraft_model"] = str(main_span.contents[0]).replace('/', '').strip()
+
+            # 2. aircraft_name
+            name_span = box.find('span', class_='editAircraftName')
+            if name_span and name_span.find('span'):
+                aircraft_data["aircraft_name"] = name_span.find('span').get_text(strip=True)
+
+            # Detay sayfası için URL'yi arka planda geçici tutuyoruz
+            btn_detail = box.find('a', class_='BtnDetailAvion')
+            detail_url = base_url + btn_detail['href'] if btn_detail else None
+            aircraft_data["_detail_url"] = detail_url
+
+            content_div = box.find('div', class_='content')
+
+            # 3. range
+            aircraft_data["range"] = get_info_by_label(content_div, "Range")
+
+            # 4. use
+            aircraft_data["use"] = get_info_by_label(content_div, "Use")
+
+            # 5. cargo
+            aircraft_data["cargo"] = get_info_by_label(content_div, "Cargo")
+
+            # 6, 7, 8. eco_seats, business_seats, first_seats
+            seats_raw = get_info_by_label(content_div, "Seats")
+            if seats_raw:
+                # Örnek Text Formatı: 492 (447/36/9)
+                match = re.search(r"\((\d+)/(\d+)/(\d+)\)", seats_raw)
+                if match:
+                    aircraft_data["eco_seats"] = match.group(1)
+                    aircraft_data["business_seats"] = match.group(2)
+                    aircraft_data["first_seats"] = match.group(3)
+
+            # 9. hub
+            hub_raw = get_info_by_label(content_div, "Hub")
+            if hub_raw:
+                aircraft_data["hub"] = hub_raw.replace('/', '').strip()
+
+            # 10. wear
+            aircraft_data["wear"] = get_info_by_label(content_div, "Wear")
+
+            # 11. age
+            aircraft_data["age"] = get_info_by_label(content_div, "Age")
+
+            page_aircrafts_data.append(aircraft_data)
+            scraped_count += 1
+
+        # --- DETAY SAYFALARINI ZİYARET ETME ---
+        for idx, data in enumerate(page_aircrafts_data):
+            detail_link = data.pop("_detail_url", None)  # Geçici url'yi sözlükten çıkar ve kullan
+
+            if not detail_link:
+                all_aircrafts.append(data)
+                continue
+
+            print(f"  -> Uçak {idx + 1}/{len(page_aircrafts_data)} detayı çekiliyor: {data['aircraft_name']}")
+            driver.get(detail_link)
+            time.sleep(random.uniform(1.0, 1.3))  # Rastgele güvenlik gecikmesi
+
+            detail_soup = BeautifulSoup(driver.page_source, 'html.parser')
+
+            # 12. capacity_pax
+            data["capacity_pax"] = get_info_by_label(detail_soup, "Capacity")
+
+            # 13. category
+            right_panel = detail_soup.find('div', id='aircraftCharacteristicRight')
+            if right_panel:
+                cat_img = right_panel.find('img', src=re.compile(r'/images/icons20/cat\d+\.png'))
+                if cat_img:
+                    match = re.search(r'cat(\d+)\.png', cat_img['src'])
+                    if match:
+                        data["category"] = match.group(1)
+
+            # 14. takeoff_distance
+            data["takeoff_distance"] = get_info_by_label(detail_soup, "Takeoff distance")
+
+            # 15. consumption
+            data["consumption"] = get_info_by_label(detail_soup, "Consumption")
+
+            # 16. speed
+            data["speed"] = get_info_by_label(detail_soup, "Speed :")
+
+            # 17. purchase_price
+            data["purchase_price"] = get_info_by_label(detail_soup, "Purchase price")
+
+            # 18. cumulative_result
+            data["cumulative_result"] = get_info_by_label(detail_soup, "Cumulative result")
+
+            # 19. flight_hours
+            data["flight_hours"] = get_info_by_label(detail_soup, "Flight hours")
+
+            # Tüm verileri toplanmış uçağı ana listeye ekle
+            all_aircrafts.append(data)
+
+        if not stop_scraping:
+            page_number += 1
+
+    # Tüm döngü bitti, Tarayıcıyı kapat.
+    driver.quit()
+    print("\nVeri çekme işlemi tamamen bitti. Excel dosyası oluşturuluyor...")
+
+    # Verileri DataFrame'e çevirip Excel'e kaydet
+    df = pd.DataFrame(all_aircrafts, columns=columns)
+
+    try:
+        df.to_excel(output_excel_path, index=False)
+        print(f"BAŞARILI! Toplam {len(df)} uçak '{output_excel_path}' dosyasına kaydedildi.")
+    except Exception as e:
+        print(f"Dosya kaydedilirken hata oluştu: {e}")
+
+
+def human_type(element, text):
+    """Her karakteri rastgele gecikmeyle yazar."""
+    for char in text:
+        element.send_keys(char)
+        time.sleep(random.uniform(0.05, 0.15))
+
+
+if __name__ == "__main__":
+    main()
