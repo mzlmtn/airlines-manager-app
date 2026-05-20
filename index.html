@@ -359,7 +359,7 @@
     }
 
     // === GITHUB & BAŞLATMA İŞLEMLERİ ===
-    // === GITHUB & BAŞLATMA İŞLEMLERİ ===
+// === GITHUB & BAŞLATMA İŞLEMLERİ ===
     async function initData() {
         // Global Ayarları Çek
         if(localStorage.getItem('g_comf')) document.getElementById('g_comf').value=localStorage.getItem('g_comf');
@@ -369,60 +369,79 @@
 
         showToast("Sunucudan veriler çekiliyor...", "info");
 
-        // GitHub Kullanıcı ve Repo Bilgileriniz
-        const username = "mzlmtn";
+        const pat = localStorage.getItem('gh_pat');
+        if (!pat) {
+            showToast("GitHub PAT bulunamadı! Ayarlar sekmesinden şifrenizi girin.", "error");
+            switchTab('stats');
+            return;
+        }
+
+        const owner = "mzlmtn";
         const repo = "airlines-manager-app";
-        const branch = "main"; // Eğer ana dalınız master ise 'master' yapın
 
-        // Önbelleği (Cache) tamamen devre dışı bırakmak için ham (raw) bağlantılar
-        // Önbelleği (Cache) tamamen delmek için URL sonuna dinamik zaman damgası (Timestamp) ekliyoruz
-        const cacheBuster = '?t=' + new Date().getTime();
-        const aircraftsUrl = `./aircrafts_output.xlsx${cacheBuster}`;
-        const routesUrl = `./routes_output.xlsx${cacheBuster}`;
+        // CORS ve Cache engellerini aşmak için doğrudan GitHub REST API kullanıyoruz
+        // URL sonuna eklenen timestamp API'nin önbellek tutmasını engeller
+        let cacheBuster = '?t=' + new Date().getTime();
+        const aircraftsApiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/aircrafts_output.xlsx${cacheBuster}`;
+        const routesApiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/routes_output.xlsx${cacheBuster}`;
 
-        // GITHUB'DAN OTOMATİK VERİ ÇEKME
         let isOnlineDataLoaded = false;
         try {
             const fetchOptions = {
                 method: 'GET',
                 headers: {
+                    'Authorization': `Bearer ${pat}`,
+                    'Accept': 'application/vnd.github.v3+json',
                     'Cache-Control': 'no-cache',
                     'Pragma': 'no-cache'
                 }
             };
 
-            // 1. Uçaklar Verisini Çek
-            let resAc = await fetch(aircraftsUrl, fetchOptions);
+            // 1. Uçaklar Verisini API Üzerinden Çek
+            let resAc = await fetch(aircraftsApiUrl, fetchOptions);
             if(resAc.ok) {
-                let arrayBuffer = await resAc.arrayBuffer();
-                let wb = XLSX.read(new Uint8Array(arrayBuffer), {type: 'array'});
+                let jsonAc = await resAc.json();
+                // GitHub API dosyayı base64 string olarak döner. Bunu binary array'e çeviriyoruz.
+                let binaryString = window.atob(jsonAc.content.replace(/\s/g, ''));
+                let len = binaryString.length;
+                let bytes = new Uint8Array(len);
+                for (let i = 0; i < len; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                let wb = XLSX.read(bytes, {type: 'array'});
                 let rawData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]).map(row=>{
                     let o={}; for(let k in row) o[String(k).trim().toLowerCase()]=row[k]; return o;
                 });
                 AIRCRAFT_DB = normalizeData(rawData, 'am_aircraft_db').filter(a=>a&&(a['aircraft name']||a['aircraft']));
-            } else throw new Error("Uçak dosyası GitHub Raw sunucusundan çekilemedi.");
+            } else throw new Error(`Uçak API Hatası: ${resAc.status}`);
 
-            // 2. Rotalar Verisini Çek
-            let resRt = await fetch(routesUrl, fetchOptions);
+            // 2. Rotalar Verisini API Üzerinden Çek
+            let resRt = await fetch(routesApiUrl, fetchOptions);
             if(resRt.ok) {
-                let arrayBuffer = await resRt.arrayBuffer();
-                let wb = XLSX.read(new Uint8Array(arrayBuffer), {type: 'array'});
+                let jsonRt = await resRt.json();
+                let binaryString = window.atob(jsonRt.content.replace(/\s/g, ''));
+                let len = binaryString.length;
+                let bytes = new Uint8Array(len);
+                for (let i = 0; i < len; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                let wb = XLSX.read(bytes, {type: 'array'});
                 let rawData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]).map(row=>{
                     let o={}; for(let k in row) o[String(k).trim().toLowerCase()]=row[k]; return o;
                 });
                 ROUTES_DB = normalizeData(rawData, 'am_routes_db').filter(row=>row&&cleanNum(row['distance'])>0);
-            } else throw new Error("Rota dosyası GitHub Raw sunucusundan çekilemedi.");
+            } else throw new Error(`Rota API Hatası: ${resRt.status}`);
 
             isOnlineDataLoaded = true;
-            showToast("Veriler GitHub Bulutundan canlı olarak yüklendi.", "success");
+            showToast("Veriler GitHub Bulutundan %100 canlı olarak yüklendi.", "success");
         } catch(e) {
-            console.warn("GitHub'dan canlı veri çekilemedi. Çevrimdışı moda geçiliyor:", e);
+            console.warn("GitHub API'den veri çekilemedi. Çevrimdışı moda geçiliyor:", e);
             try { let r=JSON.parse(localStorage.getItem('am_aircraft_db')); if(Array.isArray(r)) AIRCRAFT_DB=r.filter(a=>a&&(a['aircraft name']||a['aircraft'])); else AIRCRAFT_DB=[]; } catch(err){ AIRCRAFT_DB=[]; }
             try { let r=JSON.parse(localStorage.getItem('am_routes_db')); if(Array.isArray(r)) ROUTES_DB=r.filter(row=>row&&cleanNum(row['distance'])>0); else ROUTES_DB=[]; } catch(err){ ROUTES_DB=[]; }
             if(AIRCRAFT_DB.length > 0) showToast("Bağlantı sorunu! Yerel önbellekteki son veriler yüklendi.", "info");
         }
 
-        // Airports her halükarda yerelden gelir
+        // Airports yerelden yüklenmeye devam eder
         try { let r=JSON.parse(localStorage.getItem('am_airports_db')); if(Array.isArray(r)) AIRPORTS_DB=r.filter(ap=>ap&&ap['iata']&&(cleanNum(ap['lat'])!==0||cleanNum(ap['lon'])!==0)); else AIRPORTS_DB=[]; } catch(e){ AIRPORTS_DB=[]; }
 
         if(!window.simState) window.simState = {};
