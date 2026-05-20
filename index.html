@@ -382,11 +382,15 @@
         let isOnlineDataLoaded = false;
         try {
             // Tarayıcıya kesinlikle önbellek kullanmamasını söyleyen HTTP ayarları
+            // Tarayıcıya kesinlikle önbellek kullanmamasını ve (varsa) token eklemesini söyleyen HTTP ayarları
+            const token = localStorage.getItem('gh_pat');
             const fetchOptions = {
                 method: 'GET',
                 headers: {
                     'Cache-Control': 'no-cache',
-                    'Pragma': 'no-cache'
+                    'Pragma': 'no-cache',
+                    // Eğer token varsa, gizli repodan veri çekebilmek için yetkiyi ekliyoruz
+                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
                 }
             };
 
