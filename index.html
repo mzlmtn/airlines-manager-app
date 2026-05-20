@@ -359,6 +359,7 @@
     }
 
     // === GITHUB & BAŞLATMA İŞLEMLERİ ===
+    // === GITHUB & BAŞLATMA İŞLEMLERİ ===
     async function initData() {
         // Global Ayarları Çek
         if(localStorage.getItem('g_comf')) document.getElementById('g_comf').value=localStorage.getItem('g_comf');
@@ -368,12 +369,29 @@
 
         showToast("Sunucudan veriler çekiliyor...", "info");
 
+        // GitHub Kullanıcı ve Repo Bilgileriniz
+        const username = "mzlmtn";
+        const repo = "airlines-manager-app";
+        const branch = "main"; // Eğer ana dalınız master ise 'master' yapın
+
+        // Önbelleği (Cache) tamamen devre dışı bırakmak için ham (raw) bağlantılar
+        const aircraftsUrl = `https://raw.githubusercontent.com/${username}/${repo}/${branch}/aircrafts_output.xlsx`;
+        const routesUrl = `https://raw.githubusercontent.com/${username}/${repo}/${branch}/routes_output.xlsx`;
+
         // GITHUB'DAN OTOMATİK VERİ ÇEKME
         let isOnlineDataLoaded = false;
         try {
-            let cacheBuster = '?t=' + new Date().getTime();
-            
-            let resAc = await fetch('./aircrafts_output.xlsx' + cacheBuster);
+            // Tarayıcıya kesinlikle önbellek kullanmamasını söyleyen HTTP ayarları
+            const fetchOptions = {
+                method: 'GET',
+                headers: {
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache'
+                }
+            };
+
+            // 1. Uçaklar Verisini Çek
+            let resAc = await fetch(aircraftsUrl, fetchOptions);
             if(resAc.ok) {
                 let arrayBuffer = await resAc.arrayBuffer();
                 let wb = XLSX.read(new Uint8Array(arrayBuffer), {type: 'array'});
@@ -381,9 +399,10 @@
                     let o={}; for(let k in row) o[String(k).trim().toLowerCase()]=row[k]; return o;
                 });
                 AIRCRAFT_DB = normalizeData(rawData, 'am_aircraft_db').filter(a=>a&&(a['aircraft name']||a['aircraft']));
-            } else throw new Error("Uçak dosyası GitHub'da bulunamadı.");
+            } else throw new Error("Uçak dosyası GitHub Raw sunucusundan çekilemedi.");
 
-            let resRt = await fetch('./routes_output.xlsx' + cacheBuster);
+            // 2. Rotalar Verisini Çek
+            let resRt = await fetch(routesUrl, fetchOptions);
             if(resRt.ok) {
                 let arrayBuffer = await resRt.arrayBuffer();
                 let wb = XLSX.read(new Uint8Array(arrayBuffer), {type: 'array'});
@@ -391,18 +410,18 @@
                     let o={}; for(let k in row) o[String(k).trim().toLowerCase()]=row[k]; return o;
                 });
                 ROUTES_DB = normalizeData(rawData, 'am_routes_db').filter(row=>row&&cleanNum(row['distance'])>0);
-            } else throw new Error("Rota dosyası GitHub'da bulunamadı.");
+            } else throw new Error("Rota dosyası GitHub Raw sunucusundan çekilemedi.");
 
             isOnlineDataLoaded = true;
-            showToast("Veriler GitHub'dan başarıyla yüklendi.", "success");
+            showToast("Veriler GitHub Bulutundan canlı olarak yüklendi.", "success");
         } catch(e) {
-            console.warn("GitHub'dan veri çekilemedi. Çevrimdışı moda geçiliyor:", e);
+            console.warn("GitHub'dan canlı veri çekilemedi. Çevrimdışı moda geçiliyor:", e);
             try { let r=JSON.parse(localStorage.getItem('am_aircraft_db')); if(Array.isArray(r)) AIRCRAFT_DB=r.filter(a=>a&&(a['aircraft name']||a['aircraft'])); else AIRCRAFT_DB=[]; } catch(err){ AIRCRAFT_DB=[]; }
             try { let r=JSON.parse(localStorage.getItem('am_routes_db')); if(Array.isArray(r)) ROUTES_DB=r.filter(row=>row&&cleanNum(row['distance'])>0); else ROUTES_DB=[]; } catch(err){ ROUTES_DB=[]; }
-            if(AIRCRAFT_DB.length > 0) showToast("İnternet bağlantısı yok, yerel önbellek yüklendi.", "info");
+            if(AIRCRAFT_DB.length > 0) showToast("Bağlantı sorunu! Yerel önbellekteki son veriler yüklendi.", "info");
         }
 
-        // Airports her halükarda yerelden gelir (Scraper'da yok çünkü)
+        // Airports her halükarda yerelden gelir
         try { let r=JSON.parse(localStorage.getItem('am_airports_db')); if(Array.isArray(r)) AIRPORTS_DB=r.filter(ap=>ap&&ap['iata']&&(cleanNum(ap['lat'])!==0||cleanNum(ap['lon'])!==0)); else AIRPORTS_DB=[]; } catch(e){ AIRPORTS_DB=[]; }
 
         if(!window.simState) window.simState = {};
