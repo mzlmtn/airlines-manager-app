@@ -375,22 +375,19 @@
         const branch = "main"; // Eğer ana dalınız master ise 'master' yapın
 
         // Önbelleği (Cache) tamamen devre dışı bırakmak için ham (raw) bağlantılar
-        const aircraftsUrl = `https://raw.githubusercontent.com/${username}/${repo}/${branch}/aircrafts_output.xlsx`;
-        const routesUrl = `https://raw.githubusercontent.com/${username}/${repo}/${branch}/routes_output.xlsx`;
+        // Önbelleği (Cache) tamamen delmek için URL sonuna dinamik zaman damgası (Timestamp) ekliyoruz
+        const cacheBuster = '?t=' + new Date().getTime();
+        const aircraftsUrl = `./aircrafts_output.xlsx${cacheBuster}`;
+        const routesUrl = `./routes_output.xlsx${cacheBuster}`;
 
         // GITHUB'DAN OTOMATİK VERİ ÇEKME
         let isOnlineDataLoaded = false;
         try {
-            // Tarayıcıya kesinlikle önbellek kullanmamasını söyleyen HTTP ayarları
-            // Tarayıcıya kesinlikle önbellek kullanmamasını ve (varsa) token eklemesini söyleyen HTTP ayarları
-            const token = localStorage.getItem('gh_pat');
             const fetchOptions = {
                 method: 'GET',
                 headers: {
                     'Cache-Control': 'no-cache',
-                    'Pragma': 'no-cache',
-                    // Eğer token varsa, gizli repodan veri çekebilmek için yetkiyi ekliyoruz
-                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                    'Pragma': 'no-cache'
                 }
             };
 
