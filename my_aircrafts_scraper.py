@@ -1,3 +1,4 @@
+import glob
 import os
 import time
 import random
@@ -277,6 +278,9 @@ def main():
     df = pd.DataFrame(all_aircrafts, columns=columns)
 
     try:
+        for old_file in glob.glob("aircrafts *.xlsx"):
+            os.remove(old_file)
+            print(f"  Eski dosya silindi: {old_file}")
         df.to_excel(output_filename, index=False)
         print(f"BAŞARILI! Toplam {len(df)} uçak kaydedildi → {output_filename}")
     except Exception as e:
