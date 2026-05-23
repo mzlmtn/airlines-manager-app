@@ -1,3 +1,4 @@
+import glob
 import os
 import time
 import random
@@ -283,6 +284,12 @@ def main():
     driver.quit()
 
     df = pd.DataFrame(all_routes, columns=columns)
+
+
+    # Eski dosyaları temizle
+    for old_file in glob.glob("routes *.xlsx"):
+        os.remove(old_file)
+        print(f"  Eski dosya silindi: {old_file}")
     df.to_excel(output_filename, index=False)
     print(f"\nİşlem tamamlandı. {len(all_routes)} rota kaydedildi → {output_filename}")
 
