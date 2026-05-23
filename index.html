@@ -115,10 +115,35 @@
     <div class="toast-container" id="toast-container"></div>
 
     <div class="header-bar">
-        <h2 style="margin: 0; font-size: 18px;">✈️ AM Control Pro</h2>
+        <div>
+            <h2 style="margin: 0; font-size: 18px;">✈️ AM Control Pro</h2>
+        </div>
         <div style="display: flex; gap: 8px;">
             <button class="refresh-btn" style="border-color: var(--accent); color: var(--accent); font-weight: bold;" onclick="commitToGitHub()">☁️ Kaydet</button>
             <button class="refresh-btn" onclick="forceRefresh()">🔄 Yenile</button>
+        </div>
+    </div>
+
+    <div id="meta-dashboard" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
+        <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; font-size: 11px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 6px; border-bottom: 1px solid var(--bg-dark); padding-bottom: 4px;">
+                <b style="color: #c084fc;">✈️ UÇAKLAR DB</b>
+                <span id="meta-ac-dates" style="color: var(--text-muted); font-size: 10px;">Bekleniyor...</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 10.5px;">
+                <span class="text-muted">Bakiye: <b id="meta-ac-bal" style="color: #34d399; font-size: 11.5px;">-</b></span>
+                <span class="text-muted">D-1 Kar: <b id="meta-ac-sp" style="color: #60a5fa; font-size: 11.5px;">-</b></span>
+            </div>
+        </div>
+        <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; font-size: 11px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 6px; border-bottom: 1px solid var(--bg-dark); padding-bottom: 4px;">
+                <b style="color: #fbbf24;">📍 ROTALAR DB</b>
+                <span id="meta-rt-dates" style="color: var(--text-muted); font-size: 10px;">Bekleniyor...</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 10.5px;">
+                <span class="text-muted">Bakiye: <b id="meta-rt-bal" style="color: #34d399; font-size: 11.5px;">-</b></span>
+                <span class="text-muted">D-1 Kar: <b id="meta-rt-sp" style="color: #60a5fa; font-size: 11.5px;">-</b></span>
+            </div>
         </div>
     </div>
 
@@ -209,13 +234,12 @@
         </div>
     </div>
 
-    <!-- MODAL: Fiyat Yönetimi -->
     <div class="modal-overlay" id="modal-price-management">
         <div class="modal-content modal-lg" style="border-color: var(--accent-blue);">
             <h3 style="color: #93c5fd; margin-bottom: 5px;" id="pm-title">🎛️ Fiyat ve Talep Yönetimi</h3>
             <p class="text-muted" style="font-size: 11.5px; margin-top: 0; margin-bottom: 12px;">
                 YENİ FİYAT değiştirdikçe simülasyon otomatik güncellenir. "Uygula" demeden kayıt olmaz.<br>
-                <span style="color:#f59e0b;font-size:10.5px;">⚠️ Talep, yalnızca fiyat audit fiyatının ÜSTÜNE çıktığında azalır. Altında kalındığında baz talep (audit talebi) geçerlidir.</span>
+                <span style="color:#f59e0b;font-size:10.5px;">⚠️ Talep, fiyat <b>Audit Fiyatının</b> üstüne çıktıkça azalır. Kâr maksimizasyon noktası olan Audit fiyatta talep maksimumdur.</span>
             </p>
             <div style="display: flex; gap: 8px; justify-content: center; margin-bottom: 12px; padding: 8px; background-color: var(--bg-dark); border-radius: 6px;">
                 <button class="btn-small btn-purple" style="padding: 7px 12px; font-size: 12px;" onclick="setAllSimPrices('audit')">📋 Audit Fiyatlarını Yükle</button>
@@ -228,11 +252,9 @@
                         <th>Güncel Fiyat</th>
                         <th style="color:#a78bfa;">Audit Fiyat</th>
                         <th style="color:#60a5fa;width:100px;">YENİ FİYAT</th>
-                        <th>Arz (Koltuk/gün)</th>
-                        <!-- FIX: Sütun adı netleştirildi: Baz Talep = audit fiyatındaki talep -->
-                        <th style="color:#a78bfa;">Baz Talep<br><span style="font-weight:400;font-size:9px;">(Audit fiyatında)</span></th>
-                        <!-- FIX: Simüle Talep = seçilen yeni fiyattaki talep (sadece artış yok, azalış var) -->
-                        <th style="color:#60a5fa;">Sim. Talep<br><span style="font-weight:400;font-size:9px;">(Yeni fiyatta)</span></th>
+                        <th>Arz (Koltuk)</th>
+                        <th style="color:#a78bfa;">Audit Talep<br><span style="font-weight:400;font-size:9px;">(Max. Kazanç)</span></th>
+                        <th style="color:#60a5fa;">Sim. Talep<br><span style="font-weight:400;font-size:9px;">(Yeni Fiyatta)</span></th>
                         <th>Kalan<br><span style="font-weight:400;font-size:9px;">(- = doluluk aşımı)</span></th>
                     </tr>
                 </thead>
@@ -287,7 +309,6 @@
         </div>
     </div>
 
-    <!-- MODAL: Uçak Önerisi -->
     <div class="modal-overlay" id="modal-recommendation">
         <div class="modal-content modal-lg" style="border-color: var(--accent);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 5px;">
@@ -299,7 +320,7 @@
             </div>
             <p class="text-muted" style="margin-top:0; font-size:12px; margin-bottom:15px;">
                 Kapasite hesabı, haftalık uçuş frekanslarına ve oyunun Gidiş-Dönüş (Bölü-2) mantığına tam uyumlu olarak (Tekil Sefer Başına) hesaplanmıştır.<br>
-                <span style="color:#f59e0b;font-size:10.5px;">"Audit Öneri": Baz talebe (audit fiyatı talebi) göre. "Güncel Öneri": Mevcut kalan talebe göre.</span>
+                <span style="color:#f59e0b;font-size:10.5px;">"Audit Öneri": Max kazanç talebine göre. "Güncel Öneri": Mevcut fiyatın talebine göre hesaplanır.</span>
             </p>
             <div class="grid-3" id="rec-container"></div>
             <div style="text-align: center; margin-top: 15px;">
@@ -322,6 +343,49 @@
     ];
 
     let AIRCRAFT_DB = [], ROUTES_DB = [], AIRPORTS_DB = [];
+    
+    // Orijinal dosya isimlerini kaydetme işlemi için koruyoruz
+    window.githubRoutesFilename = 'routes_output.xlsx';
+    window.githubAircraftsFilename = 'aircrafts_output.xlsx';
+
+    // === DOSYA İSİMLERİNDEN META BİLGİ AYRIŞTIRMA (REGEX) ===
+    function parseFilenameMeta(filename) {
+        if(!filename) return null;
+        let dec = decodeURIComponent(filename);
+        // Formatı Esnek Yakalama (Boşluklar ve semboller dinamik olabilir)
+        // match[1] = type, match[2] = gameDate, match[3] = realDate, match[4] = balance, match[5] = sp
+        let regex = /^(aircrafts|routes)\s+(\d{2}_\d{2}_\d{2}_\d{4})\s+(\d{2}_\d{2}_\d{2}_\d{2}_\d{4})\s+(.*?)\s+(.*?)\.xlsx$/i;
+        let match = dec.match(regex);
+        
+        if (match) {
+            return { type: match[1].toLowerCase(), gameDate: match[2], realDate: match[3], balance: match[4], sp: match[5] };
+        }
+
+        // Bakiye & SP içermeyen eski format için Fallback
+        let fb1 = /^(aircrafts|routes)\s+(\d{2}_\d{2}_\d{2}_\d{4})\s+(\d{2}_\d{2}_\d{2}_\d{2}_\d{4})\.xlsx$/i;
+        let mFb1 = dec.match(fb1);
+        if (mFb1) return { type: mFb1[1].toLowerCase(), gameDate: mFb1[2], realDate: mFb1[3], balance: "-", sp: "-" };
+
+        return null;
+    }
+
+    function updateMetaUI(type, meta) {
+        let prefix = type === 'aircrafts' ? 'ac' : 'rt';
+        if (!meta) {
+            document.getElementById(`meta-${prefix}-dates`).innerHTML = `<span style="color:var(--danger)">Format Okunamadı</span>`;
+            return;
+        }
+
+        let g = meta.gameDate.split('_'), r = meta.realDate.split('_');
+        // Game format: HH_dd_MM_yyyy
+        let gStr = g.length === 4 ? `${g[0]}:00 ${g[1]}.${g[2]}.${g[3]}` : meta.gameDate;
+        // Real format: mm_HH_dd_MM_yyyy
+        let rStr = r.length === 5 ? `${r[1]}:${r[0]} ${r[2]}.${r[3]}.${r[4]}` : meta.realDate;
+
+        document.getElementById(`meta-${prefix}-dates`).innerHTML = `<span style="color:#94a3b8" title="Oyun İçi Senkronizasyon Tarihi">🎮 ${gStr}</span> &nbsp;<span style="color:#475569">|</span>&nbsp; <span style="color:#cbd5e1" title="Gerçek Tarih">🕒 ${rStr}</span>`;
+        document.getElementById(`meta-${prefix}-bal`).innerText = meta.balance;
+        document.getElementById(`meta-${prefix}-sp`).innerText = meta.sp;
+    }
 
     // === TOAST SİSTEMİ ===
     function showToast(msg, type='success') {
@@ -342,12 +406,14 @@
         let parsed = parseFloat(str);
         return isNaN(parsed) ? 0 : parsed;
     }
+    
     function formatMoney(v) {
         if(v===0) return '$0';
         if(Math.abs(v)>=1e6) return '$'+(v/1e6).toFixed(2)+'M';
         if(Math.abs(v)>=1e3) return '$'+(v/1e3).toFixed(1)+'K';
         return '$'+Math.round(v);
     }
+    
     function forceRefresh() { window.location.reload(true); }
 
     function calculateFlightTime(distance, speed) {
@@ -404,6 +470,34 @@
         return data;
     }
 
+    // === ELASTİKİYET VE AUDİT MATEMATİĞİ ===
+    function calcAuditPrices(dist, comf) {
+        let comfFactor = 1 + (comf / 3000);
+        let cCoef = dist >= 5000 ? 0.47 : (dist >= 2000 ? 0.52 : 0.56);
+        return {
+            e: Math.floor(120 + (dist * 0.2639) * comfFactor),
+            b: Math.floor(160 + (dist * 0.3509) * comfFactor),
+            f: Math.floor(276 + (dist * 0.6068) * comfFactor),
+            c: Math.floor(200 + (dist * cCoef))
+        };
+    }
+
+    function getBaseDemand(curD, curP, audP) {
+        if (curP > audP && audP > 0) {
+            let factor = 2 - (curP / audP);
+            if (factor <= 0) return curD; 
+            return Math.round(curD / factor);
+        }
+        return curD;
+    }
+
+    function calcElasticDemand(baseDem, price, auditPrice) {
+        if (auditPrice > 0 && price > auditPrice) {
+            return Math.max(0, Math.round(baseDem * (2 - (price / auditPrice))));
+        }
+        return baseDem;
+    }
+
     // === GITHUB & BAŞLATMA İŞLEMLERİ ===
     async function initData() {
         if(localStorage.getItem('g_comf')) document.getElementById('g_comf').value=localStorage.getItem('g_comf');
@@ -411,7 +505,7 @@
         if(localStorage.getItem('g_ngaf')) document.getElementById('g_ngaf').value=localStorage.getItem('g_ngaf');
         if(localStorage.getItem('gh_pat')) document.getElementById('g_pat').value=localStorage.getItem('gh_pat');
 
-        showToast("Sunucudan veriler çekiliyor...", "info");
+        showToast("Sunucudan canlı veriler çekiliyor...", "info");
 
         const pat = localStorage.getItem('gh_pat');
         if (!pat) {
@@ -423,18 +517,30 @@
         const owner = "mzlmtn";
         const repo = "airlines-manager-app";
         let cacheBuster = '?t=' + new Date().getTime();
-        const aircraftsApiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/aircrafts_output.xlsx${cacheBuster}`;
-        const routesApiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/routes_output.xlsx${cacheBuster}`;
-
-        let isOnlineDataLoaded = false;
+        
         try {
-            const fetchOptions = {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${pat}`,
-                    'Accept': 'application/vnd.github.v3+json'
+            const fetchOptions = { method: 'GET', headers: { 'Authorization': `Bearer ${pat}`, 'Accept': 'application/vnd.github.v3+json' } };
+            
+            const contentsUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${cacheBuster}`;
+            let resDir = await fetch(contentsUrl, fetchOptions);
+            
+            if (resDir.ok) {
+                let files = await resDir.json();
+                let routesFileNode = files.find(f => f.name.startsWith('routes') && f.name.endsWith('.xlsx'));
+                let aircraftsFileNode = files.find(f => f.name.startsWith('aircrafts') && f.name.endsWith('.xlsx'));
+                
+                if(routesFileNode) {
+                    window.githubRoutesFilename = routesFileNode.name;
+                    updateMetaUI('routes', parseFilenameMeta(routesFileNode.name));
                 }
-            };
+                if(aircraftsFileNode) {
+                    window.githubAircraftsFilename = aircraftsFileNode.name;
+                    updateMetaUI('aircrafts', parseFilenameMeta(aircraftsFileNode.name));
+                }
+            }
+
+            const aircraftsApiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(window.githubAircraftsFilename)}${cacheBuster}`;
+            const routesApiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(window.githubRoutesFilename)}${cacheBuster}`;
 
             let resAc = await fetch(aircraftsApiUrl, fetchOptions);
             if(resAc.ok) {
@@ -444,9 +550,7 @@
                 let bytes = new Uint8Array(len);
                 for (let i = 0; i < len; i++) { bytes[i] = binaryString.charCodeAt(i); }
                 let wb = XLSX.read(bytes, {type: 'array'});
-                let rawData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]).map(row=>{
-                    let o={}; for(let k in row) o[String(k).trim().toLowerCase()]=row[k]; return o;
-                });
+                let rawData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]).map(row=>{ let o={}; for(let k in row) o[String(k).trim().toLowerCase()]=row[k]; return o; });
                 AIRCRAFT_DB = normalizeData(rawData, 'am_aircraft_db').filter(a=>a&&(a['aircraft name']||a['aircraft']));
             } else throw new Error(`Uçak API Hatası: ${resAc.status}`);
 
@@ -458,13 +562,10 @@
                 let bytes = new Uint8Array(len);
                 for (let i = 0; i < len; i++) { bytes[i] = binaryString.charCodeAt(i); }
                 let wb = XLSX.read(bytes, {type: 'array'});
-                let rawData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]).map(row=>{
-                    let o={}; for(let k in row) o[String(k).trim().toLowerCase()]=row[k]; return o;
-                });
+                let rawData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]).map(row=>{ let o={}; for(let k in row) o[String(k).trim().toLowerCase()]=row[k]; return o; });
                 ROUTES_DB = normalizeData(rawData, 'am_routes_db').filter(row=>row&&cleanNum(row['distance'])>0);
             } else throw new Error(`Rota API Hatası: ${resRt.status}`);
 
-            isOnlineDataLoaded = true;
             showToast("Veriler GitHub Bulutundan %100 canlı olarak yüklendi.", "success");
         } catch(e) {
             console.warn("GitHub API'den veri çekilemedi. Çevrimdışı moda geçiliyor:", e);
@@ -483,7 +584,6 @@
     }
 
     function savePAT() { localStorage.setItem('gh_pat', document.getElementById('g_pat').value.trim()); }
-
     function saveGlobalStats() {
         localStorage.setItem('g_comf', document.getElementById('g_comf').value);
         localStorage.setItem('g_fuel', document.getElementById('g_fuel').value);
@@ -498,19 +598,20 @@
         showToast("Sunucuya yükleniyor, lütfen bekleyin...", "info");
         try {
             const owner = 'mzlmtn', repo = 'airlines-manager-app';
+            
             let wsAc = XLSX.utils.json_to_sheet(AIRCRAFT_DB);
             let wbAc = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wbAc, wsAc, "Filo");
             let b64Ac = XLSX.write(wbAc, { type: 'base64', bookType: 'xlsx' });
 
-            let cleanRoutes = ROUTES_DB.map(r=>{ if(!r) return r; let o={}; for(let k in r){ if(!k.startsWith('_orig_')) o[k]=r[k]; } return o; });
+            let cleanRoutes = ROUTES_DB.map(r=>{ if(!r) return r; let o={}; for(let k in r){ if(!k.startsWith('_orig_') && !k.startsWith('_base_')) o[k]=r[k]; } return o; });
             let wsRt = XLSX.utils.json_to_sheet(cleanRoutes);
             let wbRt = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wbRt, wsRt, "Rotalar");
             let b64Rt = XLSX.write(wbRt, { type: 'base64', bookType: 'xlsx' });
 
-            await updateFileOnGitHub(owner, repo, 'aircrafts_output.xlsx', b64Ac, "AM Pro: Uçaklar Siteden Güncellendi", pat);
-            await updateFileOnGitHub(owner, repo, 'routes_output.xlsx', b64Rt, "AM Pro: Rotalar Siteden Güncellendi", pat);
+            await updateFileOnGitHub(owner, repo, encodeURIComponent(window.githubAircraftsFilename), b64Ac, "AM Pro: Uçaklar Siteden Güncellendi", pat);
+            await updateFileOnGitHub(owner, repo, encodeURIComponent(window.githubRoutesFilename), b64Rt, "AM Pro: Rotalar Siteden Güncellendi", pat);
             showToast("✅ Tüm değişiklikler başarıyla buluta kaydedildi!", "success");
         } catch(e) { console.error(e); showToast("Kaydetme hatası: " + e.message, "error"); }
     }
@@ -540,8 +641,17 @@
                 });
                 const normalized=normalizeData(rawData,storageKey);
                 localStorage.setItem(storageKey,JSON.stringify(normalized));
-                if(storageKey === 'am_aircraft_db') AIRCRAFT_DB = normalized.filter(a=>a&&(a['aircraft name']||a['aircraft']));
-                if(storageKey === 'am_routes_db') ROUTES_DB = normalized.filter(row=>row&&cleanNum(row['distance'])>0);
+                
+                if(storageKey === 'am_aircraft_db') {
+                    AIRCRAFT_DB = normalized.filter(a=>a&&(a['aircraft name']||a['aircraft']));
+                    window.githubAircraftsFilename = file.name;
+                    updateMetaUI('aircrafts', parseFilenameMeta(file.name));
+                }
+                if(storageKey === 'am_routes_db') {
+                    ROUTES_DB = normalized.filter(row=>row&&cleanNum(row['distance'])>0);
+                    window.githubRoutesFilename = file.name;
+                    updateMetaUI('routes', parseFilenameMeta(file.name));
+                }
                 if(storageKey === 'am_airports_db') AIRPORTS_DB = normalized.filter(ap=>ap&&ap['iata']&&(cleanNum(ap['lat'])!==0||cleanNum(ap['lon'])!==0));
                 showToast(`Veritabanı yerel olarak yüklendi (${normalized.length} kayıt).`,"success");
                 updateDbStatus(); populateDropdowns(); renderHubsList(); renderFleetList();
@@ -554,12 +664,12 @@
         if(type==='aircraft') {
             if(!AIRCRAFT_DB.length) return showToast("İndirilecek veri yok.","error");
             let ws=XLSX.utils.json_to_sheet(AIRCRAFT_DB); let wb=XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb,ws,"Filo"); XLSX.writeFile(wb,"aircrafts_updated.xlsx");
+            XLSX.utils.book_append_sheet(wb,ws,"Filo"); XLSX.writeFile(wb, window.githubAircraftsFilename);
         } else {
             if(!ROUTES_DB.length) return showToast("İndirilecek veri yok.","error");
-            let cleanRoutes=ROUTES_DB.map(r=>{ if(!r) return r; let o={}; for(let k in r){ if(!k.startsWith('_orig_')) o[k]=r[k]; } return o; });
+            let cleanRoutes=ROUTES_DB.map(r=>{ if(!r) return r; let o={}; for(let k in r){ if(!k.startsWith('_orig_') && !k.startsWith('_base_')) o[k]=r[k]; } return o; });
             let ws=XLSX.utils.json_to_sheet(cleanRoutes); let wb=XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb,ws,"Rotalar"); XLSX.writeFile(wb,"routes_updated.xlsx");
+            XLSX.utils.book_append_sheet(wb,ws,"Rotalar"); XLSX.writeFile(wb, window.githubRoutesFilename);
         }
     }
 
@@ -607,17 +717,32 @@
             let c = document.getElementById('hubs-container');
             let hubs = getGroupedHubs(), names = Object.keys(hubs), html = "";
             if(!names.length) { c.innerHTML = '<div class="card text-muted" style="text-align:center;">Veri Yok.</div>'; return; }
+            let comf = cleanNum(document.getElementById('g_comf').value) || 0;
+
             names.forEach(h => {
                 let routes = hubs[h];
                 let totalKm = routes.reduce((s,r) => s+cleanNum(r['distance']),0);
-                // FIX: Verimsiz rotayı audit talebine göre hesapla (baz talep - arz < 0 = doluluk aşımı yok)
-                // Oyunla uyumlu: arz > audit talep olan rota sorunsuz, arz < audit talep olan rota eksik kapasite
+                
                 let danger = routes.filter(r => {
-                    let origD = getOrigDemand(r);
-                    return (origD.e - cleanNum(r['eco offer'])) > 0 ||
-                           (origD.b - cleanNum(r['bus offer'])) > 0 ||
-                           (origD.f - cleanNum(r['first offer'])) > 0;
+                    let dist = cleanNum(r['distance']);
+                    let aud = calcAuditPrices(dist, comf);
+                    let origP = { e: r['_orig_eco_ticket'] !== undefined ? r['_orig_eco_ticket'] : cleanNum(r['eco ticket']),
+                                  b: r['_orig_bus_ticket'] !== undefined ? r['_orig_bus_ticket'] : cleanNum(r['bus ticket']),
+                                  f: r['_orig_first_ticket']!== undefined ? r['_orig_first_ticket']: cleanNum(r['first ticket']) };
+                    let origD = { e: r['_orig_eco_demand'] !== undefined ? r['_orig_eco_demand'] : cleanNum(r['eco demand']),
+                                  b: r['_orig_bus_demand'] !== undefined ? r['_orig_bus_demand'] : cleanNum(r['bus demand']),
+                                  f: r['_orig_first_demand']!== undefined ? r['_orig_first_demand']: cleanNum(r['first demand']) };
+                    
+                    let baseD = {
+                        e: getBaseDemand(origD.e, origP.e, aud.e),
+                        b: getBaseDemand(origD.b, origP.b, aud.b),
+                        f: getBaseDemand(origD.f, origP.f, aud.f)
+                    };
+                    return (baseD.e - cleanNum(r['eco offer'])) > 0 ||
+                           (baseD.b - cleanNum(r['bus offer'])) > 0 ||
+                           (baseD.f - cleanNum(r['first offer'])) > 0;
                 }).length;
+
                 html += `<div class="list-item" onclick="openHubRoutes('${h}')">
                     <div class="list-title">🏢 Merkez: ${h} <span class="btn-small bg-gray">Aç</span></div>
                     <div class="hub-stats">
@@ -631,127 +756,7 @@
         } catch(e) { console.error(e); }
     }
 
-    // ============================================================
-    // FIX: ELASTİKİYET FONKSİYONU - ANA DÜZELTME
-    // Oyun mekaniği: "Demand (regular)" = audit fiyatındaki BAZ taleptir.
-    // Fiyat audit'in ALTINA düşerse talep ARTMAZ (oyun bunu yapmaz).
-    // Fiyat audit'in ÜSTÜNE çıkarsa talep azalır: origDem * (2 - price/auditPrice)
-    // Bu formül price=audit'te origDem, price=2*audit'te 0 verir.
-    // ============================================================
-    function calcElasticDemand(origDem, price, auditPrice) {
-        if (auditPrice > 0 && price > 0 && price > auditPrice) {
-            // Fiyat audit üstünde → talep doğrusal olarak azalır
-            return Math.max(0, Math.round(origDem * (2 - (price / auditPrice))));
-        }
-        // Fiyat audit'e eşit veya altında → baz talep (oyunla aynı)
-        return origDem;
-    }
-
-    // ============================================================
-    // FIX: AUDİT FİYAT FORMÜLÜ
-    // Katsayılar oyunun kendi "Audit" / "Recommended" değerleriyle
-    // kalibre edilmelidir. Konfor değerinizi doğru girmeniz kritiktir.
-    // Mevcut katsayılar genel ortalamaları temsil eder.
-    // Eğer oyun önerisi ile uygulama arasında fark görüyorsanız
-    // Ayarlar > Comfort değerini güncelleyin.
-    // ============================================================
-    function calcAuditPrices(dist, comf) {
-        let comfFactor = 1 + (comf / 3000);
-        let cCoef = dist >= 5000 ? 0.47 : (dist >= 2000 ? 0.52 : 0.56);
-        return {
-            e: Math.floor(120 + (dist * 0.2639) * comfFactor),
-            b: Math.floor(160 + (dist * 0.3509) * comfFactor),
-            f: Math.floor(276 + (dist * 0.6068) * comfFactor),
-            c: Math.floor(200 + (dist * cCoef))  // Kargo konfordan etkilenmez
-        };
-    }
-
-    // Baz talep: veritabanındaki orijinal değer (audit fiyatındaki talep)
-    function getOrigDemand(r) {
-        return {
-            e: r['_orig_eco_demand']   !== undefined ? r['_orig_eco_demand']   : cleanNum(r['eco demand']),
-            b: r['_orig_bus_demand']   !== undefined ? r['_orig_bus_demand']   : cleanNum(r['bus demand']),
-            f: r['_orig_first_demand'] !== undefined ? r['_orig_first_demand'] : cleanNum(r['first demand']),
-            c: r['_orig_cargo_demand'] !== undefined ? r['_orig_cargo_demand'] : cleanNum(r['cargo demand'])
-        };
-    }
-
-    // ============================================================
-    // FIX: GELİR HESAPLAMA
-    // Oyun mekaniği: günlük ciro = min(talep, arz) * fiyat
-    // "Güncel talep" = mevcut fiyatta geçerli talep (fiyat > audit ise azalmış)
-    // Gelir, talepten fazla arz varsa talep üzerinden hesaplanır.
-    // ============================================================
-    function calcRouteRevenue(r, comf) {
-        let dist   = cleanNum(r['distance']);
-        let curP   = { e: cleanNum(r['eco ticket']), b: cleanNum(r['bus ticket']), f: cleanNum(r['first ticket']), c: cleanNum(r['cargo ticket']) };
-        let aud    = calcAuditPrices(dist, comf);
-        let origD  = getOrigDemand(r);
-        let offer  = { e: cleanNum(r['eco offer']), b: cleanNum(r['bus offer']), f: cleanNum(r['first offer']), c: cleanNum(r['cargo offer']) };
-
-        // FIX: Elastikiyet artık sadece fiyat > audit olduğunda azaltıyor
-        let dem = {
-            e: calcElasticDemand(origD.e, curP.e, aud.e),
-            b: calcElasticDemand(origD.b, curP.b, aud.b),
-            f: calcElasticDemand(origD.f, curP.f, aud.f),
-            c: calcElasticDemand(origD.c, curP.c, aud.c)
-        };
-
-        // Günlük ciro = fiilen taşınan yolcu * fiyat (arz veya talebin küçüğü)
-        let daily = Math.min(dem.e, offer.e) * curP.e
-                  + Math.min(dem.b, offer.b) * curP.b
-                  + Math.min(dem.f, offer.f) * curP.f
-                  + Math.min(dem.c, offer.c) * curP.c;
-        return { daily, weekly: daily * 7 };
-    }
-
-    function calcAircraftRevenue(ac, route, comf) {
-        if (!route) return { daily: 0, weekly: 0, amortWeeks: Infinity };
-        let dist  = cleanNum(route['distance']);
-        let speed = cleanNum(ac['speed']);
-        let ft    = calculateFlightTime(dist, speed);
-        let wf    = Math.floor(168 / ft);
-        if (wf < 1) return { daily: 0, weekly: 0, amortWeeks: Infinity };
-
-        let curP  = { e: cleanNum(route['eco ticket']), b: cleanNum(route['bus ticket']), f: cleanNum(route['first ticket']), c: cleanNum(route['cargo ticket']) };
-        let aud   = calcAuditPrices(dist, comf);
-        let origD = getOrigDemand(route);
-        let offer = { e: cleanNum(route['eco offer']), b: cleanNum(route['bus offer']), f: cleanNum(route['first offer']), c: cleanNum(route['cargo offer']) };
-
-        // FIX: Elastikiyet burada da düzeltildi
-        let dem = {
-            e: calcElasticDemand(origD.e, curP.e, aud.e),
-            b: calcElasticDemand(origD.b, curP.b, aud.b),
-            f: calcElasticDemand(origD.f, curP.f, aud.f),
-            c: calcElasticDemand(origD.c, curP.c, aud.c)
-        };
-
-        // Doluluk oranı: talep / arz (max 1.0)
-        let fillE = offer.e > 0 ? Math.min(1, dem.e / offer.e) : 0;
-        let fillB = offer.b > 0 ? Math.min(1, dem.b / offer.b) : 0;
-        let fillF = offer.f > 0 ? Math.min(1, dem.f / offer.f) : 0;
-        let fillC = offer.c > 0 ? Math.min(1, dem.c / offer.c) : 0;
-
-        let eS = cleanNum(ac['eco_seats']), bS = cleanNum(ac['business_seats']);
-        let fS = cleanNum(ac['first_seats']), cS = cleanNum(ac['cargo']);
-
-        // Günlük koltuk arzı: koltuk * haftalık sefer * 2 yön / 7 gün
-        let adE = Math.round(eS * wf * 2 / 7);
-        let adB = Math.round(bS * wf * 2 / 7);
-        let adF = Math.round(fS * wf * 2 / 7);
-        let adC = Math.round(cS * wf * 2 / 7);
-
-        let daily  = Math.round(adE * fillE) * curP.e
-                   + Math.round(adB * fillB) * curP.b
-                   + Math.round(adF * fillF) * curP.f
-                   + Math.round(adC * fillC) * curP.c;
-        let weekly = daily * 7;
-        let price  = cleanNum(ac['purchase price'] || ac['purchase_price']);
-        let amortWeeks = weekly > 0 ? Math.ceil(price / weekly) : Infinity;
-        return { daily, weekly, amortWeeks };
-    }
-
-    // === ROTA LİSTELEME ===
+    // === ROTA LİSTELEME VE HESAPLAMA MANTIĞI ===
     function openHubRoutes(hubName, sortMode) {
         try {
             hubName = String(hubName).trim().toUpperCase();
@@ -767,32 +772,42 @@
             let items = routes.map((r, idx) => {
                 if (!r) return null;
                 let dName  = r['arrival'] ? String(r['arrival']).trim().toUpperCase() : "İSİMSİZ";
-                let origD  = getOrigDemand(r);
-                let rev    = calcRouteRevenue(r, comf);
                 let dDist  = cleanNum(r['distance']);
-                let curP   = { e: cleanNum(r['eco ticket']), b: cleanNum(r['bus ticket']), f: cleanNum(r['first ticket']), c: cleanNum(r['cargo ticket']) };
                 let aud    = calcAuditPrices(dDist, comf);
-                let offer  = { e: cleanNum(r['eco offer']), b: cleanNum(r['bus offer']), f: cleanNum(r['first offer']), c: cleanNum(r['cargo offer']) };
+                
+                let origP = { e: r['_orig_eco_ticket'] !== undefined ? r['_orig_eco_ticket'] : cleanNum(r['eco ticket']),
+                              b: r['_orig_bus_ticket'] !== undefined ? r['_orig_bus_ticket'] : cleanNum(r['bus ticket']),
+                              f: r['_orig_first_ticket']!== undefined ? r['_orig_first_ticket']: cleanNum(r['first ticket']),
+                              c: r['_orig_cargo_ticket']!== undefined ? r['_orig_cargo_ticket']: cleanNum(r['cargo ticket']) };
+                let origD = { e: r['_orig_eco_demand'] !== undefined ? r['_orig_eco_demand'] : cleanNum(r['eco demand']),
+                              b: r['_orig_bus_demand'] !== undefined ? r['_orig_bus_demand'] : cleanNum(r['bus demand']),
+                              f: r['_orig_first_demand']!== undefined ? r['_orig_first_demand']: cleanNum(r['first demand']),
+                              c: r['_orig_cargo_demand']!== undefined ? r['_orig_cargo_demand']: cleanNum(r['cargo demand']) };
+                
+                let baseD = {
+                    e: getBaseDemand(origD.e, origP.e, aud.e),
+                    b: getBaseDemand(origD.b, origP.b, aud.b),
+                    f: getBaseDemand(origD.f, origP.f, aud.f),
+                    c: getBaseDemand(origD.c, origP.c, aud.c)
+                };
 
-                // FIX: Güncel talep = fiyat > audit ise azalmış, değilse baz talep
-                let curDemE = calcElasticDemand(origD.e, curP.e, aud.e);
-                let curDemB = calcElasticDemand(origD.b, curP.b, aud.b);
-                let curDemF = calcElasticDemand(origD.f, curP.f, aud.f);
-                let curDemC = calcElasticDemand(origD.c, curP.c, aud.c);
+                let curP  = { e: cleanNum(r['eco ticket']), b: cleanNum(r['bus ticket']), f: cleanNum(r['first ticket']), c: cleanNum(r['cargo ticket']) };
+                let offer = { e: cleanNum(r['eco offer']), b: cleanNum(r['bus offer']), f: cleanNum(r['first offer']), c: cleanNum(r['cargo offer']) };
 
-                // Audit talep = baz talep (origD, zaten audit fiyatındaki talep)
-                let audDemE = origD.e, audDemB = origD.b, audDemF = origD.f, audDemC = origD.c;
+                let curDemE = calcElasticDemand(baseD.e, curP.e, aud.e);
+                let curDemB = calcElasticDemand(baseD.b, curP.b, aud.b);
+                let curDemF = calcElasticDemand(baseD.f, curP.f, aud.f);
+                let curDemC = calcElasticDemand(baseD.c, curP.c, aud.c);
 
-                let curRemE = curDemE - offer.e, curRemB = curDemB - offer.b;
-                let curRemF = curDemF - offer.f, curRemC = curDemC - offer.c;
-                let audRemE = audDemE - offer.e, audRemB = audDemB - offer.b;
-                let audRemF = audDemF - offer.f, audRemC = audDemC - offer.c;
+                let dailyRev = Math.min(curDemE, offer.e) * curP.e + Math.min(curDemB, offer.b) * curP.b + Math.min(curDemF, offer.f) * curP.f + Math.min(curDemC, offer.c) * curP.c;
+                let rev = { daily: dailyRev, weekly: dailyRev * 7 };
 
-                // Sıralama için ağırlıklı kalan (1 eco = 1, 1 bus = 2, 1 first = 4)
+                let curRemE = curDemE - offer.e, curRemB = curDemB - offer.b, curRemF = curDemF - offer.f, curRemC = curDemC - offer.c;
+                let audRemE = baseD.e - offer.e, audRemB = baseD.b - offer.b, audRemF = baseD.f - offer.f, audRemC = baseD.c - offer.c;
                 let curRemEq = curRemE + (curRemB * 2) + (curRemF * 4) + curRemC;
                 let audRemEq = audRemE + (audRemB * 2) + (audRemF * 4) + audRemC;
 
-                return { r, idx, dName, rev, curRemEq, audRemEq };
+                return { r, idx, dName, rev, curRemEq, audRemEq, dDist, curP, aud, baseD, offer, curDemE, curDemB, curDemF, curDemC, curRemE, curRemB, curRemF, curRemC, audRemE, audRemB, audRemF, audRemC };
             }).filter(x => x);
 
             switch(sortMode) {
@@ -818,37 +833,14 @@
                 <button class="btn-small ${sb('audrem-desc')}" onclick="openHubRoutes('${hubName}','audrem-desc')" style="padding:2px 7px;font-size:10px;">Audit Kalan ↓</button>
                 <button class="btn-small ${sb('audrem-asc')}"  onclick="openHubRoutes('${hubName}','audrem-asc')"  style="padding:2px 7px;font-size:10px;">Audit Kalan ↑</button>
                 <button class="btn-small ${sb('daily-desc')}"  onclick="openHubRoutes('${hubName}','daily-desc')"  style="padding:2px 7px;font-size:10px;">Günlük ↓</button>
-                <button class="btn-small ${sb('daily-asc')}"   onclick="openHubRoutes('${hubName}','daily-asc')"   style="padding:2px 7px;font-size:10px;">Günlük ↑</button>
-                <button class="btn-small ${sb('weekly-desc')}" onclick="openHubRoutes('${hubName}','weekly-desc')" style="padding:2px 7px;font-size:10px;">Haftalık ↓</button>
-                <button class="btn-small ${sb('weekly-asc')}"  onclick="openHubRoutes('${hubName}','weekly-asc')"  style="padding:2px 7px;font-size:10px;">Haftalık ↑</button>
             </div>`;
 
-            items.forEach(({ r, idx, dName, rev }) => {
-                let dDist  = cleanNum(r['distance']);
+            items.forEach((item) => {
+                let { r, idx, dName, rev, dDist, curP, aud, baseD, offer, curDemE, curDemB, curDemF, curDemC, curRemE, curRemB, curRemF, curRemC, audRemE, audRemB, audRemF, audRemC } = item;
                 let cacheKey = hubName + "_" + dName + "_" + idx;
                 window.routeRefCache[cacheKey] = r;
 
-                let curP  = { e: cleanNum(r['eco ticket']), b: cleanNum(r['bus ticket']), f: cleanNum(r['first ticket']), c: cleanNum(r['cargo ticket']) };
-                let aud   = calcAuditPrices(dDist, comf);
-                let origD = getOrigDemand(r);
-                let offer = { e: cleanNum(r['eco offer']), b: cleanNum(r['bus offer']), f: cleanNum(r['first offer']), c: cleanNum(r['cargo offer']) };
-
-                let curDemE = calcElasticDemand(origD.e, curP.e, aud.e);
-                let curDemB = calcElasticDemand(origD.b, curP.b, aud.b);
-                let curDemF = calcElasticDemand(origD.f, curP.f, aud.f);
-                let curDemC = calcElasticDemand(origD.c, curP.c, aud.c);
-
-                // FIX: Audit talep sütunu = origD (baz talep), güncel talep sütunu = elastik talep
-                let audDemE = origD.e, audDemB = origD.b, audDemF = origD.f, audDemC = origD.c;
-
-                let curRemE = curDemE - offer.e, curRemB = curDemB - offer.b;
-                let curRemF = curDemF - offer.f, curRemC = curDemC - offer.c;
-                let audRemE = audDemE - offer.e, audRemB = audDemB - offer.b;
-                let audRemF = audDemF - offer.f, audRemC = audDemC - offer.c;
-
-                // Rota "tehlikeli" = mevcut fiyatta bile arz talebi aşıyor (overbooking)
                 let isDanger = (curRemE < 0 || curRemB < 0 || curRemF < 0 || curRemC < 0);
-
                 let taxes    = r['taxes'] ? String(r['taxes']).trim() : '';
                 let wkFlight = cleanNum(r['weekly_flight_count']);
                 let maxCat   = cleanNum(r['max_category']);
@@ -891,11 +883,10 @@
                         <thead>
                             <tr>
                                 <th>Sınıf</th>
-                                <th>Fiyat</th>
-                                <th style="color:#a78bfa;">Audit Fiyat</th>
-                                <!-- FIX: Sütun adları oyunla birebir eşleştirildi -->
-                                <th style="color:#60a5fa;">Güncel Talep<br><span style="font-weight:400;font-size:9px;">(Bu fiyatta)</span></th>
-                                <th style="color:#a78bfa;">Audit Talep<br><span style="font-weight:400;font-size:9px;">(Baz talep)</span></th>
+                                <th>Güncel Fiyat</th>
+                                <th style="color:#a78bfa;">Audit Fiyat<br><span style="font-weight:400;font-size:9px;">(Max Kazanç)</span></th>
+                                <th style="color:#60a5fa;">Güncel Talep<br><span style="font-weight:400;font-size:9px;">(Seçili Fiyatta)</span></th>
+                                <th style="color:#a78bfa;">Audit Talep<br><span style="font-weight:400;font-size:9px;">(Audit Fiyatta)</span></th>
                                 <th>Arz</th>
                                 <th>Güncel Kalan</th>
                                 <th style="color:#a78bfa;">Audit Kalan</th>
@@ -907,7 +898,7 @@
                                 <td style="color:#94a3b8;">$${curP.e}</td>
                                 <td style="color:#c4b5fd;">$${aud.e}</td>
                                 <td>${curDemE}</td>
-                                <td style="color:#c4b5fd;">${audDemE}</td>
+                                <td style="color:#c4b5fd;">${baseD.e}</td>
                                 <td style="color:#94a3b8;">${offer.e}</td>
                                 <td class="${curRemE < 0 ? 'text-danger' : 'text-success'}"><b>${curRemE}</b></td>
                                 <td class="${audRemE < 0 ? 'text-danger' : ''}" style="${audRemE >= 0 ? 'color:#a78bfa' : ''}"><b>${audRemE}</b></td>
@@ -917,7 +908,7 @@
                                 <td style="color:#94a3b8;">$${curP.b}</td>
                                 <td style="color:#c4b5fd;">$${aud.b}</td>
                                 <td>${curDemB}</td>
-                                <td style="color:#c4b5fd;">${audDemB}</td>
+                                <td style="color:#c4b5fd;">${baseD.b}</td>
                                 <td style="color:#94a3b8;">${offer.b}</td>
                                 <td class="${curRemB < 0 ? 'text-danger' : 'text-success'}"><b>${curRemB}</b></td>
                                 <td class="${audRemB < 0 ? 'text-danger' : ''}" style="${audRemB >= 0 ? 'color:#a78bfa' : ''}"><b>${audRemB}</b></td>
@@ -927,7 +918,7 @@
                                 <td style="color:#94a3b8;">$${curP.f}</td>
                                 <td style="color:#c4b5fd;">$${aud.f}</td>
                                 <td>${curDemF}</td>
-                                <td style="color:#c4b5fd;">${audDemF}</td>
+                                <td style="color:#c4b5fd;">${baseD.f}</td>
                                 <td style="color:#94a3b8;">${offer.f}</td>
                                 <td class="${curRemF < 0 ? 'text-danger' : 'text-success'}"><b>${curRemF}</b></td>
                                 <td class="${audRemF < 0 ? 'text-danger' : ''}" style="${audRemF >= 0 ? 'color:#a78bfa' : ''}"><b>${audRemF}</b></td>
@@ -937,7 +928,7 @@
                                 <td style="color:#94a3b8;">$${curP.c}</td>
                                 <td style="color:#c4b5fd;">$${aud.c}</td>
                                 <td>${curDemC}</td>
-                                <td style="color:#c4b5fd;">${audDemC}</td>
+                                <td style="color:#c4b5fd;">${baseD.c}</td>
                                 <td style="color:#94a3b8;">${offer.c}</td>
                                 <td class="${curRemC < 0 ? 'text-danger' : 'text-success'}"><b>${curRemC}</b></td>
                                 <td class="${audRemC < 0 ? 'text-danger' : ''}" style="${audRemC >= 0 ? 'color:#a78bfa' : ''}"><b>${audRemC}</b></td>
@@ -955,7 +946,6 @@
         } catch(e) { console.error(e); }
     }
 
-    // === FİLO LİSTELEME ===
     function renderFleetList(hubFilter, sortMode) {
         try {
             let c = document.getElementById('fleet-container'), html = "";
@@ -978,7 +968,40 @@
                     let r = ROUTES_DB[i];
                     if (r && r['aircrafts model/aircrafts name on route'] && String(r['aircrafts model/aircrafts name on route']).includes(name)) { route = r; break; }
                 }
-                let rev      = calcAircraftRevenue(a, route, comf);
+                
+                let rev = { daily: 0, weekly: 0, amortWeeks: Infinity };
+                if (route) {
+                    let dist  = cleanNum(route['distance']), speed = cleanNum(a['speed']);
+                    let ft    = calculateFlightTime(dist, speed), wf = Math.floor(168 / ft);
+                    if (wf >= 1) {
+                        let curP  = { e: cleanNum(route['eco ticket']), b: cleanNum(route['bus ticket']), f: cleanNum(route['first ticket']), c: cleanNum(route['cargo ticket']) };
+                        let aud   = calcAuditPrices(dist, comf);
+                        
+                        let origP = { e: route['_orig_eco_ticket'] !== undefined ? route['_orig_eco_ticket'] : cleanNum(route['eco ticket']),
+                                      b: route['_orig_bus_ticket'] !== undefined ? route['_orig_bus_ticket'] : cleanNum(route['bus ticket']),
+                                      f: route['_orig_first_ticket']!== undefined ? route['_orig_first_ticket']: cleanNum(route['first ticket']),
+                                      c: route['_orig_cargo_ticket']!== undefined ? route['_orig_cargo_ticket']: cleanNum(route['cargo ticket']) };
+                        let origD = { e: route['_orig_eco_demand'] !== undefined ? route['_orig_eco_demand'] : cleanNum(route['eco demand']),
+                                      b: route['_orig_bus_demand'] !== undefined ? route['_orig_bus_demand'] : cleanNum(route['bus demand']),
+                                      f: route['_orig_first_demand']!== undefined ? route['_orig_first_demand']: cleanNum(route['first demand']),
+                                      c: route['_orig_cargo_demand']!== undefined ? route['_orig_cargo_demand']: cleanNum(route['cargo demand']) };
+                        
+                        let baseD = { e: getBaseDemand(origD.e, origP.e, aud.e), b: getBaseDemand(origD.b, origP.b, aud.b), f: getBaseDemand(origD.f, origP.f, aud.f), c: getBaseDemand(origD.c, origP.c, aud.c) };
+                        let dem = { e: calcElasticDemand(baseD.e, curP.e, aud.e), b: calcElasticDemand(baseD.b, curP.b, aud.b), f: calcElasticDemand(baseD.f, curP.f, aud.f), c: calcElasticDemand(baseD.c, curP.c, aud.c) };
+                        let offer = { e: cleanNum(route['eco offer']), b: cleanNum(route['bus offer']), f: cleanNum(route['first offer']), c: cleanNum(route['cargo offer']) };
+                        
+                        let fillE = offer.e > 0 ? Math.min(1, dem.e / offer.e) : 0, fillB = offer.b > 0 ? Math.min(1, dem.b / offer.b) : 0;
+                        let fillF = offer.f > 0 ? Math.min(1, dem.f / offer.f) : 0, fillC = offer.c > 0 ? Math.min(1, dem.c / offer.c) : 0;
+                        let eS = cleanNum(a['eco_seats']), bS = cleanNum(a['business_seats']), fS = cleanNum(a['first_seats']), cS = cleanNum(a['cargo']);
+                        let adE = Math.round(eS * wf * 2 / 7), adB = Math.round(bS * wf * 2 / 7), adF = Math.round(fS * wf * 2 / 7), adC = Math.round(cS * wf * 2 / 7);
+                        
+                        let daily = Math.round(adE * fillE) * curP.e + Math.round(adB * fillB) * curP.b + Math.round(adF * fillF) * curP.f + Math.round(adC * fillC) * curP.c;
+                        rev.daily = daily; rev.weekly = daily * 7;
+                        let price = cleanNum(a['purchase price'] || a['purchase_price']);
+                        rev.amortWeeks = rev.weekly > 0 ? Math.ceil(price / rev.weekly) : Infinity;
+                    }
+                }
+                
                 let totalPax = cleanNum(a['capacity pax'] || a['capacity']);
                 return { a, name, route, rev, totalPax };
             });
@@ -1096,7 +1119,6 @@
         } catch(e) { console.error(e); }
     }
 
-    // === FİLO YÖNETİM FONKSİYONLARI ===
     function calcAircraftOfferContrib(ac, route) {
         let dist  = cleanNum(route['distance']), speed = cleanNum(ac['speed']);
         let seats = cleanNum(ac['capacity pax'] || ac['capacity']);
@@ -1202,30 +1224,39 @@
         } catch(e) { console.error(e); }
     }
 
-    // === FİYAT VE TALEP YÖNETİMİ ===
+    // === FİYAT VE TALEP YÖNETİMİ (MODAL) ===
     function openPriceManagement(cacheKey) {
         let r = window.routeRefCache[cacheKey]; if (!r) return;
         let dist = cleanNum(r['distance']), comf = cleanNum(document.getElementById('g_comf').value) || 0;
         let aud  = calcAuditPrices(dist, comf);
-        let origD= getOrigDemand(r);
+        
+        let origP = { e: r['_orig_eco_ticket'] !== undefined ? r['_orig_eco_ticket'] : cleanNum(r['eco ticket']),
+                      b: r['_orig_bus_ticket'] !== undefined ? r['_orig_bus_ticket'] : cleanNum(r['bus ticket']),
+                      f: r['_orig_first_ticket']!== undefined ? r['_orig_first_ticket']: cleanNum(r['first ticket']),
+                      c: r['_orig_cargo_ticket']!== undefined ? r['_orig_cargo_ticket']: cleanNum(r['cargo ticket']) };
+        let origD = { e: r['_orig_eco_demand'] !== undefined ? r['_orig_eco_demand'] : cleanNum(r['eco demand']),
+                      b: r['_orig_bus_demand'] !== undefined ? r['_orig_bus_demand'] : cleanNum(r['bus demand']),
+                      f: r['_orig_first_demand']!== undefined ? r['_orig_first_demand']: cleanNum(r['first demand']),
+                      c: r['_orig_cargo_demand']!== undefined ? r['_orig_cargo_demand']: cleanNum(r['cargo demand']) };
+
+        let baseD = { e: getBaseDemand(origD.e, origP.e, aud.e), b: getBaseDemand(origD.b, origP.b, aud.b), f: getBaseDemand(origD.f, origP.f, aud.f), c: getBaseDemand(origD.c, origP.c, aud.c) };
         let curP = { e: cleanNum(r['eco ticket']), b: cleanNum(r['bus ticket']), f: cleanNum(r['first ticket']), c: cleanNum(r['cargo ticket']) };
         let offer= { e: cleanNum(r['eco offer']),  b: cleanNum(r['bus offer']),  f: cleanNum(r['first offer']),  c: cleanNum(r['cargo offer'])  };
 
         document.getElementById('pm-title').innerText = `🎛️ Yönetim: ${r['arrival']}`;
         document.getElementById('pm-route-key').value = cacheKey;
+        
         ['e','b','f','c'].forEach(cl => {
-            let map = {e:'e',b:'b',f:'f',c:'c'};
-            document.getElementById(`pm-cur-p${cl}`).innerText = `$${curP[map[cl]]}`;
-            document.getElementById(`pm-aud-p${cl}`).innerText = `$${aud[map[cl]]}`;
-            document.getElementById(`pm-new-p${cl}`).value     = curP[map[cl]];
-            document.getElementById(`pm-off-${cl}`).innerText  = offer[map[cl]];
-            // FIX: Baz talep sütununu doldur (audit fiyatındaki talep = origD)
-            document.getElementById(`pm-base-${cl}`).innerText = origD[map[cl]];
+            document.getElementById(`pm-cur-p${cl}`).innerText = `$${curP[cl]}`;
+            document.getElementById(`pm-aud-p${cl}`).innerText = `$${aud[cl]}`;
+            document.getElementById(`pm-new-p${cl}`).value     = curP[cl];
+            document.getElementById(`pm-off-${cl}`).innerText  = offer[cl];
+            document.getElementById(`pm-base-${cl}`).innerText = baseD[cl];
         });
 
         window.activePmData = {
             aE: aud.e,   aB: aud.b,   aF: aud.f,   aC: aud.c,
-            dE: origD.e, dB: origD.b, dF: origD.f, dC: origD.c,
+            dE: baseD.e, dB: baseD.b, dF: baseD.f, dC: baseD.c,
             oE: offer.e, oB: offer.b, oF: offer.f, oC: offer.c,
             cE: curP.e,  cB: curP.b,  cF: curP.f,  cC: curP.c
         };
@@ -1235,9 +1266,7 @@
 
     function setAllSimPrices(type) {
         let pm = window.activePmData; if (!pm) return;
-        ['e','b','f','c'].forEach(cl => {
-            document.getElementById(`pm-new-p${cl}`).value = type === 'audit' ? pm[`a${cl.toUpperCase()}`] : pm[`c${cl.toUpperCase()}`];
-        });
+        ['e','b','f','c'].forEach(cl => { document.getElementById(`pm-new-p${cl}`).value = type === 'audit' ? pm[`a${cl.toUpperCase()}`] : pm[`c${cl.toUpperCase()}`]; });
         updatePriceSim();
     }
 
@@ -1248,23 +1277,17 @@
         let nF = parseFloat(document.getElementById('pm-new-pf').value) || 0;
         let nC = parseFloat(document.getElementById('pm-new-pc').value) || 0;
 
-        // FIX: Elastikiyet düzeltmesi modal simülasyonuna da uygulandı
-        let simE = calcElasticDemand(pm.dE, nE, pm.aE);
-        let simB = calcElasticDemand(pm.dB, nB, pm.aB);
-        let simF = calcElasticDemand(pm.dF, nF, pm.aF);
-        let simC = calcElasticDemand(pm.dC, nC, pm.aC);
+        let simE = calcElasticDemand(pm.dE, nE, pm.aE), simB = calcElasticDemand(pm.dB, nB, pm.aB);
+        let simF = calcElasticDemand(pm.dF, nF, pm.aF), simC = calcElasticDemand(pm.dC, nC, pm.aC);
 
-        document.getElementById('pm-sim-tot-e').innerText = simE;
-        document.getElementById('pm-sim-tot-b').innerText = simB;
-        document.getElementById('pm-sim-tot-f').innerText = simF;
-        document.getElementById('pm-sim-tot-c').innerText = simC;
+        document.getElementById('pm-sim-tot-e').innerText = simE; document.getElementById('pm-sim-tot-b').innerText = simB;
+        document.getElementById('pm-sim-tot-f').innerText = simF; document.getElementById('pm-sim-tot-c').innerText = simC;
 
         let remE = simE - pm.oE, remB = simB - pm.oB, remF = simF - pm.oF, remC = simC - pm.oC;
         ['e','b','f','c'].forEach((cl, i) => {
             let rem = [remE, remB, remF, remC][i];
             let el  = document.getElementById(`pm-sim-rem-${cl}`);
-            el.innerText   = rem;
-            el.className   = rem < 0 ? 'text-danger' : 'text-success';
+            el.innerText = rem; el.className = rem < 0 ? 'text-danger' : 'text-success';
         });
     }
 
@@ -1273,22 +1296,19 @@
         let r = window.routeRefCache[cacheKey]; if (!r) return;
         let matched = ROUTES_DB.find(item => item && item['departure'] === r['departure'] && item['arrival'] === r['arrival']);
         if (matched) {
-            // Orijinal talepleri bir kez sakla
-            if (matched['_orig_eco_demand'] === undefined) {
-                matched['_orig_eco_demand']   = cleanNum(matched['eco demand']);
-                matched['_orig_bus_demand']   = cleanNum(matched['bus demand']);
-                matched['_orig_first_demand'] = cleanNum(matched['first demand']);
-                matched['_orig_cargo_demand'] = cleanNum(matched['cargo demand']);
+            if (matched['_orig_eco_ticket'] === undefined) {
+                matched['_orig_eco_ticket'] = cleanNum(matched['eco ticket']); matched['_orig_eco_demand'] = cleanNum(matched['eco demand']);
+                matched['_orig_bus_ticket'] = cleanNum(matched['bus ticket']); matched['_orig_bus_demand'] = cleanNum(matched['bus demand']);
+                matched['_orig_first_ticket']= cleanNum(matched['first ticket']);matched['_orig_first_demand']= cleanNum(matched['first demand']);
+                matched['_orig_cargo_ticket']= cleanNum(matched['cargo ticket']);matched['_orig_cargo_demand']= cleanNum(matched['cargo demand']);
             }
             matched['eco ticket']   = parseFloat(document.getElementById('pm-new-pe').value) || cleanNum(matched['eco ticket']);
             matched['bus ticket']   = parseFloat(document.getElementById('pm-new-pb').value) || cleanNum(matched['bus ticket']);
             matched['first ticket'] = parseFloat(document.getElementById('pm-new-pf').value) || cleanNum(matched['first ticket']);
             matched['cargo ticket'] = parseFloat(document.getElementById('pm-new-pc').value) || cleanNum(matched['cargo ticket']);
-            // FIX: Kaydedilen talep artık elastik formüle göre hesaplanan değer
-            // (Baz talep _orig_* alanlarında saklanır, asıl veri bozulmaz)
         }
         closeModal('modal-price-management');
-        openHubRoutes(String(r['departure']).trim().toUpperCase());
+        openHubRoutes(String(r['departure']).trim().toUpperCase(), window.routeSortMode);
         showToast("Fiyat değişiklikleri uygulandı.", "success");
     }
 
@@ -1299,28 +1319,32 @@
         let r = window.routeRefCache[cacheKey]; if (!r) return;
         window.activeRouteKey = cacheKey;
 
-        let dist  = cleanNum(r['distance']);
-        let comf  = cleanNum(document.getElementById('g_comf').value) || 0;
+        let dist  = cleanNum(r['distance']), comf = cleanNum(document.getElementById('g_comf').value) || 0;
         let aud   = calcAuditPrices(dist, comf);
-        let origD = getOrigDemand(r);
-        let curP  = { e: cleanNum(r['eco ticket']), b: cleanNum(r['bus ticket']), f: cleanNum(r['first ticket']), c: cleanNum(r['cargo ticket']) };
+        
+        let origP = { e: r['_orig_eco_ticket'] !== undefined ? r['_orig_eco_ticket'] : cleanNum(r['eco ticket']),
+                      b: r['_orig_bus_ticket'] !== undefined ? r['_orig_bus_ticket'] : cleanNum(r['bus ticket']),
+                      f: r['_orig_first_ticket']!== undefined ? r['_orig_first_ticket']: cleanNum(r['first ticket']),
+                      c: r['_orig_cargo_ticket']!== undefined ? r['_orig_cargo_ticket']: cleanNum(r['cargo ticket']) };
+        let origD = { e: r['_orig_eco_demand'] !== undefined ? r['_orig_eco_demand'] : cleanNum(r['eco demand']),
+                      b: r['_orig_bus_demand'] !== undefined ? r['_orig_bus_demand'] : cleanNum(r['bus demand']),
+                      f: r['_orig_first_demand']!== undefined ? r['_orig_first_demand']: cleanNum(r['first demand']),
+                      c: r['_orig_cargo_demand']!== undefined ? r['_orig_cargo_demand']: cleanNum(r['cargo demand']) };
+
+        let baseD = { e: getBaseDemand(origD.e, origP.e, aud.e), b: getBaseDemand(origD.b, origP.b, aud.b), f: getBaseDemand(origD.f, origP.f, aud.f), c: getBaseDemand(origD.c, origP.c, aud.c) };
+        let curP = { e: cleanNum(r['eco ticket']), b: cleanNum(r['bus ticket']), f: cleanNum(r['first ticket']), c: cleanNum(r['cargo ticket']) };
         let offer = { e: cleanNum(r['eco offer']),  b: cleanNum(r['bus offer']),  f: cleanNum(r['first offer']),  c: cleanNum(r['cargo offer'])  };
 
         let remE, remB, remF, remC;
         let tabCur = document.getElementById('rec-tab-current'), tabAud = document.getElementById('rec-tab-audit');
 
         if (mode === 'audit') {
-            // Audit mod: baz talep - mevcut arz = eklenecek kapasite
-            remE = origD.e - offer.e; remB = origD.b - offer.b;
-            remF = origD.f - offer.f; remC = origD.c - offer.c;
+            remE = baseD.e - offer.e; remB = baseD.b - offer.b; remF = baseD.f - offer.f; remC = baseD.c - offer.c;
             if (tabCur) tabCur.className = 'btn-small bg-gray';
             if (tabAud) tabAud.className = 'btn-small btn-blue';
         } else {
-            // Güncel mod: elastik talep - mevcut arz (sadece fiyat > audit ise azalmış)
-            remE = calcElasticDemand(origD.e, curP.e, aud.e) - offer.e;
-            remB = calcElasticDemand(origD.b, curP.b, aud.b) - offer.b;
-            remF = calcElasticDemand(origD.f, curP.f, aud.f) - offer.f;
-            remC = calcElasticDemand(origD.c, curP.c, aud.c) - offer.c;
+            remE = calcElasticDemand(baseD.e, curP.e, aud.e) - offer.e; remB = calcElasticDemand(baseD.b, curP.b, aud.b) - offer.b;
+            remF = calcElasticDemand(baseD.f, curP.f, aud.f) - offer.f; remC = calcElasticDemand(baseD.c, curP.c, aud.c) - offer.c;
             if (tabCur) tabCur.className = 'btn-small btn-blue';
             if (tabAud) tabAud.className = 'btn-small bg-gray';
         }
@@ -1332,10 +1356,7 @@
             let weeklyFreq      = Math.floor(168 / flightTimeHours);
             if (weeklyFreq < 1) return;
 
-            let reqE = (remE * 7) / (weeklyFreq * 2);
-            let reqB = (remB * 7) / (weeklyFreq * 2);
-            let reqF = (remF * 7) / (weeklyFreq * 2);
-            let reqC = (remC * 7) / (weeklyFreq * 2);
+            let reqE = (remE * 7) / (weeklyFreq * 2), reqB = (remB * 7) / (weeklyFreq * 2), reqF = (remF * 7) / (weeklyFreq * 2), reqC = (remC * 7) / (weeklyFreq * 2);
             let eqEco = reqE + (reqB * 2) + (reqF * 4);
             if (eqEco <= 0 && reqC <= 0) return;
 
@@ -1351,7 +1372,8 @@
                 if (rem2 > 0) eS += rem2;
                 let cS   = Math.min(Math.floor(reqC), availCargo);
 
-                let flightGross = ((eS * curP.e) + (bS * curP.b) + (fS * curP.f) + (cS * curP.c)) * 2;
+                let priceRef = mode === 'audit' ? aud : curP; 
+                let flightGross = ((eS * priceRef.e) + (bS * priceRef.b) + (fS * priceRef.f) + (cS * priceRef.c)) * 2;
                 let wkGross     = flightGross * weeklyFreq;
                 let fuelPrice   = parseFloat(document.getElementById('g_fuel').value) || 750;
                 let ngafLevel   = parseInt(document.getElementById('g_ngaf').value)   || 0;
@@ -1361,23 +1383,18 @@
                 let other = wkGross * (p.other * ngafMult);
                 let maint = (p.wear / 100) * ((weeklyFreq * flightTimeHours) / 100) * (p.price * qty * 0.01);
                 let dayNet= (wkGross - fuel - tax - other - maint) / 7;
-                if (dayNet > 0) {
-                    candidates.push({ plane: p, qty, config: { e: eS, b: bS, f: fS, c: cS }, profit: dayNet, freq: weeklyFreq, fillRate: (fill * 100).toFixed(1), flightTime: flightTimeHours });
-                }
+                
+                if (dayNet > 0) candidates.push({ plane: p, qty, config: { e: eS, b: bS, f: fS, c: cS }, profit: dayNet, freq: weeklyFreq, fillRate: (fill * 100).toFixed(1), flightTime: flightTimeHours });
             }
         });
 
         if (!candidates.length) return showToast("Kalan talebiniz mevcut uçak boyutlarına (%85-%110) uygun değil.", "error");
         candidates.sort((a, b) => b.profit - a.profit);
         let tops = [], seen = new Set();
-        for (let c of candidates) {
-            let k = c.qty + "x" + c.plane.name;
-            if (!seen.has(k)) { tops.push(c); seen.add(k); if (tops.length >= 3) break; }
-        }
+        for (let c of candidates) { let k = c.qty + "x" + c.plane.name; if (!seen.has(k)) { tops.push(c); seen.add(k); if (tops.length >= 3) break; } }
 
         window.activeTop3 = tops;
-        let rc = document.getElementById('rec-container');
-        rc.innerHTML = "";
+        let rc = document.getElementById('rec-container'); rc.innerHTML = "";
         tops.forEach((item, i) => {
             rc.innerHTML += `<div class="card" style="border-color:${i===0?'var(--success)':'var(--border)'};">
                 <h4 style="color:var(--text-main);margin-bottom:5px;">${i+1}. ${item.qty}x ${item.plane.name}</h4>
@@ -1437,17 +1454,15 @@
         closeModal('modal-recommendation');
         if (window.simState && window.activeRouteKey) delete window.simState[window.activeRouteKey];
         renderHubsList(); renderFleetList(); populateDropdowns();
-        if (document.getElementById('view-routes').style.display === 'block') openHubRoutes(String(r['departure']).trim().toUpperCase());
+        if (document.getElementById('view-routes').style.display === 'block') openHubRoutes(String(r['departure']).trim().toUpperCase(), window.routeSortMode);
     }
 
-    // === 168 SAATLİK DFS BACKTRACKING DEVRE MOTORU ===
     function runOptimization() {
         try {
             let resDiv = document.getElementById('opt-results');
             if (!AIRPORTS_DB.length || !AIRCRAFT_DB.length) { resDiv.innerHTML = '<div class="card text-danger">⚠️ Lütfen veritabanlarını yükleyin.</div>'; return; }
 
-            let selHub = document.getElementById('opt-hub').value;
-            let selAc  = document.getElementById('opt-ac').value;
+            let selHub = document.getElementById('opt-hub').value, selAc  = document.getElementById('opt-ac').value;
             let hubAp  = AIRPORTS_DB.find(ap => ap && String(ap['iata']).trim().toUpperCase() === selHub);
             let ac     = AIRCRAFT_DB.find(a  => a  && a['aircraft'] === selAc);
             if (!hubAp || !ac) return showToast("Seçimler için uygun veri bulunamadı.", "error");
@@ -1524,7 +1539,6 @@
     }
 
     window.onload = initData;
-
 </script>
 </body>
 </html>
