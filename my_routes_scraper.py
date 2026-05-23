@@ -3,12 +3,20 @@ import time
 import random
 import re
 import pandas as pd
+from datetime import datetime, timezone, timedelta
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
+
+
+def human_type(element, text):
+    """Her karakteri rastgele gecikmeyle yazar."""
+    for char in text:
+        element.send_keys(char)
+        time.sleep(random.uniform(0.05, 0.15))
 
 
 def extract_table_data(body, data_dict, prefix):
@@ -40,17 +48,70 @@ def extract_table_data(body, data_dict, prefix):
             data_dict[f"cargo_price_{prefix}"] = tds[4].get_text(strip=True)
 
 
+def get_metadata(driver, base_url):
+    """
+    Scrape sonrası /home sayfasına giderek metadata çeker:
+    - Oyun tarihi (#header_dateTime): "Mon, 10/30/2062, 14:47:31" → "14_30_10_2062"
+    - Gerçek tarih (Türkiye saati): "47_14_23_05_2026"
+    - Para miktarı (#ressource3)
+    - Structural profit D-1 (dashboard)
+    """
+    driver.get(f"{base_url}/home")
+    time.sleep(random.uniform(2, 3))
+
+    home_soup = BeautifulSoup(driver.page_source, 'html.parser')
+
+    # 1. Oyun tarihi
+    game_date_str = "00_00_00_0000"
+    header_date_el = home_soup.find(id='header_dateTime')
+    if header_date_el:
+        date_text = header_date_el.get_text(strip=True)
+        # "Mon, 10/30/2062, 14:47:31" formatını parse et
+        date_match = re.search(r'(\d+)/(\d+)/(\d+),\s*(\d+):(\d+):(\d+)', date_text)
+        if date_match:
+            month = date_match.group(1).zfill(2)
+            day = date_match.group(2).zfill(2)
+            year = date_match.group(3)
+            hour = date_match.group(4).zfill(2)
+            game_date_str = f"{hour}_{day}_{month}_{year}"
+
+    # 2. Gerçek tarih (Türkiye saati, UTC+3)
+    turkey_tz = timezone(timedelta(hours=3))
+    now = datetime.now(turkey_tz)
+    real_date_str = now.strftime("%M_%H_%d_%m_%Y")
+
+    # 3. Para miktarı
+    money_str = "0"
+    money_el = home_soup.find(id='ressource3')
+    if money_el:
+        money_str = money_el.get_text(strip=True)
+
+    # 4. Structural profit D-1
+    profit_str = "0"
+    profit_el = home_soup.select_one(
+        '#dashboardContent > div:nth-child(2) > div.indexModule.companyStats.en > div.content > div:nth-child(6) > span'
+    )
+    if profit_el:
+        profit_str = profit_el.get_text(strip=True)
+
+    return game_date_str, real_date_str, money_str, profit_str
+
+
+def sanitize_filename(name):
+    """Dosya adından Windows'da geçersiz karakterleri temizler."""
+    return re.sub(r'[<>:"/\\|?*]', '', name)
+
+
 def main():
     # --- GITHUB SECRETS KONTROLÜ ---
     USER_EMAIL = os.environ.get("AIRLINES_USER")
     USER_PASS = os.environ.get("AIRLINES_PASS")
 
     if not USER_EMAIL or not USER_PASS:
-        print("HATA: GitHub Secrets (AIRLINES_USER veya AIRLINES_PASS) bulunamadı. İşlem iptal ediliyor.")
+        print("HATA: GitHub Secrets (AIRLINES_USER veya AIRLINES_PASS) bulunamadı.")
         return
 
     base_url = "https://tycoon.airlines-manager.com"
-    output_excel_path = "routes_output.xlsx"
 
     columns = [
         "departure_airport", "arrival_airport", "distance", "assigned_aircraft_count",
@@ -64,9 +125,9 @@ def main():
     ]
 
     all_routes = []
-    processed_urls = set()  # Tüm duplikeleri yakalamak için set
+    processed_urls = set()
 
-    # --- GITHUB ACTIONS İÇİN CHROME AYARLARI ---
+    # --- CHROME AYARLARI ---
     chrome_options = Options()
     chrome_options.add_argument("--headless=new")
     chrome_options.add_argument("--no-sandbox")
@@ -84,42 +145,35 @@ def main():
         EC.presence_of_element_located((By.ID, "username"))
     )
     human_type(username_field, USER_EMAIL)
-
     time.sleep(random.uniform(0.5, 1.5))
 
     password_field = driver.find_element(By.ID, "password")
     human_type(password_field, USER_PASS)
-
     time.sleep(random.uniform(0.5, 1.0))
 
     login_btn = driver.find_element(By.ID, "loginSubmit")
     login_btn.click()
 
-    # Giriş sonrası sayfanın yüklenmesini bekle
-    WebDriverWait(driver, 15).until(
-        EC.url_contains("/home")
-    )
+    WebDriverWait(driver, 15).until(EC.url_contains("/home"))
     print("Giriş başarılı!")
     time.sleep(random.uniform(2, 3))
 
+    # --- ROTA SCRAPING ---
     page_number = 1
 
     while True:
         list_url = f"{base_url}/network/?classFilter=&sort=iata&page={page_number}"
         driver.get(list_url)
-        time.sleep(random.uniform(1.5, 2.2))
+        time.sleep(random.uniform(2, 3))
 
         soup = BeautifulSoup(driver.page_source, 'html.parser')
 
-        # FIX 1: Aramayı #displayRegular ile sınırla (sayfa genelindeki duplike elementleri önler)
         container = soup.find('div', id='displayRegular')
         if not container:
             print(f"Sayfa {page_number}: #displayRegular bulunamadı, durduruluyor.")
             break
 
-        # FIX 2: recursive=False ile sadece doğrudan çocuk div'leri al (iç içe eşleşmeleri önler)
         route_boxes = container.find_all('div', class_='lineListBox', recursive=False)
-
         if not route_boxes:
             print(f"Sayfa {page_number}: Rota bulunamadı, durduruluyor.")
             break
@@ -129,13 +183,11 @@ def main():
         for idx, box in enumerate(route_boxes, 1):
             data = {col: None for col in columns}
 
-            # --- Listing sayfasından temel bilgileri çek ---
             title_div = box.find('div', class_='title')
             if title_div:
                 dep_span = title_div.find('span', class_='grey')
                 if dep_span:
                     data["departure_airport"] = dep_span.get_text(strip=True)
-
                 title_text = title_div.get_text(separator=" ", strip=True)
                 if "/" in title_text:
                     data["arrival_airport"] = title_text.split("/")[-1].strip()[:3]
@@ -146,7 +198,6 @@ def main():
                 if dist_li and dist_li.find('b'):
                     data["distance"] = dist_li.find('b').get_text(strip=True)
 
-            # --- Detay sayfası linkini bul ---
             btn_detail = box.find('a', href=re.compile(r'/network/showline/'))
             if not btn_detail:
                 print(f"  [{idx}] Detay linki bulunamadı, atlanıyor.")
@@ -154,22 +205,17 @@ def main():
 
             detail_url = base_url + btn_detail['href']
 
-            # FIX 3: Set ile tam duplikasyon koruması (sadece ardışık değil, tüm tekrarları yakalar)
             if detail_url in processed_urls:
-                print(f"  [{idx}] Zaten işlendi, atlanıyor: {btn_detail['href']}")
+                print(f"  [{idx}] Zaten işlendi, atlanıyor.")
                 continue
             processed_urls.add(detail_url)
 
             route_label = f"{data.get('departure_airport', '?')}-{data.get('arrival_airport', '?')}"
             print(f"  [{idx}] {route_label} işleniyor...")
 
-            # --- Detay sayfasına git ---
             driver.get(detail_url)
-
-            # FIX 4: Rate limiting koruması - rastgele gecikme
             time.sleep(random.uniform(2.0, 3.0))
 
-            # FIX 5: Hata loglanarak atlanıyor (sessiz yutma yerine)
             try:
                 WebDriverWait(driver, 10).until(
                     EC.presence_of_element_located((By.ID, "todayResultsBody"))
@@ -180,7 +226,6 @@ def main():
 
             detail_soup = BeautifulSoup(driver.page_source, 'html.parser')
 
-            # --- Box1: Atanmış uçak sayısı, haftalık uçuş ---
             box1 = detail_soup.find('ul', id='box1')
             if box1:
                 lis = box1.find_all('li')
@@ -189,7 +234,6 @@ def main():
                 if len(lis) >= 3 and lis[2].find('strong'):
                     data["weekly_flight_count"] = lis[2].find('strong').get_text(strip=True)
 
-            # --- Box2: Kategori, vergiler ---
             box2 = detail_soup.find('ul', id='box2')
             if box2:
                 lis2 = box2.find_all('li')
@@ -202,7 +246,6 @@ def main():
                 if len(lis2) >= 3 and lis2[2].find('b'):
                     data["taxes"] = lis2[2].find('b').get_text(strip=True)
 
-            # FIX 6: Uçak listesi - iç içe span duplikasyonu önlendi
             aircraft_names = []
             for ac_box in detail_soup.select('.aircraftListView .aircraftListBox'):
                 ac_title = ac_box.find('div', class_='title')
@@ -219,7 +262,6 @@ def main():
 
             data["aircrafts_on_route"] = ", ".join(aircraft_names)
 
-            # --- Talep / Arz / Fiyat tabloları ---
             extract_table_data(detail_soup.find('tbody', id='todayResultsBody'), data, "today")
             extract_table_data(detail_soup.find('tbody', id='yesterdayResultsBody'), data, "yesterday")
 
@@ -227,18 +269,22 @@ def main():
 
         page_number += 1
 
+    # --- SCRAPE SONRASI: METADATA ÇEK VE DOSYA İSİMLENDİR ---
+    print("\n--- Metadata çekiliyor (oyun tarihi, para, structural profit) ---")
+    game_date, real_date, money, profit = get_metadata(driver, base_url)
+    print(f"  Oyun tarihi: {game_date}")
+    print(f"  Gerçek tarih: {real_date}")
+    print(f"  Para: {money}")
+    print(f"  Structural profit D-1: {profit}")
+
+    output_filename = sanitize_filename(f"routes {game_date} {real_date} {money} {profit}.xlsx")
+    print(f"  Dosya adı: {output_filename}")
+
     driver.quit()
 
     df = pd.DataFrame(all_routes, columns=columns)
-    df.to_excel(output_excel_path, index=False)
-    print(f"\nİşlem tamamlandı. {len(all_routes)} rota kaydedildi → {output_excel_path}")
-
-
-def human_type(element, text):
-    """Her karakteri rastgele gecikmeyle yazar."""
-    for char in text:
-        element.send_keys(char)
-        time.sleep(random.uniform(0.05, 0.15))
+    df.to_excel(output_filename, index=False)
+    print(f"\nİşlem tamamlandı. {len(all_routes)} rota kaydedildi → {output_filename}")
 
 
 if __name__ == "__main__":
