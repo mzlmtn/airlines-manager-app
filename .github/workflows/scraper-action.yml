@@ -40,7 +40,18 @@ jobs:
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        # İki dosyayı da takip listesine alıyoruz
+        
+        # Tüm yeni ve güncellenmiş xlsx dosyalarını ekle
         git add -A *.xlsx
+        
+        # Değişiklik varsa commit at
         git commit -m "Otomatik Güncelleme: Uçak ve Rota Excel verileri güncellendi" || echo "Değişiklik yok, commit atlanıyor."
+        
+        # UYARI ÇÖZÜMÜ: Siteden yaptığınız "Kaydet" işlemlerini (varsa) bota indir.
+        # Eğer bot ile sitenin dosyaları çakışırsa, botun güncel verisini ("ours") tercih et.
+        git config pull.rebase false
+        git pull origin main -X ours --no-edit
+        
+        # Birleştirilmiş son hali GitHub'a gönder
         git push
+
