@@ -54,7 +54,7 @@
         .card-highlight { border-left: 4px solid var(--accent-blue) !important; }
 
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; }
         .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; }
 
         label { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 4px; font-weight: 600;}
@@ -92,7 +92,7 @@
         .hub-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 11.5px; color: var(--text-muted); background: var(--bg-dark); padding: 8px; border-radius: 6px; margin-bottom: 8px;}
         .hub-stats div span { color: var(--text-main); font-weight: bold; }
 
-        /* Table responsiveness improvements */
+        /* Table responsiveness */
         .table-responsive { width: 100%; overflow-x: auto; margin-top: 6px; border-radius: 6px;}
         .dashboard-table { width: 100%; border-collapse: collapse; font-size: 11.5px; text-align: center; white-space: nowrap;}
         .dashboard-table th { background: var(--bg-dark); color: var(--text-muted); padding: 6px 8px; font-weight: 600; border: 1px solid var(--border); }
@@ -319,16 +319,16 @@
 
     <div class="modal-overlay" id="modal-recommendation">
         <div class="modal-content modal-lg" style="border-color: var(--accent);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 5px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 5px; flex-wrap:wrap; gap:8px;">
                 <h3 style="color: var(--accent); margin:0;">✈️ Kâr Maksimizasyonlu Uçak Önerisi</h3>
                 <div style="display:flex; gap:4px;">
                     <button class="btn-small btn-blue" id="rec-tab-current" style="padding:5px 10px;" onclick="runRecommendTab('current')">Güncel Talep Önerisi</button>
                     <button class="btn-small bg-gray" id="rec-tab-audit" style="padding:5px 10px;" onclick="runRecommendTab('audit')">Audit Talep Önerisi</button>
                 </div>
             </div>
-            <p class="text-muted" style="margin-top:0; font-size:11px; margin-bottom:15px;">
-                Oyunun kâr dinamiklerine (Eco > Bus > First) uygun olarak boş koltuk kalmayacak şekilde kapasiteyi dağıtır.<br>
-                Sadece Tekil (1x) uçaklar listelenir ve tahmini kâr, gerçekçi biçimde <b>satılan dolu koltuk</b> baz alınarak hesaplanır.
+            <p class="text-muted" style="margin-top:0; font-size:11.5px; margin-bottom:15px;">
+                Oyunun kâr dinamiklerine (Eco > Bus > First) uygun olarak kapasiteyi dağıtır.<br>
+                Yalnızca <b>tek (1x) uçaklar</b> listelenir, tahmini kârınız tamamen satılan dolu koltuk baz alınarak hesaplanır.
             </p>
             <div class="grid-3" id="rec-container"></div>
             <div style="text-align: center; margin-top: 15px;">
@@ -354,27 +354,44 @@
     window.githubRoutesFilename = 'routes_output.xlsx';
     window.githubAircraftsFilename = 'aircrafts_output.xlsx';
 
-    // === DOSYA İSİMLERİNDEN META BİLGİ AYRIŞTIRMA (REGEX) ===
+    // === DOSYA İSİMLERİNDEN META BİLGİ AYRIŞTIRMA VE GÜN FORMATI ===
     function parseFilenameMeta(filename) {
         if(!filename) return null;
         let dec = decodeURIComponent(filename);
-        // regex okuma: (Type) (OyunTarihi) (GerçekTarih) (Bakiye) (NetKar)
         let regex = /^(aircrafts|routes)\s+(\d{2}_\d{2}_\d{2}_\d{4})\s+(\d{2}_\d{2}_\d{2}_\d{2}_\d{4})\s+(.*?)\s+(.*?)\.xlsx$/i;
         let match = dec.match(regex);
         if (match) {
+            let gParts = match[2].split('_'); // HH_dd_MM_yyyy
+            let gDate = new Date(gParts[3], parseInt(gParts[2])-1, gParts[1], gParts[0]);
+            
             let rParts = match[3].split('_'); // mm_HH_dd_MM_yyyy
             let rDate = new Date(rParts[4], parseInt(rParts[3])-1, rParts[2], rParts[1], rParts[0]);
-            return { type: match[1].toLowerCase(), gameDate: match[2], realDate: match[3], balance: match[4], sp: match[5], dateObj: rDate };
+            
+            return { type: match[1].toLowerCase(), gameDate: match[2], realDate: match[3], balance: match[4], sp: match[5], dateObj: rDate, gameDateObj: gDate };
         }
-        // Fallback for old format
         let fb = /^(aircrafts|routes)\s+(\d{2}_\d{2}_\d{2}_\d{4})\s+(\d{2}_\d{2}_\d{2}_\d{2}_\d{4})\.xlsx$/i;
         let mFb = dec.match(fb);
         if (mFb) {
+            let gParts = mFb[2].split('_');
+            let gDate = new Date(gParts[3], parseInt(gParts[2])-1, gParts[1], gParts[0]);
+            
             let rParts = mFb[3].split('_');
             let rDate = new Date(rParts[4], parseInt(rParts[3])-1, rParts[2], rParts[1], rParts[0]);
-            return { type: mFb[1].toLowerCase(), gameDate: mFb[2], realDate: mFb[3], balance: "-", sp: "-", dateObj: rDate };
+            return { type: mFb[1].toLowerCase(), gameDate: mFb[2], realDate: mFb[3], balance: "-", sp: "-", dateObj: rDate, gameDateObj: gDate };
         }
         return null;
+    }
+
+    function formatDateTR(dObj, hasMin) {
+        if(isNaN(dObj)) return "";
+        const days = ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'];
+        let h = String(dObj.getHours()).padStart(2, '0');
+        let min = hasMin ? ":" + String(dObj.getMinutes()).padStart(2, '0') : ":00";
+        let d = String(dObj.getDate()).padStart(2, '0');
+        let m = String(dObj.getMonth()+1).padStart(2, '0');
+        let y = dObj.getFullYear();
+        let day = days[dObj.getDay()];
+        return `${h}${min} ${d}.${m}.${y}, ${day}`;
     }
 
     function updateMetaUI(type, meta) {
@@ -384,9 +401,8 @@
             return;
         }
 
-        let g = meta.gameDate.split('_'), r = meta.realDate.split('_');
-        let gStr = g.length === 4 ? `${g[0]}:00 ${g[1]}.${g[2]}.${g[3]}` : meta.gameDate;
-        let rStr = r.length === 5 ? `${r[1]}:${r[0]} ${r[2]}.${r[3]}.${r[4]}` : meta.realDate;
+        let gStr = meta.gameDateObj ? formatDateTR(meta.gameDateObj, false) : meta.gameDate;
+        let rStr = meta.dateObj ? formatDateTR(meta.dateObj, true) : meta.realDate;
 
         document.getElementById(`meta-${prefix}-sync`).innerHTML = `<span style="color:var(--text-main)">${rStr}</span>`;
         document.getElementById(`meta-${prefix}-gamedate`).innerText = `🎮 ${gStr}`;
@@ -463,7 +479,7 @@
         } return data;
     }
 
-    // === ELASTİKİYET VE AUDİT MATEMATİĞİ (REVİZE FORMÜLLER) ===
+    // === ELASTİKİYET VE AUDİT MATEMATİĞİ ===
     function calcAuditPrices(dist, comf) {
         let comfFactor = 1 + (comf / (2600 + (1260000 / dist)));
         let pEco = (120 + 0.26 * dist) * comfFactor;
@@ -476,7 +492,6 @@
         };
     }
 
-    // Excel'deki güncel talep ve güncel fiyatı kullanarak Gerçek Audit (Max) Talebi bulur
     function getBaseDemand(curD, curP, audP) {
         if (audP <= 0) return curD;
         if (curP > audP) {
@@ -488,7 +503,6 @@
         }
     }
 
-    // Audit Talepten yola çıkarak istenen yeni fiyata göre daraltılmış/simüle edilmiş talebi bulur
     function calcElasticDemand(baseDem, price, auditPrice) {
         if (auditPrice <= 0) return baseDem;
         if (price > auditPrice) {
@@ -519,7 +533,6 @@
             if (resDir.ok) {
                 let files = await resDir.json();
                 
-                // Routes ve Aircrafts dosyalarını regex objelerine göre zamansal sırala (En Güncel olan en üstte)
                 let rFiles = files.filter(f => f.name.startsWith('routes') && f.name.endsWith('.xlsx')).map(f => ({f, m: parseFilenameMeta(f.name)})).filter(x=>x.m);
                 rFiles.sort((a,b) => b.m.dateObj - a.m.dateObj);
                 if(rFiles.length > 0) {
@@ -1192,16 +1205,13 @@
             if (eqEco <= 0 && reqC <= 0) return;
 
             let seats_left = p.seats;
-            // Eco en çok kârı getirdiği için (alan başına) her zaman ilk doldurulur.
             let eS = Math.min(Math.floor(reqE), seats_left); seats_left -= eS;
             let bS = Math.min(Math.floor(reqB), Math.floor(seats_left / 2)); seats_left -= bS * 2;
             let fS = Math.min(Math.floor(reqF), Math.floor(seats_left / 4)); seats_left -= fS * 4;
             let cS = Math.min(Math.floor(reqC), p.cargo);
             
-            // Eğer Eco, Bus, First doldurduktan sonra yer artıyorsa ve boş uçurmak istemiyorsak ek talep olmamasına rağmen öneriye dahil edilebilir ancak
-            // gerçekçi hesap için satılan bilet baz alınır.
             let fill = ((eS + bS*2 + fS*4) / p.seats);
-            if (fill < 0.70 || fill > 1.20) return; // Algoritma daha dar/etkili sınırda
+            if (fill < 0.70 || fill > 1.20) return;
 
             let priceRef = mode === 'audit' ? aud : curP; 
             let wkGross = ((eS * priceRef.e) + (bS * priceRef.b) + (fS * priceRef.f) + (cS * priceRef.c)) * 2 * weeklyFreq;
@@ -1214,7 +1224,7 @@
             let maint = (p.wear / 100) * ((weeklyFreq * flightTimeHours) / 100) * (p.price * 0.01);
             let dayNet = (wkGross - fuel - tax - other - maint) / 7;
             
-            if (dayNet > 0) candidates.push({ plane: p, config: { e: eS, b: bS, f: fS, c: cS }, profit: dayNet, freq: weeklyFreq, fillRate: ((weeklyFreq*flightTimeHours)/168*100).toFixed(1), amort: (p.price / (dayNet * 7)).toFixed(1) });
+            if (dayNet > 0) candidates.push({ plane: p, config: { e: eS, b: bS, f: fS, c: cS }, profit: dayNet, freq: weeklyFreq, fillRate: ((weeklyFreq*flightTimeHours)/168*100).toFixed(1), amort: (p.price / (dayNet * 7)).toFixed(1), flightTime: flightTimeHours });
         });
 
         if (!candidates.length) return showToast("Uygun kapasiteli (%70-%120 doluluk) uçak bulunamadı.", "error");
@@ -1226,17 +1236,40 @@
         window.activeTop3 = tops;
         let rc = document.getElementById('rec-container'); rc.innerHTML = "";
         tops.forEach((item, i) => {
+            let fHours = Math.floor(item.flightTime);
+            let fMins = Math.round((item.flightTime - fHours) * 60);
+            let timeStr = `${fHours}h ${fMins}m`;
+
             rc.innerHTML += `<div class="card" style="border-color:${i===0?'var(--success)':'var(--border)'};">
-                <h4 style="color:var(--text-main);margin-bottom:5px;">${i+1}. ${item.plane.name}</h4>
-                <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">Tahmini Kâr: <b class="text-success">${formatMoney(item.profit)} / Gün</b></div>
-                <div style="font-size:11px;color:var(--accent-blue);margin-bottom:4px;">Haftalık Frekans: <b>${item.freq} Sfr</b></div>
-                <div style="font-size:11px;color:var(--text-muted);margin-bottom:10px;">Zaman Doluluğu: <b style="color:white;">%${item.fillRate}</b> | Amorti: <b style="color:#f59e0b">${item.amort} Hf</b></div>
-                <div class="grid-2" style="font-size:12px;background:var(--bg-dark);padding:8px;border-radius:6px;text-align:center;margin-bottom:12px;border:1px solid var(--border);">
-                    <div>Eco:<br><b style="font-size:14px;color:#34d399">${item.config.e}</b></div>
-                    <div>Bus:<br><b style="font-size:14px;color:#60a5fa">${item.config.b}</b></div>
-                    <div>First:<br><b style="font-size:14px;color:#c084fc">${item.config.f}</b></div>
-                    <div>Crg:<br><b style="font-size:14px;color:#94a3b8">${item.config.c}T</b></div>
+                <h4 style="color:var(--text-main);margin-bottom:8px;">${i+1}. ${item.plane.name}</h4>
+                
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px; font-size:11px; color:var(--text-muted); margin-bottom:10px; border-bottom:1px solid var(--border); padding-bottom:8px;">
+                    <div style="display:flex; flex-direction:column; gap:3px;">
+                        <span>Fiyat: <b style="color:var(--text-main)">${formatMoney(item.plane.price)}</b></span>
+                        <span>Süre: <b style="color:var(--text-main)">${timeStr}</b></span>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:3px; text-align:right;">
+                        <span>Max Pax: <b style="color:var(--text-main)">${item.plane.seats}</b></span>
+                        <span>Frekans: <b style="color:var(--accent-blue)">${item.freq} Sefer</b></span>
+                    </div>
                 </div>
+
+                <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
+                    <span>Kâr: <b class="text-success" style="font-size:13px;">${formatMoney(item.profit)} / Gün</b></span>
+                    <span>Amorti: <b style="color:#f59e0b">${item.amort} Hf</b></span>
+                </div>
+                
+                <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px;">
+                    Zaman Doluluğu: <b style="color:white;">%${item.fillRate}</b>
+                </div>
+
+                <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:4px; font-size:11px; background:var(--bg-dark); padding:8px; border-radius:6px; text-align:center; margin-bottom:12px; border:1px solid var(--border);">
+                    <div>Eco<br><b style="font-size:14px;color:#34d399">${item.config.e}</b></div>
+                    <div>Bus<br><b style="font-size:14px;color:#60a5fa">${item.config.b}</b></div>
+                    <div>First<br><b style="font-size:14px;color:#c084fc">${item.config.f}</b></div>
+                    <div>Kargo<br><b style="font-size:14px;color:#94a3b8">${item.config.c}T</b></div>
+                </div>
+                
                 <label>Özel İsim (Opsiyonel)</label>
                 <input type="text" id="rec-name-${i}" placeholder="${item.plane.name}">
                 <button class="btn-main btn-success" style="width:100%;margin-top:5px;padding:10px;font-size:13px;" onclick="commitRecommendation(${i})">✅ Ekle</button>
