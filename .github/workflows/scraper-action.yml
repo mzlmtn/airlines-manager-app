@@ -2,8 +2,13 @@ name: Airlines Manager Scraper
 
 on:
   schedule:
-    # Her gün Türkiye saatiyle yaklaşık 06:00'da çalışır (UTC 03:00)
-    - cron: '0 2 * * *'
+    # 05:15 TRT = 02:15 UTC
+
+    - cron: '15 2 * * *'
+
+    # 15:30 TRT = 12:30 UTC
+
+    - cron: '30 12 * * *'
   workflow_dispatch:
 
 jobs:
