@@ -7,6 +7,7 @@ on:
 
     # 15:30 TRT = 12:30 UTC
     - cron: '30 12 * * *'
+
   workflow_dispatch:
 
 jobs:
@@ -17,42 +18,64 @@ jobs:
     - name: 1. Repoyu Klonla
       uses: actions/checkout@v4
 
-    - name: 2. Python Kurulumu
+    - name: 2. Sunucu Saatini Göster (DEBUG)
+      run: |
+        echo "UTC Saat:"
+        date -u
+
+        echo "Local Saat:"
+        date
+
+    - name: 3. Python Kurulumu
       uses: actions/setup-python@v5
       with:
         python-version: '3.10'
 
-    - name: 3. Gerekli Kütüphaneleri Yükle
+    - name: 4. Gerekli Kütüphaneleri Yükle
       run: |
         python -m pip install --upgrade pip
         pip install selenium beautifulsoup4 pandas openpyxl
 
-    - name: 4. Eski Excel Dosyalarını Sil (KRİTİK EKLEME)
+    - name: 5. Eski Excel Dosyalarını Sil
       run: |
         echo "Eski Excel dosyaları siliniyor..."
-        rm -f *.xlsx
 
-    - name: 5. Uçaklar (Aircrafts) Scraper Kodunu Çalıştır
+        rm -f *.xlsx || true
+
+        echo "Silme sonrası kalan xlsx dosyaları:"
+        ls -la *.xlsx || echo "xlsx kalmadı"
+
+    - name: 6. Aircrafts Scraper
       env:
         AIRLINES_USER: ${{ secrets.AIRLINES_USER }}
         AIRLINES_PASS: ${{ secrets.AIRLINES_PASS }}
       run: python my_aircrafts_scraper.py
 
-    - name: 6. Rotalar (Routes) Scraper Kodunu Çalıştır
+    - name: 7. Routes Scraper
       env:
         AIRLINES_USER: ${{ secrets.AIRLINES_USER }}
         AIRLINES_PASS: ${{ secrets.AIRLINES_PASS }}
       run: python my_routes_scraper.py
 
-    - name: 7. Yeni Excel Dosyalarını Repoya Kaydet
+    - name: 8. Git Status Debug
+      run: |
+        echo "Yeni oluşan dosyalar:"
+        ls -la *.xlsx || true
+
+        echo "Git status:"
+        git status
+
+    - name: 9. Commit ve Push
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
 
-        # Sadece yeni oluşan dosyaları ekle
-        git add *.xlsx
+        # KRİTİK:
+        # Silinen dosyaları da Git'e bildirir
+        git add -A
 
-        # Değişiklik varsa commit at
-        git commit -m "Otomatik Güncelleme: Uçak ve Rota Excel verileri güncellendi" || echo "Değişiklik yok, commit atlanıyor."
+        git status
+
+        git commit -m "Otomatik Güncelleme: Excel verileri yenilendi" || echo "Değişiklik yok"
 
         git push
