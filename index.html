@@ -648,59 +648,47 @@
         if (!putRes.ok) throw new Error("API Hatası");
     }
 
-    // === AM SAAT TABLOSU ÇEKME VE GÖSTERME ===
-    async function showAmHours() {
-        if (AM_HOURS_DB) {
-            renderAmHours();
-            openModal('modal-am-hours');
-            return;
-        }
+    // === AM SAAT TABLOSU GÖSTERME ===
+    const AM_HOURS_STATIC = [
+        {"Oyun Saati": "00:00", "Pazartesi": "09:51", "Salı": "13:17", "Çarşamba": "16:43", "Perşembe": "20:09", "Cuma": "23:34", "Cumartesi": "03:00", "Pazar": "06:26"},
+        {"Oyun Saati": "01:00", "Pazartesi": "10:00", "Salı": "13:26", "Çarşamba": "16:51", "Perşembe": "20:17", "Cuma": "23:43", "Cumartesi": "03:09", "Pazar": "06:34"},
+        {"Oyun Saati": "02:00", "Pazartesi": "10:09", "Salı": "13:34", "Çarşamba": "17:00", "Perşembe": "20:26", "Cuma": "23:51", "Cumartesi": "03:17", "Pazar": "06:43"},
+        {"Oyun Saati": "03:00", "Pazartesi": "10:17", "Salı": "13:43", "Çarşamba": "17:09", "Perşembe": "20:34", "Cuma": "00:00", "Cumartesi": "03:26", "Pazar": "06:51"},
+        {"Oyun Saati": "04:00", "Pazartesi": "10:26", "Salı": "13:51", "Çarşamba": "17:17", "Perşembe": "20:43", "Cuma": "00:09", "Cumartesi": "03:34", "Pazar": "07:00"},
+        {"Oyun Saati": "05:00", "Pazartesi": "10:34", "Salı": "14:00", "Çarşamba": "17:26", "Perşembe": "20:51", "Cuma": "00:17", "Cumartesi": "03:43", "Pazar": "07:09"},
+        {"Oyun Saati": "06:00", "Pazartesi": "10:43", "Salı": "14:09", "Çarşamba": "17:34", "Perşembe": "21:00", "Cuma": "00:26", "Cumartesi": "03:51", "Pazar": "07:17"},
+        {"Oyun Saati": "07:00", "Pazartesi": "10:51", "Salı": "14:17", "Çarşamba": "17:43", "Perşembe": "21:09", "Cuma": "00:34", "Cumartesi": "04:00", "Pazar": "07:26"},
+        {"Oyun Saati": "08:00", "Pazartesi": "11:00", "Salı": "14:26", "Çarşamba": "17:51", "Perşembe": "21:17", "Cuma": "00:43", "Cumartesi": "04:09", "Pazar": "07:34"},
+        {"Oyun Saati": "09:00", "Pazartesi": "11:09", "Salı": "14:34", "Çarşamba": "18:00", "Perşembe": "21:26", "Cuma": "00:51", "Cumartesi": "04:17", "Pazar": "07:43"},
+        {"Oyun Saati": "10:00", "Pazartesi": "11:17", "Salı": "14:43", "Çarşamba": "18:09", "Perşembe": "21:34", "Cuma": "01:00", "Cumartesi": "04:26", "Pazar": "07:51"},
+        {"Oyun Saati": "11:00", "Pazartesi": "11:26", "Salı": "14:51", "Çarşamba": "18:17", "Perşembe": "21:43", "Cuma": "01:09", "Cumartesi": "04:34", "Pazar": "08:00"},
+        {"Oyun Saati": "12:00", "Pazartesi": "11:34", "Salı": "15:00", "Çarşamba": "18:26", "Perşembe": "21:51", "Cuma": "01:17", "Cumartesi": "04:43", "Pazar": "08:09"},
+        {"Oyun Saati": "13:00", "Pazartesi": "11:43", "Salı": "15:09", "Çarşamba": "18:34", "Perşembe": "22:00", "Cuma": "01:26", "Cumartesi": "04:51", "Pazar": "08:17"},
+        {"Oyun Saati": "14:00", "Pazartesi": "11:51", "Salı": "15:17", "Çarşamba": "18:43", "Perşembe": "22:09", "Cuma": "01:34", "Cumartesi": "05:00", "Pazar": "08:26"},
+        {"Oyun Saati": "15:00", "Pazartesi": "12:00", "Salı": "15:26", "Çarşamba": "18:51", "Perşembe": "22:17", "Cuma": "01:43", "Cumartesi": "05:09", "Pazar": "08:34"},
+        {"Oyun Saati": "16:00", "Pazartesi": "12:09", "Salı": "15:34", "Çarşamba": "19:00", "Perşembe": "22:26", "Cuma": "01:51", "Cumartesi": "05:17", "Pazar": "08:43"},
+        {"Oyun Saati": "17:00", "Pazartesi": "12:17", "Salı": "15:43", "Çarşamba": "19:09", "Perşembe": "22:34", "Cuma": "02:00", "Cumartesi": "05:26", "Pazar": "08:51"},
+        {"Oyun Saati": "18:00", "Pazartesi": "12:26", "Salı": "15:51", "Çarşamba": "19:17", "Perşembe": "22:43", "Cuma": "02:09", "Cumartesi": "05:34", "Pazar": "09:00"},
+        {"Oyun Saati": "19:00", "Pazartesi": "12:34", "Salı": "16:00", "Çarşamba": "19:26", "Perşembe": "22:51", "Cuma": "02:17", "Cumartesi": "05:43", "Pazar": "09:09"},
+        {"Oyun Saati": "20:00", "Pazartesi": "12:43", "Salı": "16:09", "Çarşamba": "19:34", "Perşembe": "23:00", "Cuma": "02:26", "Cumartesi": "05:51", "Pazar": "09:17"},
+        {"Oyun Saati": "21:00", "Pazartesi": "12:51", "Salı": "16:17", "Çarşamba": "19:43", "Perşembe": "23:09", "Cuma": "02:34", "Cumartesi": "06:00", "Pazar": "09:26"},
+        {"Oyun Saati": "22:00", "Pazartesi": "13:00", "Salı": "16:26", "Çarşamba": "19:51", "Perşembe": "23:17", "Cuma": "02:43", "Cumartesi": "06:09", "Pazar": "09:34"},
+        {"Oyun Saati": "23:00", "Pazartesi": "13:09", "Salı": "16:34", "Çarşamba": "20:00", "Perşembe": "23:26", "Cuma": "02:51", "Cumartesi": "06:17", "Pazar": "09:43"}
+    ];
 
-        const pat = localStorage.getItem('gh_pat');
-        if (!pat) { showToast("GitHub PAT eksik. Ayarlara gidiniz.", "error"); switchTab('stats'); return; }
-
-        showToast("Saat tablosu yükleniyor...", "info");
-        const owner = "mzlmtn", repo = "airlines-manager-app";
-        let cb = '?t=' + new Date().getTime();
-        
-        try {
-            const fetchOpts = { method: 'GET', headers: { 'Authorization': `Bearer ${pat}`, 'Accept': 'application/vnd.github.v3+json' } };
-            let res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/AM_Hours.xlsx${cb}`, fetchOpts);
-            
-            if(res.ok) {
-                let jFile = await res.json(); 
-                let bStr = window.atob(jFile.content.replace(/\s/g, ''));
-                let bytes = new Uint8Array(bStr.length); 
-                for (let i=0; i<bStr.length; i++) bytes[i] = bStr.charCodeAt(i);
-                
-                let wb = XLSX.read(bytes, {type: 'array'});
-                AM_HOURS_DB = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-                
-                showToast("Saat tablosu yüklendi.", "success");
-                renderAmHours();
-                openModal('modal-am-hours');
-            } else {
-                throw new Error("AM_Hours.xlsx bulunamadı.");
-            }
-        } catch(e) {
-            console.warn(e);
-            showToast("Saat tablosu çekilemedi (AM_Hours.xlsx yok mu?).", "error");
-        }
+    function showAmHours() {
+        renderAmHours();
+        openModal('modal-am-hours');
     }
 
     function renderAmHours() {
         let c = document.getElementById('am-hours-container');
-        if(!AM_HOURS_DB || !AM_HOURS_DB.length) {
-            c.innerHTML = "<div class='card text-danger'>Veri okunamadı.</div>";
-            return;
-        }
-        
-        let headers = Object.keys(AM_HOURS_DB[0]);
+        let headers = Object.keys(AM_HOURS_STATIC[0]);
         let html = '<div class="table-responsive"><table class="dashboard-table"><thead><tr>';
         headers.forEach(h => html += `<th>${h}</th>`);
         html += '</tr></thead><tbody>';
         
-        AM_HOURS_DB.forEach(row => {
+        AM_HOURS_STATIC.forEach(row => {
             html += '<tr>';
             headers.forEach((h, i) => {
                 let val = row[h] !== undefined ? row[h] : '';
