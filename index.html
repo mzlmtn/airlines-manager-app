@@ -684,7 +684,8 @@
     function renderAmHours() {
         let c = document.getElementById('am-hours-container');
         let headers = Object.keys(AM_HOURS_STATIC[0]);
-        let html = '<div class="table-responsive"><table class="dashboard-table"><thead><tr>';
+        let html = '<style>.am-table th { position: sticky; top: 0; background: var(--bg-dark); z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.5); } .am-hl-row td { background: rgba(59,130,246,0.2) !important; } .am-hl-col { background: rgba(59,130,246,0.2) !important; } .am-table td, .am-table th { transition: background 0.15s; cursor: pointer; }</style>';
+        html += '<div class="table-responsive" style="max-height: 65vh; overflow-y: auto;"><table class="dashboard-table am-table"><thead><tr>';
         headers.forEach(h => html += `<th>${h}</th>`);
         html += '</tr></thead><tbody>';
         
@@ -702,6 +703,27 @@
         });
         html += '</tbody></table></div>';
         c.innerHTML = html;
+
+        let table = c.querySelector('.am-table');
+        let tds = table.querySelectorAll('tbody td');
+        tds.forEach(td => {
+            let handleHighlight = function() {
+                table.querySelectorAll('.am-hl-row, .am-hl-col').forEach(el => {
+                    el.classList.remove('am-hl-row', 'am-hl-col');
+                });
+                let tr = this.parentElement;
+                let colIdx = Array.from(tr.children).indexOf(this);
+                tr.classList.add('am-hl-row');
+                table.querySelectorAll(`tbody tr td:nth-child(${colIdx + 1})`).forEach(cell => {
+                    cell.classList.add('am-hl-col');
+                });
+            };
+            td.addEventListener('mouseenter', handleHighlight);
+            td.addEventListener('click', handleHighlight);
+        });
+        table.addEventListener('mouseleave', function() {
+            table.querySelectorAll('.am-hl-row, .am-hl-col').forEach(el => el.classList.remove('am-hl-row', 'am-hl-col'));
+        });
     }
 
     function handleFileUpload(event, storageKey) {
