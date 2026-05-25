@@ -3,11 +3,9 @@ name: Airlines Manager Scraper
 on:
   schedule:
     # 05:15 TRT = 02:15 UTC
-
     - cron: '15 2 * * *'
 
     # 15:30 TRT = 12:30 UTC
-
     - cron: '30 12 * * *'
   workflow_dispatch:
 
@@ -29,34 +27,32 @@ jobs:
         python -m pip install --upgrade pip
         pip install selenium beautifulsoup4 pandas openpyxl
 
-    - name: 4. Uçaklar (Aircrafts) Scraper Kodunu Çalıştır
+    - name: 4. Eski Excel Dosyalarını Sil (KRİTİK EKLEME)
+      run: |
+        echo "Eski Excel dosyaları siliniyor..."
+        rm -f *.xlsx
+
+    - name: 5. Uçaklar (Aircrafts) Scraper Kodunu Çalıştır
       env:
         AIRLINES_USER: ${{ secrets.AIRLINES_USER }}
         AIRLINES_PASS: ${{ secrets.AIRLINES_PASS }}
       run: python my_aircrafts_scraper.py
 
-    - name: 5. Rotalar (Routes) Scraper Kodunu Çalıştır
+    - name: 6. Rotalar (Routes) Scraper Kodunu Çalıştır
       env:
         AIRLINES_USER: ${{ secrets.AIRLINES_USER }}
         AIRLINES_PASS: ${{ secrets.AIRLINES_PASS }}
       run: python my_routes_scraper.py
 
-    - name: 6. Oluşan Excel Dosyalarını Repoya Kaydet
+    - name: 7. Yeni Excel Dosyalarını Repoya Kaydet
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        
-        # Tüm yeni ve güncellenmiş xlsx dosyalarını ekle
-        git add -A *.xlsx
-        
+
+        # Sadece yeni oluşan dosyaları ekle
+        git add *.xlsx
+
         # Değişiklik varsa commit at
         git commit -m "Otomatik Güncelleme: Uçak ve Rota Excel verileri güncellendi" || echo "Değişiklik yok, commit atlanıyor."
-        
-        # UYARI ÇÖZÜMÜ: Siteden yaptığınız "Kaydet" işlemlerini (varsa) bota indir.
-        # Eğer bot ile sitenin dosyaları çakışırsa, botun güncel verisini ("ours") tercih et.
-        git config pull.rebase false
-        git pull origin main -X ours --no-edit
-        
-        # Birleştirilmiş son hali GitHub'a gönder
-        git push
 
+        git push
