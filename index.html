@@ -1465,8 +1465,7 @@
                 if (r && String(r['departure']).trim().toUpperCase() === selHub) {
                     let arr = String(r['arrival']).trim().toUpperCase();
                     let dEco = cleanNum(r['eco demand']), dBus = cleanNum(r['bus demand']), dFirst = cleanNum(r['first demand']);
-                    let oEco = cleanNum(r['eco offer']), oBus = cleanNum(r['bus offer']), oFirst = cleanNum(r['first offer']);
-                    let remE = Math.max(0, dEco - oEco), remB = Math.max(0, dBus - oBus), remF = Math.max(0, dFirst - oFirst);
+                    let remE = dEco, remB = dBus, remF = dFirst; // Artık kalan değil direkt TOPLAM talebi alıyoruz
                     let pE = cleanNum(r['eco ticket']), pB = cleanNum(r['bus ticket']), pF = cleanNum(r['first ticket']);
                     if(pE === 0) pE = 100; if(pB === 0) pB = 200; if(pF === 0) pF = 400; // safety defaults
                     let eqDemand = dEco + (dBus * 2) + (dFirst * 4); // Eco equivalent demand
@@ -1612,7 +1611,7 @@
             }
             
             html += `<div class="table-responsive"><table class="dashboard-table">
-                <thead><tr><th style="text-align:left;">Rota</th><th>Mesafe</th><th>Uçuş Süresi</th>${useOwn?'<th>Kalan Talep (E / B / F)</th>':''}</tr></thead><tbody>`;
+                <thead><tr><th style="text-align:left;">Rota</th><th>Mesafe</th><th>Uçuş Süresi</th>${useOwn?'<th>Toplam Talep (E / B / F)</th>':''}</tr></thead><tbody>`;
             c.indices.forEach(i => { 
                 let d = validDests[i]; 
                 html += `<tr><td style="text-align:left;"><b>${selHub}➔${d.name}</b></td><td>${d.dist} km</td><td>${d.hours.toFixed(2)}s</td>${useOwn?`<td><span style="color:#34d399;font-weight:bold;">${d.remE}</span> / <span style="color:#60a5fa;font-weight:bold;">${d.remB}</span> / <span style="color:#c084fc;font-weight:bold;">${d.remF}</span></td>`:''}</tr>`; 
