@@ -117,9 +117,25 @@
         @keyframes toastIn { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
         @keyframes toastOut { from { opacity:1; } to { opacity:0; transform:translateY(-10px); } }
         
-        .golden-fleet-table tbody tr:hover td { background-color: rgba(16, 185, 129, 0.15); color: #fff; }
-        .golden-fleet-table td:first-child, .golden-fleet-table th:first-child { position: sticky; left: 0; background: var(--bg-dark); font-weight: bold; color: var(--accent); box-shadow: 2px 0 5px rgba(0,0,0,0.2); }
-        .golden-fleet-table tbody tr:hover td:first-child { background-color: rgba(16, 185, 129, 0.2); color: #fff; }
+        .fleet-table { overflow: hidden; }
+        .fleet-table td, .fleet-table th { position: relative; cursor: pointer; }
+        .fleet-table tbody td:hover::after, .fleet-table tbody td:active::after {
+            content: ""; position: absolute; left: 0; top: -5000px; height: 10000px; width: 100%;
+            background-color: rgba(251, 191, 36, 0.15); z-index: -1;
+        }
+        .fleet-table tbody tr:hover td, .fleet-table tbody tr:active td { background-color: rgba(251, 191, 36, 0.15); }
+        .fleet-table tbody td:hover, .fleet-table tbody td:active { background-color: rgba(251, 191, 36, 0.35) !important; color: white !important; }
+        
+        .row-golden td { color: #fef08a; }
+        .row-golden td:first-child { color: #eab308; font-weight: bold; }
+        .row-golden:hover td { color: #fff; }
+        
+        .row-other td { color: var(--text-main); }
+        .row-other td:first-child { color: var(--text-muted); font-weight: bold; }
+        
+        .fleet-table td:first-child, .fleet-table th:first-child { position: sticky; left: 0; background: var(--bg-dark); z-index: 5; box-shadow: 2px 0 5px rgba(0,0,0,0.2); }
+        .fleet-table th { position: sticky; top: 0; z-index: 10; background: var(--bg-dark); box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+        .fleet-table th:first-child { z-index: 11; }
     </style>
 </head>
 <body>
@@ -379,10 +395,10 @@
                 <button class="btn-small bg-gray" onclick="closeModal('modal-golden-fleet')" style="padding: 6px 12px;">✖ Kapat</button>
             </div>
             <div id="golden-fleet-container" class="table-responsive" style="max-height: 65vh; overflow-y: auto; overflow-x: auto;">
-                <table class="dashboard-table golden-fleet-table" style="width:100%;">
-                    <thead style="position: sticky; top: 0; z-index: 10; background: var(--bg-dark); box-shadow: 0 2px 5px rgba(0,0,0,0.5);">
+                <table class="dashboard-table fleet-table" style="width:100%;">
+                    <thead>
                         <tr>
-                            <th style="position: sticky; left: 0; z-index: 11; background: var(--bg-dark);">Model</th>
+                            <th>Model</th>
                             <th>Fiyat</th>
                             <th>Sahip Olunan</th>
                             <th>Kapasite (Eco)</th>
@@ -1951,21 +1967,24 @@
         
         let ownedCounts = {};
         AIRCRAFT_DB.forEach(a => {
-            let model = String(a['aircraft'] || a['model'] || '').toLowerCase();
-            ownedCounts[model] = (ownedCounts[model] || 0) + 1;
+            let model = String(a['aircraft'] || a['model'] || a['aircraft_model'] || '').toLowerCase().trim();
+            if (model) ownedCounts[model] = (ownedCounts[model] || 0) + 1;
         });
 
         GOLDEN_FLEET.forEach(p => {
             let modelLower = String(p.name).toLowerCase();
-            let count = AIRCRAFT_DB.filter(a => {
-                let m = String(a['aircraft'] || a['model'] || '').toLowerCase();
-                return m.includes(modelLower) || modelLower.includes(m);
-            }).length;
+            let count = 0;
+            for (let key in ownedCounts) {
+                if (key.includes(modelLower) || modelLower.includes(key)) count += ownedCounts[key];
+            }
 
-            html += `<tr>
-                <td style="text-align:left;">${p.name}</td>
-                <td>$${formatMoney(p.price)}</td>
-                <td style="color: ${count > 0 ? 'var(--success)' : 'var(--text-muted)'}; font-weight: bold;">${count} Adet</td>
+            let pStr = formatMoney(p.price);
+            if (!String(pStr).includes('$')) pStr = '$' + pStr;
+
+            html += `<tr class="row-golden">
+                <td style="text-align:left;">⭐ ${p.name}</td>
+                <td>${pStr}</td>
+                <td style="color: ${count > 0 ? 'var(--success)' : 'inherit'}; font-weight: bold;">${count > 0 ? count + ' Adet' : '-'}</td>
                 <td>${p.seats}</td>
                 <td>${p.range} km</td>
                 <td>${p.speed} km/s</td>
@@ -1975,6 +1994,55 @@
                 <td>$${p.other ? p.other : '0'}</td>
             </tr>`;
         });
+
+        let otherModelsMap = {};
+        AIRCRAFT_DB.forEach(a => {
+            let model = String(a['aircraft'] || a['aircraft_model'] || a['model'] || '').trim();
+            if (!model) return;
+            
+            let isGolden = GOLDEN_FLEET.some(g => String(g.name).toLowerCase() === model.toLowerCase() || model.toLowerCase().includes(String(g.name).toLowerCase()));
+            if (isGolden) return;
+
+            if (!otherModelsMap[model]) {
+                otherModelsMap[model] = {
+                    name: model,
+                    price: cleanNum(a['purchase_price'] || a['purchase price'] || 0),
+                    seats: cleanNum(a['capacity_pax'] || a['capacity'] || a['eco_seats'] || 0),
+                    range: cleanNum(a['range'] || 0),
+                    speed: cleanNum(a['speed'] || 0),
+                    cargo: cleanNum(a['cargo'] || 0),
+                    fuel: parseFloat(a['consumption'] || a['fuel'] || 0).toFixed(2),
+                    wear: parseFloat(a['wear'] || 0).toFixed(1),
+                    count: 0
+                };
+            }
+            otherModelsMap[model].count++;
+        });
+
+        let otherModels = Object.values(otherModelsMap).sort((a,b) => b.count - a.count);
+        
+        if (otherModels.length > 0) {
+            html += `<tr><td colspan="10" style="background: rgba(255,255,255,0.05); color: var(--text-muted); font-weight: bold; padding: 10px; text-align: left; position: sticky; left: 0;">👇 Sahip Olduğunuz Diğer Uçak Modelleri</td></tr>`;
+            
+            otherModels.forEach(p => {
+                let pStr = formatMoney(p.price);
+                if (p.price > 0 && !String(pStr).includes('$')) pStr = '$' + pStr;
+                else if (p.price === 0) pStr = '-';
+                
+                html += `<tr class="row-other">
+                    <td style="text-align:left;">${p.name}</td>
+                    <td>${pStr}</td>
+                    <td style="color: var(--success); font-weight: bold;">${p.count} Adet</td>
+                    <td>${p.seats || '-'}</td>
+                    <td>${p.range ? p.range + ' km' : '-'}</td>
+                    <td>${p.speed ? p.speed + ' km/s' : '-'}</td>
+                    <td>${p.cargo ? p.cargo + 'T' : '-'}</td>
+                    <td>${p.fuel > 0 ? p.fuel + ' L' : '-'}</td>
+                    <td>${p.wear > 0 ? p.wear + '%' : '-'}</td>
+                    <td>-</td>
+                </tr>`;
+            });
+        }
         tbody.innerHTML = html;
         openModal('modal-golden-fleet');
     };
