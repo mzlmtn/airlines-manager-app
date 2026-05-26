@@ -1570,9 +1570,18 @@
                 for(let w = 0; w < maxWaves; w++) {
                     let e = 0, b = 0, f = 0, space = acSeats;
                     
-                    let getMRe = (k) => routes.reduce((sum, r) => sum + (k * 2 <= r.remE ? r.pE : 0), 0) * 14; 
-                    let getMRb = (k) => routes.reduce((sum, r) => sum + (k * 2 <= r.remB ? r.pB : 0), 0) * 14;
-                    let getMRf = (k) => routes.reduce((sum, r) => sum + (k * 2 <= r.remF ? r.pF : 0), 0) * 14;
+                    let getMRe = (k) => routes.reduce((sum, r) => {
+                        let added = Math.max(0, Math.min(k*2, r.remE)) - Math.max(0, Math.min((k-1)*2, r.remE));
+                        return sum + (added * r.pE) - ((2 - added) * r.pE * 0.25);
+                    }, 0);
+                    let getMRb = (k) => routes.reduce((sum, r) => {
+                        let added = Math.max(0, Math.min(k*2, r.remB)) - Math.max(0, Math.min((k-1)*2, r.remB));
+                        return sum + (added * r.pB) - ((2 - added) * r.pB * 0.25);
+                    }, 0);
+                    let getMRf = (k) => routes.reduce((sum, r) => {
+                        let added = Math.max(0, Math.min(k*2, r.remF)) - Math.max(0, Math.min((k-1)*2, r.remF));
+                        return sum + (added * r.pF) - ((2 - added) * r.pF * 0.25);
+                    }, 0);
                     
                     while(space > 0) {
                         let effE = space >= 1 ? getMRe(e + 1) : -1;
@@ -1587,7 +1596,9 @@
                     }
                     
                     if (e === 0 && b === 0 && f === 0) break;
-                    if (space > 0) { e += space; space = 0; }
+                    
+                    // Eğer uçağın %70'inden fazlası boş/kargo kalacaksa bu dalgayı önerme (verimsiz yatırım)
+                    if ((acSeats - space) < (acSeats * 0.30)) break;
                     
                     let grossWeeklyRev = 0;
                     routes.forEach(r => {
@@ -1610,7 +1621,7 @@
                     let grossROI = investment / grossWeeklyRev;
                     let netROI = investment / netWeeklyRev;
                     
-                    c.waves.push({ e, b, f, grossWeeklyRev, netWeeklyRev, grossROI, netROI });
+                    c.waves.push({ e, b, f, space, grossWeeklyRev, netWeeklyRev, grossROI, netROI });
                 }
                 
                 c.finalRoutes = routes;
@@ -1634,7 +1645,7 @@
                 c.waves.forEach((w, wIdx) => {
                     html += `<div style="background:var(--input-bg); padding:8px 12px; border-radius:6px; display:flex; justify-content:space-between; align-items:center; border: 1px solid var(--border);">
                         <div><span style="color:var(--text-muted);font-size:11px;">Dalga ${wIdx+1} (7 Adet Uçak) Optimum Koltuk:</span><br>
-                        <b style="color:#34d399;font-size:13px;">${w.e} Eco</b> - <b style="color:#60a5fa;font-size:13px;">${w.b} Bus</b> - <b style="color:#c084fc;font-size:13px;">${w.f} First</b></div>
+                        <b style="color:#34d399;font-size:13px;">${w.e} Eco</b> - <b style="color:#60a5fa;font-size:13px;">${w.b} Bus</b> - <b style="color:#c084fc;font-size:13px;">${w.f} First</b>${w.space > 0 ? ` <span style="color:var(--text-muted);font-size:12px;">(+${w.space} Kargo/Boş)</span>` : ''}</div>
                         <div style="text-align:right;"><span style="color:var(--text-muted);font-size:11px;">Brüt / Net Getiri | Amortisman:</span><br>
                         <b style="color:var(--success);font-size:12px;">${formatMoney(w.grossWeeklyRev)} (${w.grossROI.toFixed(1)} hf)</b> | <b style="color:#60a5fa;font-size:12px;">${formatMoney(w.netWeeklyRev)} (${w.netROI.toFixed(1)} hf)</b></div>
                     </div>`;
