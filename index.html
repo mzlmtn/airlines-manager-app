@@ -1814,8 +1814,8 @@
             }
             
             if (needed > 0) {
-                let acData = AIRCRAFT_TYPES[selAc] || AIRCRAFT_TYPES[Object.keys(AIRCRAFT_TYPES).find(k => k.toLowerCase() === selAc.toLowerCase())];
-                let planeCost = acData ? acData.cost : 0;
+                let acData = GOLDEN_FLEET.find(g => g.name.toLowerCase() === selAc.toLowerCase());
+                let planeCost = acData ? acData.price : 0;
                 let totalCost = needed * planeCost;
                 
                 let buy = confirm(`${needed} adet ${selAc} eksik. Toplam tahmini maliyet: $${formatMoney(totalCost)}.\nOnaylarsanız uçaklar filoya eklenip devre kurulacaktır.`);
