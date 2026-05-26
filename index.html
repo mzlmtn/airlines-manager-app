@@ -117,18 +117,10 @@
         @keyframes toastIn { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
         @keyframes toastOut { from { opacity:1; } to { opacity:0; transform:translateY(-10px); } }
         
-        .fleet-table { overflow: hidden; }
-        .fleet-table td, .fleet-table th { position: relative; cursor: pointer; }
-        .fleet-table tbody td:hover::after, .fleet-table tbody td:active::after {
-            content: ""; position: absolute; left: 0; top: -5000px; height: 10000px; width: 100%;
-            background-color: rgba(251, 191, 36, 0.15); z-index: -1;
-        }
-        .fleet-table tbody tr:hover td, .fleet-table tbody tr:active td { background-color: rgba(251, 191, 36, 0.15); }
-        .fleet-table tbody td:hover, .fleet-table tbody td:active { background-color: rgba(251, 191, 36, 0.35) !important; color: white !important; }
-        
+        .dashboard-table tbody tr:hover td { background-color: rgba(255,255,255,0.05); }
+
         .row-golden td { color: #fef08a; }
         .row-golden td:first-child { color: #eab308; font-weight: bold; }
-        .row-golden:hover td { color: #fff; }
         
         .row-other td { color: var(--text-main); }
         .row-other td:first-child { color: var(--text-muted); font-weight: bold; }
@@ -394,7 +386,7 @@
                 <h3 style="color: var(--accent); margin:0;">✈️ Golden Fleet (Tüm Uçaklar)</h3>
                 <button class="btn-small bg-gray" onclick="closeModal('modal-golden-fleet')" style="padding: 6px 12px;">✖ Kapat</button>
             </div>
-            <div id="golden-fleet-container" class="table-responsive" style="max-height: 65vh; overflow-y: auto; overflow-x: auto;">
+            <div id="golden-fleet-container" style="max-height: 65vh; overflow: auto; border-radius: 6px; border: 1px solid var(--border);">
                 <table class="dashboard-table fleet-table" style="width:100%;">
                     <thead>
                         <tr>
@@ -425,22 +417,10 @@
     const GOLDEN_FLEET = [
         {name:"Airbus A380-800",range:15556,speed:903,seats:853,cargo:84,price:403000000,fuel:2.44,wear:6.0,other:0.10},
         {name:"Boeing 747-400",range:13454,speed:903,seats:660,cargo:65,price:296300000,fuel:2.57,wear:5.0,other:0.02},
-        {name:"Boeing 777-300ER",range:14695,speed:892,seats:550,cargo:71,price:315000000,fuel:2.28,wear:4.0,other:0.08},
-        {name:"Airbus A330-300",range:11750,speed:871,seats:440,cargo:45,price:239400000,fuel:2.05,wear:2.0,other:0.04},
-        {name:"Boeing 767-300ER",range:11100,speed:850,seats:351,cargo:0,price:182800000,fuel:2.33,wear:8.0,other:0},
-        {name:"Airbus A350-900XWB",range:16780,speed:911,seats:475,cargo:0,price:295200000,fuel:2.13,wear:2.0,other:0},
-        {name:"Airbus A350-1000",range:14750,speed:911,seats:522,cargo:54,price:335000000,fuel:2.06,wear:2.0,other:0.18},
-        {name:"Boeing 777-300",range:11119,speed:892,seats:550,cargo:0,price:284700000,fuel:2.80,wear:2.0,other:0},
-        {name:"Airbus A350-900ULR",range:18000,speed:911,seats:440,cargo:0,price:317400000,fuel:2.13,wear:2.0,other:0},
-        {name:"Airbus A330-800",range:15094,speed:883,seats:406,cargo:0,price:259900000,fuel:2.27,wear:4.0,other:0},
-        {name:"Boeing 787-8",range:15196,speed:911,seats:381,cargo:0,price:206800000,fuel:2.23,wear:9.0,other:0},
-        {name:"Boeing 777-200ER",range:14315,speed:892,seats:440,cargo:0,price:258800000,fuel:2.72,wear:9.0,other:0},
-        {name:"Boeing 787-9",range:15556,speed:911,seats:420,cargo:0,price:249500000,fuel:2.12,wear:8.0,other:0},
-        {name:"Airbus A330-900",range:13334,speed:883,seats:460,cargo:0,price:272000000,fuel:2.37,wear:4.0,other:0},
-        {name:"Boeing 787-10",range:10467,speed:911,seats:440,cargo:0,price:257000000,fuel:2.07,wear:5.0,other:0},
-        {name:"Boeing 747-8I",range:14825,speed:911,seats:730,cargo:0,price:352800000,fuel:2.24,wear:6.0,other:0},
-        {name:"Boeing 767-400ER",range:10424,speed:850,seats:409,cargo:0,price:200800000,fuel:2.32,wear:10.0,other:0},
         {name:"Boeing 747-200B",range:12150,speed:890,seats:496,cargo:53,price:213200000,fuel:3.32,wear:2.8,other:0.00},
+        {name:"Boeing 777-300ER",range:14695,speed:892,seats:550,cargo:71,price:315000000,fuel:2.28,wear:4.0,other:0.08},
+        {name:"Airbus A350-1000",range:14750,speed:911,seats:522,cargo:54,price:335000000,fuel:2.06,wear:2.0,other:0.18},
+        {name:"Airbus A330-300",range:11750,speed:871,seats:440,cargo:45,price:239400000,fuel:2.05,wear:2.0,other:0.04},
         {name:"Ilyushin Il-96-300",range:9000,speed:850,seats:300,cargo:40,price:53000000,fuel:2.70,wear:1.8,other:0.01},
         {name:"Airbus A321neo",range:6852,speed:840,seats:244,cargo:5,price:129500000,fuel:1.95,wear:1.2,other:0.15}
     ];
@@ -520,6 +500,12 @@
     }
     function openModal(id) { document.getElementById(id).style.display = 'flex'; }
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+    window.addEventListener('click', function(e) {
+        if (e.target.classList.contains('modal-overlay')) e.target.style.display = 'none';
+    });
+    window.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none');
+    });
     function cleanNum(val) {
         if (val === undefined || val === null || val === '') return 0;
         let str = String(val).replace(/[\s$,€£]/g, ''); let parsed = parseFloat(str);
@@ -1962,7 +1948,18 @@
             
             document.getElementById('optimization-results').innerHTML = `<div class="card" style="border: 1px solid var(--success); background: rgba(52, 211, 153, 0.1);">
                 <h4 style="color:var(--success);">🎉 Devre Kurulumu Tamamlandı!</h4>
-                <p><strong>${pool.length}</strong> adet <strong>${selAc}</strong> başarıyl    window.currentFleetSortBy = 'count';
+                <p><strong>${pool.length}</strong> adet <strong>${selAc}</strong> başarıyla kurgulandı ve seçilen 7 rotaya atandı.</p>
+                <p><strong>Atanan İsimler:</strong> ${selHub} Circuit ${currentC} 1 1 vb.</p>
+                <p>Mevcut diğer rotalar serbest bırakıldı, bilet fiyatları Audit fiyatlarıyla güncellendi ve kapasiteler rotalara yazıldı.</p>
+                <p style="color:var(--danger);font-weight:bold;margin-top:10px;">⚠️ Unutmayın: Değişiklikleri GitHub'a yansıtmak için yukarıdaki KAYDET butonuna basmalısınız.</p>
+            </div>`;
+        } catch(err) {
+            alert("Uygulama Hatası: " + err.message);
+            console.error(err);
+        }
+    };
+
+    window.currentFleetSortBy = 'count';
     window.currentFleetSortAsc = false;
     
     window.sortFleet = function(col) {
@@ -1975,25 +1972,24 @@
         window.showFleetList(false);
     };
 
-    window.hoverCol = function(idx, el) {
-        let trs = el.parentElement.parentElement.children;
-        for(let i=0; i<trs.length; i++) {
-            let td = trs[i].children[idx];
-            if(td && td.tagName === 'TD') td.classList.add('col-hover');
-        }
-    };
-    window.unhoverCol = function(idx, el) {
-        let trs = el.parentElement.parentElement.children;
-        for(let i=0; i<trs.length; i++) {
-            let td = trs[i].children[idx];
-            if(td && td.tagName === 'TD') td.classList.remove('col-hover');
-        }
-    };
-
     window.showFleetList = function(openModalFlag = true) {
         let tbody = document.getElementById('golden-fleet-body');
         let html = '';
         
+        let sortBtns = document.getElementById('fleet-sort-btns');
+        if (sortBtns) {
+            let mapping = ['name', 'price', 'count', 'seats', 'range', 'speed', 'fuel', 'wear'];
+            let labels = ['Model', 'Fiyat', 'Sahip Olunan', 'Kapasite', 'Menzil', 'Hız', 'Yakıt', 'Aşınma'];
+            let btnHtml = '<strong style="color:var(--text-muted); align-self:center;">Sırala:</strong>';
+            mapping.forEach((col, i) => {
+                let isActive = window.currentFleetSortBy === col;
+                let arrow = isActive ? (window.currentFleetSortAsc ? ' ▲' : ' ▼') : '';
+                let activeClass = isActive ? 'active' : '';
+                btnHtml += `<button class="sub-tab-btn ${activeClass}" onclick="window.sortFleet('${col}')">${labels[i]}${arrow}</button>`;
+            });
+            sortBtns.innerHTML = btnHtml;
+        }
+
         let ownedCounts = {};
         AIRCRAFT_DB.forEach(a => {
             let model = String(a['aircraft'] || a['model'] || a['aircraft_model'] || '').toLowerCase().trim();
@@ -2051,14 +2047,14 @@
         goldenData.sort(sortFn);
         otherData.sort(sortFn);
 
-        let mkTd = (val) => `<td onmouseover="hoverCol(this.cellIndex, this)" onmouseout="unhoverCol(this.cellIndex, this)">${val}</td>`;
+        let mkTd = (val) => `<td>${val}</td>`;
 
         goldenData.forEach(p => {
             let pStr = formatMoney(p.price);
             if (!String(pStr).includes('$')) pStr = '$' + pStr;
 
             html += `<tr class="row-golden">
-                <td style="text-align:left;" onmouseover="hoverCol(this.cellIndex, this)" onmouseout="unhoverCol(this.cellIndex, this)">⭐ ${p.name}</td>
+                <td style="text-align:left;">⭐ ${p.name}</td>
                 ${mkTd(pStr)}
                 ${mkTd(`<span style="color: ${p.count > 0 ? 'var(--success)' : 'inherit'}; font-weight: bold;">${p.count > 0 ? p.count + ' Adet' : '-'}</span>`)}
                 ${mkTd(p.seats)}
@@ -2080,7 +2076,7 @@
                 else if (p.price === 0) pStr = '-';
                 
                 html += `<tr class="row-other">
-                    <td style="text-align:left;" onmouseover="hoverCol(this.cellIndex, this)" onmouseout="unhoverCol(this.cellIndex, this)">${p.name}</td>
+                    <td style="text-align:left;">${p.name}</td>
                     ${mkTd(pStr)}
                     ${mkTd(`<span style="color: var(--success); font-weight: bold;">${p.count} Adet</span>`)}
                     ${mkTd(p.seats || '-')}
@@ -2096,6 +2092,30 @@
 
         tbody.innerHTML = html;
         
+        let table = document.querySelector('.fleet-table');
+        let tds = table.querySelectorAll('tbody td');
+        tds.forEach(td => {
+            let handleHighlight = function() {
+                table.querySelectorAll('.fleet-hl-row, .fleet-hl-col, .fleet-hl-cell').forEach(el => {
+                    el.classList.remove('fleet-hl-row', 'fleet-hl-col', 'fleet-hl-cell');
+                });
+                let tr = this.parentElement;
+                let colIdx = Array.from(tr.children).indexOf(this);
+                tr.classList.add('fleet-hl-row');
+                table.querySelectorAll(`tbody tr td:nth-child(${colIdx + 1})`).forEach(cell => {
+                    cell.classList.add('fleet-hl-col');
+                });
+                this.classList.add('fleet-hl-cell');
+            };
+            td.addEventListener('mouseenter', handleHighlight);
+            td.addEventListener('click', handleHighlight);
+        });
+        table.addEventListener('mouseleave', function() {
+            table.querySelectorAll('.fleet-hl-row, .fleet-hl-col, .fleet-hl-cell').forEach(el => {
+                el.classList.remove('fleet-hl-row', 'fleet-hl-col', 'fleet-hl-cell');
+            });
+        });
+
         let thead = document.getElementById('fleet-thead');
         if(thead) {
             let ths = thead.querySelectorAll('th');
