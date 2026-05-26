@@ -1621,7 +1621,7 @@
                     let grossROI = investment / grossWeeklyRev;
                     let netROI = investment / netWeeklyRev;
                     
-                    c.waves.push({ e, b, f, space, grossWeeklyRev, netWeeklyRev, grossROI, netROI });
+                    c.waves.push({ e, b, f, space, grossWeeklyRev, netWeeklyRev, grossROI, netROI, active: true });
                 }
                 
                 c.finalRoutes = routes;
@@ -1630,9 +1630,12 @@
         });
         
         combinations.sort((a, b) => a.score - b.score);
+        
+        window.lastCircuits = combinations.slice(0, 5);
+        window.lastValidDests = validDests;
 
         let html = `<h3 style="margin-top:10px;margin-bottom:12px;color:var(--accent-blue);">🌍 Mükemmel 168s Devreleri (Çoklu Dalga Optimizasyonu)</h3>`;
-        combinations.slice(0, 5).forEach((c, idx) => {
+        window.lastCircuits.forEach((c, idx) => {
             html += `<details ${idx===0?"open":""} style="border-color:${idx===0?"var(--accent)":"var(--border)"};margin-bottom:12px;">
                 <summary style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px;">
                     <div>Kombinasyon #${idx+1} | ${c.indices.length} Rota | ${(c.time / 60).toFixed(1)} Saat</div>
@@ -1643,18 +1646,25 @@
             if (useOwn && c.waves && c.waves.length > 0) {
                 html += `<div style="display:flex; flex-direction:column; gap:6px; margin-bottom:10px;">`;
                 c.waves.forEach((w, wIdx) => {
-                    html += `<div style="background:var(--input-bg); padding:8px 12px; border-radius:6px; display:flex; justify-content:space-between; align-items:center; border: 1px solid var(--border);">
-                        <div><span style="color:var(--text-muted);font-size:11px;">Dalga ${wIdx+1} (7 Adet Uçak) Optimum Koltuk:</span><br>
-                        <b style="color:#34d399;font-size:13px;">${w.e} Eco</b> - <b style="color:#60a5fa;font-size:13px;">${w.b} Bus</b> - <b style="color:#c084fc;font-size:13px;">${w.f} First</b>${w.space > 0 ? ` <span style="color:var(--text-muted);font-size:12px;">(+${w.space} Kargo/Boş)</span>` : ''}</div>
+                    let isDanger = w.netROI > 70; // 70 haftadan uzun amortisman riskli kabul edilir
+                    let waveBg = isDanger ? 'background:rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);' : 'background:var(--input-bg); border: 1px solid var(--border);';
+                    let roiColor = isDanger ? 'color:var(--danger);' : 'color:#60a5fa;';
+                    
+                    html += `<div style="${waveBg} padding:8px 12px; border-radius:6px; display:flex; justify-content:space-between; align-items:center; gap: 8px;">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <input type="checkbox" checked onchange="toggleWave(${idx}, ${wIdx}, this.checked)" style="width:16px;height:16px;cursor:pointer;">
+                            <div><span style="color:var(--text-muted);font-size:11px;">Dalga ${wIdx+1} (7 Adet Uçak) Optimum Koltuk:</span><br>
+                            <b style="color:#34d399;font-size:13px;">${w.e} Eco</b> - <b style="color:#60a5fa;font-size:13px;">${w.b} Bus</b> - <b style="color:#c084fc;font-size:13px;">${w.f} First</b>${w.space > 0 ? ` <span style="color:var(--text-muted);font-size:12px;">(+${w.space} Kargo/Boş)</span>` : ''}</div>
+                        </div>
                         <div style="text-align:right;"><span style="color:var(--text-muted);font-size:11px;">Brüt / Net Getiri | Amortisman:</span><br>
-                        <b style="color:var(--success);font-size:12px;">${formatMoney(w.grossWeeklyRev)} (${w.grossROI.toFixed(1)} hf)</b> | <b style="color:#60a5fa;font-size:12px;">${formatMoney(w.netWeeklyRev)} (${w.netROI.toFixed(1)} hf)</b></div>
+                        <b style="color:var(--success);font-size:12px;">${formatMoney(w.grossWeeklyRev)} (${w.grossROI.toFixed(1)} hf)</b> | <b style="${roiColor}font-size:12px;">${formatMoney(w.netWeeklyRev)} (${w.netROI.toFixed(1)} hf)</b></div>
                     </div>`;
                 });
                 html += `</div>`;
             }
             
             html += `<div class="table-responsive"><table class="dashboard-table">
-                <thead><tr><th style="text-align:left;">Rota</th><th>Mesafe</th><th>Uçuş Süresi</th>${useOwn?'<th>Toplam Talep (E/B/F)</th><th>Audit Bilet (E/B/F)</th><th>Kalan Talep (Sonra)</th>':''}</tr></thead><tbody>`;
+                <thead><tr><th style="text-align:left;">Rota</th><th>Mesafe</th><th>Uçuş Süresi</th>${useOwn?'<th>Toplam Talep (E/B/F)</th><th>Audit Bilet (E/B/F)</th><th>Kalan Talep (Sonra)</th>':''}</tr></thead><tbody id="circ-table-${idx}">`;
             c.indices.forEach((rIdx, i) => { 
                 let d = validDests[rIdx];
                 let remStr = "";
@@ -1672,6 +1682,33 @@
             html += `</tbody></table></div></div></details>`;
         }); resDiv.innerHTML = html;
     }
+
+    window.toggleWave = function(cIdx, wIdx, isActive) {
+        let c = window.lastCircuits[cIdx];
+        if (!c) return;
+        c.waves[wIdx].active = isActive;
+        
+        let tbody = document.getElementById(`circ-table-${cIdx}`);
+        if (!tbody) return;
+        
+        c.indices.forEach((rIdx, i) => {
+            let d = window.lastValidDests[rIdx];
+            let remE = d.remE, remB = d.remB, remF = d.remF;
+            
+            c.waves.forEach(w => {
+                if (w.active) {
+                    remE -= (w.e * 2);
+                    remB -= (w.b * 2);
+                    remF -= (w.f * 2);
+                }
+            });
+            
+            let fd = (val) => val <= 0 ? `<span style="color:var(--danger);font-weight:bold;">${val}</span>` : `<span style="color:#34d399;font-weight:bold;">+${val}</span>`;
+            let row = tbody.children[i];
+            let cell = row.children[row.children.length - 1]; // Son hücre "Kalan Talep"
+            cell.innerHTML = `${fd(remE)} / ${fd(remB)} / ${fd(remF)}`;
+        });
+    };
 
     window.onload = initData;
 
