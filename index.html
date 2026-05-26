@@ -1635,14 +1635,18 @@
             }
             
             html += `<div class="table-responsive"><table class="dashboard-table">
-                <thead><tr><th style="text-align:left;">Rota</th><th>Mesafe</th><th>Uçuş Süresi</th>${useOwn?'<th>Kalan Talep (Sonra)</th>':''}</tr></thead><tbody>`;
+                <thead><tr><th style="text-align:left;">Rota</th><th>Mesafe</th><th>Uçuş Süresi</th>${useOwn?'<th>Toplam Talep (E/B/F)</th><th>Audit Bilet (E/B/F)</th><th>Kalan Talep (Sonra)</th>':''}</tr></thead><tbody>`;
             c.indices.forEach((rIdx, i) => { 
                 let d = validDests[rIdx];
                 let remStr = "";
                 if (useOwn && c.finalRoutes) {
                     let fr = c.finalRoutes[i];
                     let fd = (val) => val <= 0 ? `<span style="color:var(--danger);font-weight:bold;">${val}</span>` : `<span style="color:#34d399;font-weight:bold;">+${val}</span>`;
-                    remStr = `<td>${fd(fr.remE)} / ${fd(fr.remB)} / ${fd(fr.remF)}</td>`;
+                    
+                    let baseDemStr = `<td><span style="color:#34d399">${d.remE}</span> / <span style="color:#60a5fa">${d.remB}</span> / <span style="color:#c084fc">${d.remF}</span></td>`;
+                    let auditPriceStr = `<td><span style="color:#34d399">$${d.pE}</span> / <span style="color:#60a5fa">$${d.pB}</span> / <span style="color:#c084fc">$${d.pF}</span></td>`;
+                    
+                    remStr = `${baseDemStr}${auditPriceStr}<td>${fd(fr.remE)} / ${fd(fr.remB)} / ${fd(fr.remF)}</td>`;
                 }
                 html += `<tr><td style="text-align:left;"><b>${selHub}➔${d.name}</b></td><td>${d.dist} km</td><td>${d.hours.toFixed(2)}s</td>${remStr}</tr>`; 
             });
