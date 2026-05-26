@@ -1466,7 +1466,11 @@
                 if (r && String(r['departure']).trim().toUpperCase() === selHub) {
                     let arr = String(r['arrival']).trim().toUpperCase();
                     let dist = cleanNum(r['distance']);
-                    let dEco = cleanNum(r['eco demand']), dBus = cleanNum(r['bus demand']), dFirst = cleanNum(r['first demand']);
+                    // Audit taleplerini öncelikli olarak çekmeye çalış
+                    let dEco = cleanNum(r['audit eco']) || cleanNum(r['eco audit']) || cleanNum(r['eco demand']);
+                    let dBus = cleanNum(r['audit bus']) || cleanNum(r['bus audit']) || cleanNum(r['bus demand']);
+                    let dFirst = cleanNum(r['audit first']) || cleanNum(r['first audit']) || cleanNum(r['first demand']);
+                    
                     let remE = dEco, remB = dBus, remF = dFirst; 
                     let audPrices = calcAuditPrices(dist, comfLevel);
                     let pE = audPrices.e, pB = audPrices.b, pF = audPrices.f;
@@ -1587,10 +1591,14 @@
                     
                     let grossWeeklyRev = 0;
                     routes.forEach(r => {
-                        let paxE = Math.min(e * 2, r.remE);
-                        let paxB = Math.min(b * 2, r.remB);
-                        let paxF = Math.min(f * 2, r.remF);
-                        r.remE -= paxE; r.remB -= paxB; r.remF -= paxF;
+                        let paxE = Math.max(0, Math.min(e * 2, r.remE));
+                        let paxB = Math.max(0, Math.min(b * 2, r.remB));
+                        let paxF = Math.max(0, Math.min(f * 2, r.remF));
+                        
+                        r.remE -= (e * 2); 
+                        r.remB -= (b * 2); 
+                        r.remF -= (f * 2);
+                        
                         grossWeeklyRev += (paxE * r.pE + paxB * r.pB + paxF * r.pF) * 7;
                     });
                     
