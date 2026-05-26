@@ -1013,16 +1013,21 @@
 
         let comf = cleanNum(document.getElementById('g_comf').value) || 0;
         let items = list.map(a => {
-            let name = a['aircraft name'] ? String(a['aircraft name']).trim() : "İSİMSİZ", route = null;
+            let name = a['aircraft name'] ? String(a['aircraft name']).trim() : "İSİMSİZ", routes = [];
             for (let i = 0; i < ROUTES_DB.length; i++) {
-                if (ROUTES_DB[i] && ROUTES_DB[i]['aircrafts model/aircrafts name on route'] && String(ROUTES_DB[i]['aircrafts model/aircrafts name on route']).includes(name)) { route = ROUTES_DB[i]; break; }
+                if (ROUTES_DB[i] && ROUTES_DB[i]['aircrafts model/aircrafts name on route'] && String(ROUTES_DB[i]['aircrafts model/aircrafts name on route']).includes(name)) { 
+                    routes.push(ROUTES_DB[i]); 
+                }
             }
             
             let rev = { daily: 0, weekly: 0, amortWeeks: Infinity };
-            if (route) {
-                let dist = cleanNum(route['distance']), speed = cleanNum(a['speed']);
-                let ft = calculateFlightTime(dist, speed), wf = Math.floor(168 / ft);
-                if (wf >= 1) {
+            if (routes.length > 0) {
+                let isCircuit = name.includes("Circuit");
+                routes.forEach(route => {
+                    let dist = cleanNum(route['distance']), speed = cleanNum(a['speed']);
+                    let ft = calculateFlightTime(dist, speed);
+                    let wf = isCircuit ? 2 : Math.floor(168 / ft);
+                    
                     let curP = { e: cleanNum(route['eco ticket']), b: cleanNum(route['bus ticket']), f: cleanNum(route['first ticket']), c: cleanNum(route['cargo ticket']) };
                     let aud = calcAuditPrices(dist, comf);
                     
@@ -1042,15 +1047,16 @@
                     let fillE = offer.e > 0 ? Math.min(1, dem.e / offer.e) : 0, fillB = offer.b > 0 ? Math.min(1, dem.b / offer.b) : 0;
                     let fillF = offer.f > 0 ? Math.min(1, dem.f / offer.f) : 0, fillC = offer.c > 0 ? Math.min(1, dem.c / offer.c) : 0;
                     let eS = cleanNum(a['eco_seats']), bS = cleanNum(a['business_seats']), fS = cleanNum(a['first_seats']), cS = cleanNum(a['cargo']);
-                    let adE = Math.round(eS * wf * 2 / 7), adB = Math.round(bS * wf * 2 / 7), adF = Math.round(fS * wf * 2 / 7), adC = Math.round(cS * wf * 2 / 7);
                     
-                    let daily = Math.round(adE * fillE) * curP.e + Math.round(adB * fillB) * curP.b + Math.round(adF * fillF) * curP.f + Math.round(adC * fillC) * curP.c;
-                    rev.daily = daily; rev.weekly = daily * 7;
-                    let price = cleanNum(a['purchase price'] || a['purchase_price']);
-                    rev.amortWeeks = rev.weekly > 0 ? (price / rev.weekly).toFixed(1) : Infinity;
-                }
+                    let weeklyOffE = eS * wf, weeklyOffB = bS * wf, weeklyOffF = fS * wf, weeklyOffC = cS * wf;
+                    let weeklyR = Math.round(weeklyOffE * fillE) * curP.e + Math.round(weeklyOffB * fillB) * curP.b + Math.round(weeklyOffF * fillF) * curP.f + Math.round(weeklyOffC * fillC) * curP.c;
+                    rev.weekly += weeklyR;
+                });
+                rev.daily = Math.round(rev.weekly / 7);
+                let price = cleanNum(a['purchase price'] || a['purchase_price']);
+                rev.amortWeeks = rev.weekly > 0 ? (price / rev.weekly).toFixed(1) : Infinity;
             }
-            return { a, name, route, rev, totalPax: cleanNum(a['capacity pax'] || a['capacity']) };
+            return { a, name, routes, rev, totalPax: cleanNum(a['capacity pax'] || a['capacity']) };
         });
 
         switch(sortMode) {
@@ -1075,15 +1081,17 @@
             <button class="btn-small ${sb('amort-asc')}" onclick="renderFleetList('${hf}','amort-asc')">Amorti Hızlısı</button>
         </div>`;
 
-        items.forEach(({ a, name, route, rev }) => {
+        items.forEach(({ a, name, routes, rev }) => {
             let model = a['aircraft'] ? String(a['aircraft']).trim() : "Bilinmeyen";
             let safeN = name.replace(/'/g, "\\'");
             let hub = a['hub'] ? String(a['hub']).trim().toUpperCase() : '';
             let ecoS = cleanNum(a['eco_seats']), busS = cleanNum(a['business_seats']), firstS = cleanNum(a['first_seats']);
             let routeHtml = '<span class="text-muted" style="font-size:11px;">Atanmamış</span>', isAssigned = false, removeBtn = '';
-            if (route) {
-                let arr = route['arrival'] ? String(route['arrival']).trim().toUpperCase() : "?", dep = route['departure'] ? String(route['departure']).trim().toUpperCase() : "?";
-                routeHtml = `<span class="link-badge link-badge-route" onclick="goToRoute('${arr}','${dep}')">📍 ${dep} ➔ ${arr}</span>`;
+            if (routes.length > 0) {
+                routeHtml = `<div style="display:flex;flex-wrap:wrap;gap:4px;">` + routes.map(route => {
+                    let arr = route['arrival'] ? String(route['arrival']).trim().toUpperCase() : "?", dep = route['departure'] ? String(route['departure']).trim().toUpperCase() : "?";
+                    return `<span class="link-badge link-badge-route" onclick="goToRoute('${arr}','${dep}')" style="font-size:10px;padding:2px 4px;">📍 ${dep} ➔ ${arr}</span>`;
+                }).join('') + `</div>`;
                 isAssigned = true; removeBtn = `<button class="btn-small" style="background:#f59e0b;" onclick="event.stopPropagation();removeFromRoute('${safeN}')">🔗 Çıkar</button>`;
             }
 
@@ -1726,160 +1734,178 @@
     };
 
     window.applyCircuit = function(cIdx) {
-        let c = window.lastCircuits[cIdx];
-        if (!c) return;
-        
-        let activeWaves = c.waves.filter(w => w.active);
-        if (activeWaves.length === 0) {
-            alert("Lütfen en az bir dalga seçin.");
-            return;
-        }
-        
-        let N = activeWaves.length * 7;
-        let selHub = window.selHubGlobal;
-        let selAc = window.selAcGlobal;
-        
-        let planesOnRoutes = new Set();
-        c.indices.forEach(rIdx => {
-            let rRaw = window.lastValidDests[rIdx].raw;
-            if (rRaw && rRaw['aircrafts_on_route']) {
-                let matches = String(rRaw['aircrafts_on_route']).match(/\(([^)]+)\)/g);
-                if (matches) matches.forEach(m => planesOnRoutes.add(m.substring(1, m.length - 1).trim()));
+        try {
+            let c = window.lastCircuits[cIdx];
+            if (!c) return;
+            
+            let activeWaves = c.waves.filter(w => w.active);
+            if (activeWaves.length === 0) {
+                alert("Lütfen en az bir dalga seçin.");
+                return;
             }
-        });
-        
-        let pool = [];
-        let needed = N;
-        
-        planesOnRoutes.forEach(name => {
-            let p = AIRCRAFT_DB.find(a => (a['aircraft name'] || '').trim() === name);
-            if (p) {
-                let model = String(p['aircraft'] || p['model'] || '').toLowerCase();
-                if (model.includes(selAc.toLowerCase())) {
-                    if (needed > 0) {
-                        pool.push(p);
-                        needed--;
+            
+            let N = activeWaves.length * 7;
+            let selHub = window.selHubGlobal;
+            let selAc = window.selAcGlobal;
+            
+            let planesOnRoutes = new Set();
+            c.indices.forEach(rIdx => {
+                let rRaw = window.lastValidDests[rIdx].raw;
+                if (rRaw && (rRaw['aircrafts_on_route'] || rRaw['aircrafts model/aircrafts name on route'])) {
+                    let targetStr = String(rRaw['aircrafts_on_route'] || rRaw['aircrafts model/aircrafts name on route']);
+                    let matches = targetStr.match(/\(([^)]+)\)/g);
+                    if (matches) matches.forEach(m => planesOnRoutes.add(m.substring(1, m.length - 1).trim()));
+                }
+            });
+            
+            let pool = [];
+            let needed = N;
+            
+            planesOnRoutes.forEach(name => {
+                let p = AIRCRAFT_DB.find(a => (a['aircraft name'] || '').trim() === name);
+                if (p) {
+                    let model = String(p['aircraft'] || p['model'] || '').toLowerCase();
+                    if (model.includes(selAc.toLowerCase())) {
+                        if (needed > 0) {
+                            pool.push(p);
+                            needed--;
+                        }
                     }
                 }
-            }
-        });
-        
-        c.indices.forEach(rIdx => {
-            let rRaw = window.lastValidDests[rIdx].raw;
-            if (rRaw) rRaw['aircrafts_on_route'] = "";
-        });
-        
-        let allAssignedNames = new Set();
-        ROUTES_DB.forEach(r => {
-            if (r['aircrafts_on_route']) {
-                let matches = String(r['aircrafts_on_route']).match(/\(([^)]+)\)/g);
+            });
+            
+            c.indices.forEach(rIdx => {
+                let rRaw = window.lastValidDests[rIdx].raw;
+                if (rRaw) {
+                    rRaw['aircrafts_on_route'] = "";
+                    rRaw['aircrafts model/aircrafts name on route'] = "";
+                }
+            });
+            
+            let allAssignedNames = new Set();
+            ROUTES_DB.forEach(r => {
+                let targetStr = String(r['aircrafts_on_route'] || r['aircrafts model/aircrafts name on route'] || "");
+                let matches = targetStr.match(/\(([^)]+)\)/g);
                 if (matches) matches.forEach(m => allAssignedNames.add(m.substring(1, m.length - 1).trim()));
+            });
+            
+            let freePlanes = [];
+            AIRCRAFT_DB.forEach(p => {
+                let name = (p['aircraft name'] || '').trim();
+                let model = String(p['aircraft'] || p['model'] || '').toLowerCase();
+                if (model.includes(selAc.toLowerCase()) && !allAssignedNames.has(name) && !pool.includes(p)) {
+                    freePlanes.push(p);
+                }
+            });
+            
+            freePlanes.sort((a, b) => {
+                let hubA = String(a['hub'] || '').trim().toUpperCase();
+                let hubB = String(b['hub'] || '').trim().toUpperCase();
+                if (hubA === selHub && hubB !== selHub) return -1;
+                if (hubA !== selHub && hubB === selHub) return 1;
+                return 0;
+            });
+            
+            for (let p of freePlanes) {
+                if (needed > 0) {
+                    pool.push(p);
+                    needed--;
+                } else break;
             }
-        });
-        
-        let freePlanes = [];
-        AIRCRAFT_DB.forEach(p => {
-            let name = (p['aircraft name'] || '').trim();
-            let model = String(p['aircraft'] || p['model'] || '').toLowerCase();
-            if (model.includes(selAc.toLowerCase()) && !allAssignedNames.has(name) && !pool.includes(p)) {
-                freePlanes.push(p);
-            }
-        });
-        
-        freePlanes.sort((a, b) => {
-            let hubA = String(a['hub'] || '').trim().toUpperCase();
-            let hubB = String(b['hub'] || '').trim().toUpperCase();
-            if (hubA === selHub && hubB !== selHub) return -1;
-            if (hubA !== selHub && hubB === selHub) return 1;
-            return 0;
-        });
-        
-        for (let p of freePlanes) {
+            
             if (needed > 0) {
-                pool.push(p);
-                needed--;
-            } else break;
-        }
-        
-        if (needed > 0) {
-            let acData = AIRCRAFT_TYPES[selAc] || AIRCRAFT_TYPES[Object.keys(AIRCRAFT_TYPES).find(k => k.toLowerCase() === selAc.toLowerCase())];
-            let planeCost = acData ? acData.cost : 0;
-            let totalCost = needed * planeCost;
-            
-            let buy = confirm(`${needed} adet ${selAc} eksik. Toplam tahmini maliyet: $${formatMoney(totalCost)}.\nOnaylarsanız uçaklar filoya eklenip devre kurulacaktır.`);
-            if (!buy) return;
-            
-            for(let i=0; i<needed; i++) {
-                let newPlane = {
-                    'aircraft name': 'NewPlane_' + Date.now() + '_' + i,
-                    'aircraft': selAc,
-                    'hub': selHub,
-                    'eco': 0, 'bus': 0, 'first': 0, 'cargo': 0
-                };
-                AIRCRAFT_DB.push(newPlane);
-                pool.push(newPlane);
-            }
-        }
-        
-        let maxC = 0;
-        AIRCRAFT_DB.forEach(p => {
-            let n = (p['aircraft name'] || '').trim();
-            if (n.startsWith(`${selHub} Circuit `)) {
-                let parts = n.split(' ');
-                if (parts.length >= 4) {
-                    let cNum = parseInt(parts[2]);
-                    if (!isNaN(cNum) && cNum > maxC) maxC = cNum;
+                let acData = AIRCRAFT_TYPES[selAc] || AIRCRAFT_TYPES[Object.keys(AIRCRAFT_TYPES).find(k => k.toLowerCase() === selAc.toLowerCase())];
+                let planeCost = acData ? acData.cost : 0;
+                let totalCost = needed * planeCost;
+                
+                let buy = confirm(`${needed} adet ${selAc} eksik. Toplam tahmini maliyet: $${formatMoney(totalCost)}.\nOnaylarsanız uçaklar filoya eklenip devre kurulacaktır.`);
+                if (!buy) return;
+                
+                for(let i=0; i<needed; i++) {
+                    let newPlane = {
+                        'aircraft name': 'NewPlane_' + Date.now() + '_' + i,
+                        'aircraft': selAc,
+                        'hub': selHub,
+                        'eco': 0, 'bus': 0, 'first': 0, 'cargo': 0
+                    };
+                    AIRCRAFT_DB.push(newPlane);
+                    pool.push(newPlane);
                 }
             }
-        });
-        let currentC = maxC + 1;
-        
-        let poolIdx = 0;
-        let routeAircraftStrings = [];
-        activeWaves.forEach((w, wIdx) => {
-            for(let p=1; p<=7; p++) {
-                let plane = pool[poolIdx++];
-                plane['aircraft name'] = `${selHub} Circuit ${currentC} ${wIdx+1} ${p}`;
-                plane['hub'] = selHub;
-                plane['eco'] = w.e;
-                plane['bus'] = w.b;
-                plane['first'] = w.f;
-                plane['cargo'] = w.space || 0;
-                
-                routeAircraftStrings.push(`${selAc} (${plane['aircraft name']})`);
-            }
-        });
-        
-        let aircraftsOnRouteFinal = routeAircraftStrings.join(', ');
-        
-        let totalE = activeWaves.reduce((sum, w) => sum + w.e * 2, 0);
-        let totalB = activeWaves.reduce((sum, w) => sum + w.b * 2, 0);
-        let totalF = activeWaves.reduce((sum, w) => sum + w.f * 2, 0);
-        
-        c.indices.forEach(rIdx => {
-            let d = window.lastValidDests[rIdx];
-            let rRaw = d.raw;
-            if (rRaw) {
-                rRaw['aircrafts_on_route'] = aircraftsOnRouteFinal;
-                rRaw['eco_offer_today'] = totalE;
-                rRaw['bus_offer_today'] = totalB;
-                rRaw['first_offer_today'] = totalF;
-                
-                rRaw['eco_price_today'] = d.pE;
-                rRaw['bus_price_today'] = d.pB;
-                rRaw['first_price_today'] = d.pF;
-            }
-        });
-        
-        showToast("✅ Devre başarıyla kuruldu! Lütfen kaydet butonuna basmayı unutmayın.", "success");
-        
-        document.getElementById('optimization-results').innerHTML = `<div class="card" style="border: 1px solid var(--success); background: rgba(52, 211, 153, 0.1);">
-            <h4 style="color:var(--success);">🎉 Devre Kurulumu Tamamlandı!</h4>
-            <p><strong>${pool.length}</strong> adet <strong>${selAc}</strong> başarıyla kurgulandı ve seçilen 7 rotaya atandı.</p>
-            <p><strong>Atanan İsimler:</strong> ${selHub} Circuit ${currentC} 1 1 vb.</p>
-            <p>Mevcut diğer rotalar serbest bırakıldı, bilet fiyatları Audit fiyatlarıyla güncellendi ve kapasiteler rotalara yazıldı.</p>
-            <p style="color:var(--danger);font-weight:bold;margin-top:10px;">⚠️ Unutmayın: Değişiklikleri GitHub'a yansıtmak için yukarıdaki KAYDET butonuna basmalısınız.</p>
-        </div>`;
+            
+            let maxC = 0;
+            AIRCRAFT_DB.forEach(p => {
+                let n = (p['aircraft name'] || '').trim();
+                if (n.startsWith(`${selHub} Circuit `)) {
+                    let parts = n.split(' ');
+                    if (parts.length >= 4) {
+                        let cNum = parseInt(parts[2]);
+                        if (!isNaN(cNum) && cNum > maxC) maxC = cNum;
+                    }
+                }
+            });
+            let currentC = maxC + 1;
+            
+            let poolIdx = 0;
+            let routeAircraftStrings = [];
+            activeWaves.forEach((w, wIdx) => {
+                for(let p=1; p<=7; p++) {
+                    let plane = pool[poolIdx++];
+                    plane['aircraft name'] = `${selHub} Circuit ${currentC} ${wIdx+1} ${p}`;
+                    plane['hub'] = selHub;
+                    plane['eco'] = w.e;
+                    plane['bus'] = w.b;
+                    plane['first'] = w.f;
+                    plane['cargo'] = w.space || 0;
+                    
+                    routeAircraftStrings.push(`${selAc} (${plane['aircraft name']})`);
+                }
+            });
+            
+            let aircraftsOnRouteFinal = routeAircraftStrings.join(', ');
+            
+            let totalE = activeWaves.reduce((sum, w) => sum + w.e * 2, 0);
+            let totalB = activeWaves.reduce((sum, w) => sum + w.b * 2, 0);
+            let totalF = activeWaves.reduce((sum, w) => sum + w.f * 2, 0);
+            
+            c.indices.forEach(rIdx => {
+                let d = window.lastValidDests[rIdx];
+                let rRaw = d.raw;
+                if (rRaw) {
+                    rRaw['aircrafts_on_route'] = aircraftsOnRouteFinal;
+                    rRaw['aircrafts model/aircrafts name on route'] = aircraftsOnRouteFinal;
+                    
+                    rRaw['eco_offer_today'] = totalE;
+                    rRaw['bus_offer_today'] = totalB;
+                    rRaw['first_offer_today'] = totalF;
+                    
+                    rRaw['eco offer'] = totalE;
+                    rRaw['bus offer'] = totalB;
+                    rRaw['first offer'] = totalF;
+                    
+                    rRaw['eco_price_today'] = d.pE;
+                    rRaw['bus_price_today'] = d.pB;
+                    rRaw['first_price_today'] = d.pF;
+                    
+                    rRaw['eco ticket'] = d.pE;
+                    rRaw['bus ticket'] = d.pB;
+                    rRaw['first ticket'] = d.pF;
+                }
+            });
+            
+            showToast("✅ Devre başarıyla kuruldu! Lütfen kaydet butonuna basmayı unutmayın.", "success");
+            
+            document.getElementById('optimization-results').innerHTML = `<div class="card" style="border: 1px solid var(--success); background: rgba(52, 211, 153, 0.1);">
+                <h4 style="color:var(--success);">🎉 Devre Kurulumu Tamamlandı!</h4>
+                <p><strong>${pool.length}</strong> adet <strong>${selAc}</strong> başarıyla kurgulandı ve seçilen 7 rotaya atandı.</p>
+                <p><strong>Atanan İsimler:</strong> ${selHub} Circuit ${currentC} 1 1 vb.</p>
+                <p>Mevcut diğer rotalar serbest bırakıldı, bilet fiyatları Audit fiyatlarıyla güncellendi ve kapasiteler rotalara yazıldı.</p>
+                <p style="color:var(--danger);font-weight:bold;margin-top:10px;">⚠️ Unutmayın: Değişiklikleri GitHub'a yansıtmak için yukarıdaki KAYDET butonuna basmalısınız.</p>
+            </div>`;
+        } catch(err) {
+            alert("Uygulama Hatası: " + err.message);
+            console.error(err);
+        }
     };
 
     window.onload = initData;
