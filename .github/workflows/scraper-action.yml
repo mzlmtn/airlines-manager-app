@@ -40,7 +40,8 @@ jobs:
       run: |
         echo "Eski Excel dosyaları siliniyor..."
 
-        rm -f *.xlsx || true
+        # Sadece ismi 'aircrafts_' ve 'routes_' ile başlayan Excel dosyalarını siler
+        rm -f aircrafts*.xlsx routes*.xlsx || true
 
         echo "Silme sonrası kalan xlsx dosyaları:"
         ls -la *.xlsx || echo "xlsx kalmadı"
