@@ -116,6 +116,10 @@
         .toast-info { background: #2563eb; }
         @keyframes toastIn { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
         @keyframes toastOut { from { opacity:1; } to { opacity:0; transform:translateY(-10px); } }
+        
+        .golden-fleet-table tbody tr:hover td { background-color: rgba(16, 185, 129, 0.15); color: #fff; }
+        .golden-fleet-table td:first-child, .golden-fleet-table th:first-child { position: sticky; left: 0; background: var(--bg-dark); font-weight: bold; color: var(--accent); box-shadow: 2px 0 5px rgba(0,0,0,0.2); }
+        .golden-fleet-table tbody tr:hover td:first-child { background-color: rgba(16, 185, 129, 0.2); color: #fff; }
     </style>
 </head>
 <body>
@@ -126,6 +130,7 @@
         <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
             <h2 style="margin: 0; font-size: 18px;">✈️ AM Exact Meta Engine</h2>
             <button class="btn-small bg-gray" style="padding: 4px 8px; font-size: 11px;" onclick="showAmHours()">🕒 AM Saat Tablosu</button>
+            <button class="btn-small bg-gray" style="padding: 4px 8px; font-size: 11px;" onclick="showFleetList()">✈️ Uçak Listesi</button>
         </div>
         <div style="display: flex; gap: 8px;">
             <button class="refresh-btn" style="border-color: var(--accent); color: var(--accent); font-weight: bold;" onclick="commitToGitHub()">☁️ Kaydet</button>
@@ -363,6 +368,38 @@
                 </div>
             <div style="text-align: center; margin-top: 15px;">
                 <button class="btn-main bg-gray" style="width: auto; padding: 10px 30px;" onclick="closeModal('modal-am-hours')">Kapat</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-golden-fleet">
+        <div class="modal-content modal-xl" style="border-color: var(--accent); max-width: 1100px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 10px;">
+                <h3 style="color: var(--accent); margin:0;">✈️ Golden Fleet (Tüm Uçaklar)</h3>
+                <button class="btn-small bg-gray" onclick="closeModal('modal-golden-fleet')" style="padding: 6px 12px;">✖ Kapat</button>
+            </div>
+            <div id="golden-fleet-container" class="table-responsive" style="max-height: 65vh; overflow-y: auto; overflow-x: auto;">
+                <table class="dashboard-table golden-fleet-table" style="width:100%;">
+                    <thead style="position: sticky; top: 0; z-index: 10; background: var(--bg-dark); box-shadow: 0 2px 5px rgba(0,0,0,0.5);">
+                        <tr>
+                            <th style="position: sticky; left: 0; z-index: 11; background: var(--bg-dark);">Model</th>
+                            <th>Fiyat</th>
+                            <th>Sahip Olunan</th>
+                            <th>Kapasite (Eco)</th>
+                            <th>Menzil</th>
+                            <th>Hız</th>
+                            <th>Kargo</th>
+                            <th>Yakıt</th>
+                            <th>Aşınma</th>
+                            <th>Diğer Gider</th>
+                        </tr>
+                    </thead>
+                    <tbody id="golden-fleet-body">
+                    </tbody>
+                </table>
+            </div>
+            <div style="text-align: center; margin-top: 15px;">
+                <button class="btn-main bg-gray" style="width: auto; padding: 10px 30px;" onclick="closeModal('modal-golden-fleet')">Kapat</button>
             </div>
         </div>
     </div>
@@ -1906,6 +1943,40 @@
             alert("Uygulama Hatası: " + err.message);
             console.error(err);
         }
+    };
+
+    window.showFleetList = function() {
+        let tbody = document.getElementById('golden-fleet-body');
+        let html = '';
+        
+        let ownedCounts = {};
+        AIRCRAFT_DB.forEach(a => {
+            let model = String(a['aircraft'] || a['model'] || '').toLowerCase();
+            ownedCounts[model] = (ownedCounts[model] || 0) + 1;
+        });
+
+        GOLDEN_FLEET.forEach(p => {
+            let modelLower = String(p.name).toLowerCase();
+            let count = AIRCRAFT_DB.filter(a => {
+                let m = String(a['aircraft'] || a['model'] || '').toLowerCase();
+                return m.includes(modelLower) || modelLower.includes(m);
+            }).length;
+
+            html += `<tr>
+                <td style="text-align:left;">${p.name}</td>
+                <td>$${formatMoney(p.price)}</td>
+                <td style="color: ${count > 0 ? 'var(--success)' : 'var(--text-muted)'}; font-weight: bold;">${count} Adet</td>
+                <td>${p.seats}</td>
+                <td>${p.range} km</td>
+                <td>${p.speed} km/s</td>
+                <td>${p.cargo}T</td>
+                <td>${p.fuel} L/pax/100km</td>
+                <td>${p.wear}% /100h</td>
+                <td>$${p.other ? p.other : '0'}</td>
+            </tr>`;
+        });
+        tbody.innerHTML = html;
+        openModal('modal-golden-fleet');
     };
 
     window.onload = initData;
