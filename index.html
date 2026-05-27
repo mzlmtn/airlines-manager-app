@@ -94,9 +94,9 @@
 
         /* Table responsiveness */
         .table-responsive { width: 100%; overflow-x: auto; margin-top: 6px; border-radius: 6px;}
-        .dashboard-table { width: 100%; border-collapse: collapse; font-size: 11.5px; text-align: center; white-space: nowrap;}
-        .dashboard-table th { background: var(--bg-dark); color: var(--text-muted); padding: 6px 8px; font-weight: 600; border: 1px solid var(--border); }
-        .dashboard-table td { padding: 6px 8px; border: 1px solid var(--border); font-weight: 500; vertical-align: middle; }
+        .dashboard-table { width: 100%; border-collapse: collapse; font-size: 11px; text-align: center; white-space: nowrap;}
+        .dashboard-table th { background: var(--bg-dark); color: var(--text-muted); padding: 5px 5px; font-weight: 600; border: 1px solid var(--border); }
+        .dashboard-table td { padding: 5px 5px; border: 1px solid var(--border); font-weight: 500; vertical-align: middle; }
         .dashboard-table tr:nth-child(even) { background: rgba(255,255,255,0.01); }
 
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: flex-start; overflow-y: auto; padding: 20px 0; }
@@ -209,10 +209,12 @@
                 <option value="9">9 Rota</option>
             </select>
             
-            <label style="display:flex;align-items:center;gap:6px;margin-top:12px;margin-bottom:8px;cursor:pointer;">
-                <input type="checkbox" id="opt-use-own" style="width:auto;margin:0;cursor:pointer;" onchange="document.getElementById('opt-tol-container').style.opacity = this.checked ? '1' : '0.5';">
-                <span style="color:var(--text-main);font-size:13px;font-weight:normal;">Sadece sahip olduğum rotalardan ara</span>
-            </label>
+            <label style="margin-top:12px;">Arama Modu (Devre Esnekliği)</label>
+            <select id="opt-search-mode" style="margin-bottom:8px; width:100%;" onchange="document.getElementById('opt-tol-container').style.opacity = (this.value === 'own' || this.value === 'hybrid') ? '1' : '0.5';">
+                <option value="predict">Sadece Yeni Rotalar (Tahmin)</option>
+                <option value="own">Sadece Sahip Olduğum Boştaki Rotalar (Gerçek)</option>
+                <option value="hybrid" selected>Hibrit: Sahip Olduğum Boştaki Rotalar + Yeni Rotalar</option>
+            </select>
             
             <label id="opt-tol-container" style="display:flex;align-items:center;gap:8px;margin-bottom:12px;opacity:0.5;transition:0.3s;">
                 <span style="width:140px;color:var(--text-muted);font-size:12px;">Talep Benzerliği Tol.:</span>
@@ -643,13 +645,15 @@
     }
 
     function getBaseDemand(curD, curP, audP) {
-        if (audP <= 0) return curD;
+        if (audP <= 0 || curD === 0) return curD;
         if (curP > audP) {
             let factor = 4 - 3 * (curP / audP);
-            return factor > 0 ? Math.round(curD / factor) : curD;
+            if (factor <= 0.1) factor = 0.1;
+            return Math.round(curD / factor);
         } else {
             let factor = (4/3) - (curP / (3 * audP));
-            return factor > 0 ? Math.round(curD / factor) : curD;
+            if (factor <= 0.1) factor = 0.1;
+            return Math.round(curD / factor);
         }
     }
 
@@ -979,17 +983,26 @@
                           b: r['_orig_bus_ticket'] !== undefined ? r['_orig_bus_ticket'] : cleanNum(r['bus ticket']),
                           f: r['_orig_first_ticket']!== undefined ? r['_orig_first_ticket']: cleanNum(r['first ticket']),
                           c: r['_orig_cargo_ticket']!== undefined ? r['_orig_cargo_ticket']: cleanNum(r['cargo ticket']) };
-            let origD = { e: r['_orig_eco_demand'] !== undefined ? r['_orig_eco_demand'] : cleanNum(r['eco demand']),
-                          b: r['_orig_bus_demand'] !== undefined ? r['_orig_bus_demand'] : cleanNum(r['bus demand']),
-                          f: r['_orig_first_demand']!== undefined ? r['_orig_first_demand']: cleanNum(r['first demand']),
-                          c: r['_orig_cargo_demand']!== undefined ? r['_orig_cargo_demand']: cleanNum(r['cargo demand']) };
+            let getMaxDem = (pref) => {
+                let today = cleanNum(r[`${pref}_demand_today`]);
+                let yest = cleanNum(r[`${pref}_demand_yesterday`]);
+                let old = cleanNum(r[`${pref} demand`]);
+                return Math.max(today || 0, Math.max(yest || 0, old || 0));
+            };
+            
+            let origD = { e: r['_orig_eco_demand'] !== undefined ? r['_orig_eco_demand'] : getMaxDem('eco'),
+                          b: r['_orig_bus_demand'] !== undefined ? r['_orig_bus_demand'] : getMaxDem('business'),
+                          f: r['_orig_first_demand']!== undefined ? r['_orig_first_demand']: getMaxDem('first'),
+                          c: r['_orig_cargo_demand']!== undefined ? r['_orig_cargo_demand']: getMaxDem('cargo') };
             
             let baseD = { e: getBaseDemand(origD.e, origP.e, aud.e), b: getBaseDemand(origD.b, origP.b, aud.b), f: getBaseDemand(origD.f, origP.f, aud.f), c: getBaseDemand(origD.c, origP.c, aud.c) };
             let curP  = { e: cleanNum(r['eco ticket']), b: cleanNum(r['bus ticket']), f: cleanNum(r['first ticket']), c: cleanNum(r['cargo ticket']) };
             let offer = { e: cleanNum(r['eco offer']), b: cleanNum(r['bus offer']), f: cleanNum(r['first offer']), c: cleanNum(r['cargo offer']) };
 
-            let curDemE = calcElasticDemand(baseD.e, curP.e, aud.e), curDemB = calcElasticDemand(baseD.b, curP.b, aud.b);
-            let curDemF = calcElasticDemand(baseD.f, curP.f, aud.f), curDemC = calcElasticDemand(baseD.c, curP.c, aud.c);
+            let curDemE = (curP.e === origP.e) ? origD.e : calcElasticDemand(baseD.e, curP.e, aud.e);
+            let curDemB = (curP.b === origP.b) ? origD.b : calcElasticDemand(baseD.b, curP.b, aud.b);
+            let curDemF = (curP.f === origP.f) ? origD.f : calcElasticDemand(baseD.f, curP.f, aud.f);
+            let curDemC = (curP.c === origP.c) ? origD.c : calcElasticDemand(baseD.c, curP.c, aud.c);
 
             let dailyRev = Math.min(curDemE, offer.e) * curP.e + Math.min(curDemB, offer.b) * curP.b + Math.min(curDemF, offer.f) * curP.f + Math.min(curDemC, offer.c) * curP.c;
             let rev = { daily: dailyRev, weekly: dailyRev * 7 };
@@ -999,7 +1012,7 @@
             let curRemEq = curRemE + (curRemB * 2) + (curRemF * 4) + curRemC;
             let audRemEq = audRemE + (audRemB * 2) + (audRemF * 4) + audRemC;
 
-            return { r, idx, dName, rev, curRemEq, audRemEq, dDist, curP, aud, baseD, offer, curDemE, curDemB, curDemF, curDemC, curRemE, curRemB, curRemF, curRemC, audRemE, audRemB, audRemF, audRemC };
+            return { r, idx, dName, rev, curRemEq, audRemEq, dDist, curP, aud, baseD, offer, curDemE, curDemB, curDemF, curDemC, curRemE, curRemB, curRemF, curRemC, audRemE, audRemB, audRemF, audRemC, origD };
         }).filter(x => x);
 
         switch(sortMode) {
@@ -1026,7 +1039,7 @@
         </div>`;
 
         items.forEach((item) => {
-            let { r, idx, dName, rev, dDist, curP, aud, baseD, offer, curDemE, curDemB, curDemF, curDemC, curRemE, curRemB, curRemF, curRemC, audRemE, audRemB, audRemF, audRemC } = item;
+            let { r, idx, dName, rev, dDist, curP, aud, baseD, offer, curDemE, curDemB, curDemF, curDemC, curRemE, curRemB, curRemF, curRemC, audRemE, audRemB, audRemF, audRemC, origD } = item;
             let cacheKey = hubName + "_" + dName + "_" + idx;
             window.routeRefCache[cacheKey] = r;
 
@@ -1071,6 +1084,7 @@
                             <tr>
                                 <th style="text-align:left;">Sınıf</th>
                                 <th>G. Fiyat</th>
+                                <th style="color:#fbbf24;">Orj. Talep</th>
                                 <th style="color:#a78bfa;">A. Fiyat</th>
                                 <th style="color:#60a5fa;">G. Talep</th>
                                 <th style="color:#a78bfa;">A. Talep</th>
@@ -1083,6 +1097,7 @@
                             <tr>
                                 <td style="text-align:left;"><b>Eco</b></td>
                                 <td style="color:#94a3b8;">$${curP.e}</td>
+                                <td style="color:#fbbf24;">${origD.e}</td>
                                 <td style="color:#c4b5fd;">$${aud.e}</td>
                                 <td>${curDemE}</td>
                                 <td style="color:#c4b5fd;">${baseD.e}</td>
@@ -1093,6 +1108,7 @@
                             <tr>
                                 <td style="text-align:left;"><b>Bus</b></td>
                                 <td style="color:#94a3b8;">$${curP.b}</td>
+                                <td style="color:#fbbf24;">${origD.b}</td>
                                 <td style="color:#c4b5fd;">$${aud.b}</td>
                                 <td>${curDemB}</td>
                                 <td style="color:#c4b5fd;">${baseD.b}</td>
@@ -1103,6 +1119,7 @@
                             <tr>
                                 <td style="text-align:left;"><b>First</b></td>
                                 <td style="color:#94a3b8;">$${curP.f}</td>
+                                <td style="color:#fbbf24;">${origD.f}</td>
                                 <td style="color:#c4b5fd;">$${aud.f}</td>
                                 <td>${curDemF}</td>
                                 <td style="color:#c4b5fd;">${baseD.f}</td>
@@ -1113,6 +1130,7 @@
                             <tr>
                                 <td style="text-align:left;"><b>Crg</b></td>
                                 <td style="color:#94a3b8;">$${curP.c}</td>
+                                <td style="color:#fbbf24;">${origD.c}</td>
                                 <td style="color:#c4b5fd;">$${aud.c}</td>
                                 <td>${curDemC}</td>
                                 <td style="color:#c4b5fd;">${baseD.c}</td>
@@ -1625,7 +1643,10 @@
         if (!AIRPORTS_DB.length || !AIRCRAFT_DB.length) return resDiv.innerHTML = '<div class="card text-danger">⚠️ Veritabanı yok.</div>';
 
         let selHub = document.getElementById('opt-hub').value, selAc = document.getElementById('opt-ac').value;
-        let useOwn = document.getElementById('opt-use-own') ? document.getElementById('opt-use-own').checked : false;
+        let searchModeEl = document.getElementById('opt-search-mode');
+        let searchMode = searchModeEl ? searchModeEl.value : 'hybrid';
+        let useOwn = searchMode === 'own';
+        let useHybrid = searchMode === 'hybrid';
         let tolVal = document.getElementById('opt-demand-tol') ? parseFloat(document.getElementById('opt-demand-tol').value)/100 : 0.2;
         let selRouteCount = parseInt(document.getElementById('opt-route-count').value) || 5;
 
@@ -1656,7 +1677,14 @@
         let ownedRoutesMap = {};
         let skippedCircuits = 0;
         
-        if (useOwn) {
+        let getMaxDem = (r, pref) => {
+            let today = cleanNum(r[`${pref}_demand_today`]);
+            let yest = cleanNum(r[`${pref}_demand_yesterday`]);
+            let old = cleanNum(r[`${pref} demand`]);
+            return Math.max(today || 0, Math.max(yest || 0, old || 0));
+        };
+
+        if (useOwn || useHybrid) {
             ROUTES_DB.forEach(r => {
                 if (r && String(r['departure']).trim().toUpperCase() === selHub) {
                     let acs = String(r['aircrafts_on_route'] || "").toLowerCase();
@@ -1667,10 +1695,10 @@
                     
                     let arr = String(r['arrival']).trim().toUpperCase();
                     let dist = cleanNum(r['distance']);
-                    // Audit taleplerini öncelikli olarak çekmeye çalış
-                    let dEco = cleanNum(r['audit eco']) || cleanNum(r['eco audit']) || cleanNum(r['eco demand']);
-                    let dBus = cleanNum(r['audit bus']) || cleanNum(r['bus audit']) || cleanNum(r['bus demand']);
-                    let dFirst = cleanNum(r['audit first']) || cleanNum(r['first audit']) || cleanNum(r['first demand']);
+                    
+                    let dEco = getMaxDem(r, 'eco');
+                    let dBus = getMaxDem(r, 'business');
+                    let dFirst = getMaxDem(r, 'first');
                     
                     let remE = dEco, remB = dBus, remF = dFirst; 
                     let audPrices = calcAuditPrices(dist, comfLevel);
@@ -1686,7 +1714,8 @@
             let iata = String(ap['iata']).trim().toUpperCase();
             if (iata === selHub) return;
             
-            if (useOwn && !ownedRoutesMap[iata]) return;
+            if (searchMode === 'own' && !ownedRoutesMap[iata]) return;
+            if (searchMode === 'predict' && ownedRoutesMap[iata]) return;
 
             let dist = calculateDistance(hubLat, hubLon, cleanNum(ap['lat']), cleanNum(ap['lon']));
             if (dist <= acRange && dist >= 2000) {
@@ -1698,15 +1727,18 @@
                     let calcCost = dist > 10000 ? Math.round(299545742 + ((dist - 12217) * 6463)) : Math.round(50000000 + (dist * dist * 1.3));
                     if (calcCost < 40000000) calcCost = 40000000;
                     
-                    let destObj = { name: iata, dist: Math.round(dist), time: timeMins, cost: calcCost, hours: flightHours, country: countryName };
-                    if (useOwn) {
+                    let destObj = { name: iata, dist: Math.round(dist), time: timeMins, cost: calcCost, hours: flightHours, country: countryName, isOwned: false };
+                    
+                    if (ownedRoutesMap[iata]) {
                         let om = ownedRoutesMap[iata];
                         destObj.eqDemand = om.eqDemand;
                         destObj.remE = om.remE; destObj.remB = om.remB; destObj.remF = om.remF;
                         destObj.pE = om.pE; destObj.pB = om.pB; destObj.pF = om.pF;
                         destObj.raw = om.raw;
+                        destObj.cost = 0; // Sahip olduğumuz için rota maliyeti YOK
+                        destObj.isOwned = true;
                         validDests.push(destObj);
-                    } else {
+                    } else if (searchMode !== 'own') {
                         let pred = predictBaseDemand(dist, selHub, iata);
                         if (pred) {
                             destObj.eqDemand = pred.eq;
