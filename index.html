@@ -475,19 +475,17 @@
         let destF = parsePct(destData['first']), destC = parsePct(destData['cargo']);
 
         let distMult = distance > 4800 ? 1.5 : (distance > 3700 ? 1.2 : 1.0);
-        let baseConstant = 22 * distMult; 
-        if (distance > 8000) baseConstant *= 1.3;
-        if (distance > 12000) baseConstant *= 1.2;
+        let baseConstant = 17.5 * distMult; 
 
         let ecoStatMult = 1 + ((ent * 0.001) + (punct * 0.0005));
         let busStatMult = 1 + ((safety * 0.001) + (punct * 0.0005));
         let firstStatMult = 1 + ((safety * 0.0015) + (comf * 0.0005));
         let cargoStatMult = 1 + ((price * 0.001) + (punct * 0.0005));
 
-        let eD = Math.round(baseConstant * ((hubE + destE) / 2) * ecoStatMult);
-        let bD = Math.round((baseConstant * 0.6) * ((hubB + destB) / 2) * busStatMult);
-        let fD = Math.round((baseConstant * 0.3) * ((hubF + destF) / 2) * firstStatMult);
-        let cD = Math.round((baseConstant * 0.8) * ((hubC + destC) / 2) * cargoStatMult);
+        let eD = Math.max(0, Math.round(-300 + (baseConstant * 1.1) * ((hubE + destE) / 2) * ecoStatMult));
+        let bD = Math.max(0, Math.round(100 + (baseConstant * 0.11) * ((hubB + destB) / 2) * busStatMult));
+        let fD = Math.max(0, Math.round(10 + (baseConstant * 0.045) * ((hubF + destF) / 2) * firstStatMult));
+        let cD = Math.max(0, Math.round(10 + (baseConstant * 0.035) * ((hubC + destC) / 2) * cargoStatMult));
 
         return { e: eD, b: bD, f: fD, c: cD, eq: eD + (bD * 2) + (fD * 4) };
     }
@@ -1696,7 +1694,11 @@
                 if (flightHours >= 12 && flightHours <= 36) {
                     let hubAuditData = HUB_AUDIT_DB.find(h => String(h['hubtag']).trim().toUpperCase() === iata);
                     let countryName = hubAuditData && hubAuditData['country'] ? hubAuditData['country'] : (ap['country'] || '');
-                    let destObj = { name: iata, dist: Math.round(dist), time: timeMins, cost: 10000000 + (dist * dist * 1.5), hours: flightHours, country: countryName };
+                    
+                    let calcCost = dist > 10000 ? Math.round(299545742 + ((dist - 12217) * 6463)) : Math.round(50000000 + (dist * dist * 1.3));
+                    if (calcCost < 40000000) calcCost = 40000000;
+                    
+                    let destObj = { name: iata, dist: Math.round(dist), time: timeMins, cost: calcCost, hours: flightHours, country: countryName };
                     if (useOwn) {
                         let om = ownedRoutesMap[iata];
                         destObj.eqDemand = om.eqDemand;
