@@ -119,6 +119,11 @@
         
         .dashboard-table tbody tr:hover td { background-color: rgba(255,255,255,0.05); }
 
+        .fleet-hl-row td { background: rgba(251, 191, 36, 0.15) !important; color: white !important; }
+        .fleet-hl-col { background: rgba(251, 191, 36, 0.15) !important; color: white !important; }
+        .fleet-hl-cell { background: rgba(251, 191, 36, 0.35) !important; color: white !important; }
+        .fleet-table td { transition: background 0.1s; }
+
         .row-golden td { color: #fef08a; }
         .row-golden td:first-child { color: #eab308; font-weight: bold; }
         
@@ -383,9 +388,10 @@
     <div class="modal-overlay" id="modal-golden-fleet">
         <div class="modal-content modal-xl" style="border-color: var(--accent); max-width: 1100px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 10px;">
-                <h3 style="color: var(--accent); margin:0;">✈️ Golden Fleet (Tüm Uçaklar)</h3>
+                <h3 style="color: var(--accent); margin:0;">✈️ Uçak Listesi ve Golden Fleet</h3>
                 <button class="btn-small bg-gray" onclick="closeModal('modal-golden-fleet')" style="padding: 6px 12px;">✖ Kapat</button>
             </div>
+            <div id="fleet-sort-btns" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom: 12px; font-size:12px;"></div>
             <div id="golden-fleet-container" style="max-height: 65vh; overflow: auto; border-radius: 6px; border: 1px solid var(--border);">
                 <table class="dashboard-table fleet-table" style="width:100%;">
                     <thead>
@@ -417,10 +423,11 @@
     const GOLDEN_FLEET = [
         {name:"Airbus A380-800",range:15556,speed:903,seats:853,cargo:84,price:403000000,fuel:2.44,wear:6.0,other:0.10},
         {name:"Boeing 747-400",range:13454,speed:903,seats:660,cargo:65,price:296300000,fuel:2.57,wear:5.0,other:0.02},
-        {name:"Boeing 747-200B",range:12150,speed:890,seats:496,cargo:53,price:213200000,fuel:3.32,wear:2.8,other:0.00},
         {name:"Boeing 777-300ER",range:14695,speed:892,seats:550,cargo:71,price:315000000,fuel:2.28,wear:4.0,other:0.08},
         {name:"Airbus A350-1000",range:14750,speed:911,seats:522,cargo:54,price:335000000,fuel:2.06,wear:2.0,other:0.18},
+        {name:"Airbus A350-900XWB",range:16780,speed:911,seats:475,cargo:0,price:295200000,fuel:2.13,wear:2.0,other:0},
         {name:"Airbus A330-300",range:11750,speed:871,seats:440,cargo:45,price:239400000,fuel:2.05,wear:2.0,other:0.04},
+        {name:"Boeing 787-9",range:15556,speed:911,seats:420,cargo:0,price:249500000,fuel:2.12,wear:8.0,other:0},
         {name:"Ilyushin Il-96-300",range:9000,speed:850,seats:300,cargo:40,price:53000000,fuel:2.70,wear:1.8,other:0.01},
         {name:"Airbus A321neo",range:6852,speed:840,seats:244,cargo:5,price:129500000,fuel:1.95,wear:1.2,other:0.15}
     ];
@@ -1261,15 +1268,43 @@
         otherList.forEach(h => hH += `<option value="${h}">${h}</option>`);
         hS.innerHTML = hH;
 
-        let models = [];
-        AIRCRAFT_DB.forEach(a => { if(a && a['aircraft'] && !models.includes(a['aircraft'])) models.push(a['aircraft']); });
+        let ownedCounts = {};
+        let modelsInfo = {};
+        AIRCRAFT_DB.forEach(a => { 
+            if(a && a['aircraft']) {
+                let m = a['aircraft'];
+                ownedCounts[m] = (ownedCounts[m] || 0) + 1;
+                if (!modelsInfo[m]) {
+                    modelsInfo[m] = {
+                        price: cleanNum(a['purchase price'] || a['purchase_price']),
+                        seats: cleanNum(a['capacity pax'] || a['capacity'] || a['eco_seats']),
+                        range: cleanNum(a['range']),
+                        speed: cleanNum(a['speed'])
+                    };
+                }
+            }
+        });
         
+        let getAcStr = (m, info, count) => {
+            let p = formatMoney(info.price); if (info.price > 0 && !String(p).includes('$')) p = '$' + p;
+            return `${m} (T. Adet: ${count}, Fiyat: ${p}, Kapasite: ${info.seats}, Menzil: ${info.range}km, Hız: ${info.speed}km/s)`;
+        };
+
+        GOLDEN_FLEET.forEach(g => {
+            let m = g.name;
+            let c = ownedCounts[m] || 0;
+            let info = modelsInfo[m] || { price: g.price, seats: g.seats, range: g.range, speed: g.speed };
+            aH += `<option value="${m}">⭐ ${getAcStr(m, info, c)}</option>`;
+        });
+
         let goldenNames = GOLDEN_FLEET.map(g => g.name);
-        let goldenModels = models.filter(m => goldenNames.includes(m)).sort((a,b) => goldenNames.indexOf(a) - goldenNames.indexOf(b));
-        let otherModels = models.filter(m => !goldenNames.includes(m)).sort();
-        
-        goldenModels.forEach(m => aH += `<option value="${m}">⭐ ${m}</option>`);
-        otherModels.forEach(m => aH += `<option value="${m}">${m}</option>`);
+        let otherModels = Object.keys(ownedCounts).filter(m => !goldenNames.includes(m)).sort();
+        otherModels.forEach(m => {
+            let c = ownedCounts[m] || 0;
+            let info = modelsInfo[m];
+            aH += `<option value="${m}">✈️ ${getAcStr(m, info, c)}</option>`;
+        });
+
         aS.innerHTML = aH;
     }
 
@@ -2095,6 +2130,14 @@
         let table = document.querySelector('.fleet-table');
         let tds = table.querySelectorAll('tbody td');
         tds.forEach(td => {
+            if (td.hasAttribute('colspan')) {
+                td.addEventListener('mouseenter', function() {
+                    table.querySelectorAll('.fleet-hl-row, .fleet-hl-col, .fleet-hl-cell').forEach(el => {
+                        el.classList.remove('fleet-hl-row', 'fleet-hl-col', 'fleet-hl-cell');
+                    });
+                });
+                return;
+            }
             let handleHighlight = function() {
                 table.querySelectorAll('.fleet-hl-row, .fleet-hl-col, .fleet-hl-cell').forEach(el => {
                     el.classList.remove('fleet-hl-row', 'fleet-hl-col', 'fleet-hl-cell');
@@ -2102,9 +2145,11 @@
                 let tr = this.parentElement;
                 let colIdx = Array.from(tr.children).indexOf(this);
                 tr.classList.add('fleet-hl-row');
-                table.querySelectorAll(`tbody tr td:nth-child(${colIdx + 1})`).forEach(cell => {
-                    cell.classList.add('fleet-hl-col');
-                });
+                if (colIdx > 0) {
+                    table.querySelectorAll(`tbody tr td:nth-child(${colIdx + 1})`).forEach(cell => {
+                        if (!cell.hasAttribute('colspan')) cell.classList.add('fleet-hl-col');
+                    });
+                }
                 this.classList.add('fleet-hl-cell');
             };
             td.addEventListener('mouseenter', handleHighlight);
