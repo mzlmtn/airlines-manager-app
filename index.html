@@ -200,6 +200,14 @@
             <select id="opt-hub"></select>
             <label>Kullanılacak Uçak Modeli</label>
             <select id="opt-ac"></select>
+            <label style="margin-top:12px;">Hedef Rota Sayısı (5-9)</label>
+            <select id="opt-route-count">
+                <option value="5" selected>5 Rota</option>
+                <option value="6">6 Rota</option>
+                <option value="7">7 Rota</option>
+                <option value="8">8 Rota</option>
+                <option value="9">9 Rota</option>
+            </select>
             
             <label style="display:flex;align-items:center;gap:6px;margin-top:12px;margin-bottom:8px;cursor:pointer;">
                 <input type="checkbox" id="opt-use-own" style="width:auto;margin:0;cursor:pointer;" onchange="document.getElementById('opt-tol-container').style.opacity = this.checked ? '1' : '0.5';">
@@ -1271,16 +1279,26 @@
         let ownedCounts = {};
         let modelsInfo = {};
         AIRCRAFT_DB.forEach(a => { 
-            if(a && a['aircraft']) {
-                let m = a['aircraft'];
-                ownedCounts[m] = (ownedCounts[m] || 0) + 1;
-                if (!modelsInfo[m]) {
-                    modelsInfo[m] = {
-                        price: cleanNum(a['purchase price'] || a['purchase_price']),
-                        seats: cleanNum(a['capacity pax'] || a['capacity'] || a['eco_seats']),
-                        range: cleanNum(a['range']),
-                        speed: cleanNum(a['speed'])
-                    };
+            if(a) {
+                let m = String(a['aircraft'] || a['model'] || '').trim();
+                if (m) {
+                    let gfMatch = GOLDEN_FLEET.find(g => 
+                        g.name.toLowerCase() === m.toLowerCase() || 
+                        g.name.toLowerCase().includes(m.toLowerCase()) || 
+                        m.toLowerCase().includes(g.name.toLowerCase())
+                    );
+                    if (gfMatch) {
+                        m = gfMatch.name;
+                    }
+                    ownedCounts[m] = (ownedCounts[m] || 0) + 1;
+                    if (!modelsInfo[m]) {
+                        modelsInfo[m] = {
+                            price: cleanNum(a['purchase price'] || a['purchase_price']),
+                            seats: cleanNum(a['capacity pax'] || a['capacity'] || a['eco_seats']),
+                            range: cleanNum(a['range']),
+                            speed: cleanNum(a['speed'])
+                        };
+                    }
                 }
             }
         });
@@ -1545,10 +1563,27 @@
         let selHub = document.getElementById('opt-hub').value, selAc = document.getElementById('opt-ac').value;
         let useOwn = document.getElementById('opt-use-own') ? document.getElementById('opt-use-own').checked : false;
         let tolVal = document.getElementById('opt-demand-tol') ? parseFloat(document.getElementById('opt-demand-tol').value)/100 : 0.2;
-        
+        let selRouteCount = parseInt(document.getElementById('opt-route-count').value) || 5;
+
         let hubAp = AIRPORTS_DB.find(ap => ap && String(ap['iata']).trim().toUpperCase() === selHub);
-        let ac = AIRCRAFT_DB.find(a => a && a['aircraft'] === selAc);
-        if (!hubAp || !ac) return;
+        let ac = AIRCRAFT_DB.find(a => {
+            if(!a) return false;
+            let m = String(a['aircraft'] || a['model'] || '').trim();
+            if (!m) return false;
+            return m.toLowerCase() === selAc.toLowerCase() || 
+                   selAc.toLowerCase().includes(m.toLowerCase()) || 
+                   m.toLowerCase().includes(selAc.toLowerCase());
+        });
+        if (!ac) {
+            let gf = GOLDEN_FLEET.find(g => g.name === selAc);
+            if (gf) {
+                ac = {
+                    'aircraft': gf.name, 'range': gf.range, 'speed': gf.speed,
+                    'capacity pax': gf.seats, 'purchase price': gf.price
+                };
+            }
+        }
+        if (!hubAp || !ac) return resDiv.innerHTML = '<div class="card text-danger">⚠️ Merkez veya Uçak bulunamadı.</div>';
 
         let hubLat = cleanNum(hubAp['lat']), hubLon = cleanNum(hubAp['lon']);
         let acRange = cleanNum(ac['range']), acSpeed = cleanNum(ac['speed']), validDests = [];
@@ -1590,9 +1625,9 @@
             if (useOwn && !ownedRoutesMap[iata]) return;
 
             let dist = calculateDistance(hubLat, hubLon, cleanNum(ap['lat']), cleanNum(ap['lon']));
-            if (dist <= acRange && dist >= 4000) {
+            if (dist <= acRange && dist >= 2000) {
                 let flightHours = calculateFlightTime(dist, acSpeed), timeMins = Math.round(flightHours * 60);
-                if (flightHours >= 22 && flightHours <= 34) {
+                if (flightHours >= 12 && flightHours <= 36) {
                     let destObj = { name: iata, dist: Math.round(dist), time: timeMins, cost: dist * 15000, hours: flightHours };
                     if (useOwn) {
                         let om = ownedRoutesMap[iata];
@@ -1609,16 +1644,18 @@
         if (!validDests.length) {
             let skipMsg = skippedCircuits > 0 ? `<br><small>Not: Halihazırda devreye (circuit) atanmış ${skippedCircuits} rota filtrelendi.</small>` : "";
             showToast("⚠️ Kriterlere uygun rota bulunamadı.", "error");
-            return resDiv.innerHTML = `<div class="card text-danger">⚠️ Kriterlere (22-34s veya Sadece Sahip Olunan) uygun rota bulunamadı.${skipMsg}</div>`;
+            return resDiv.innerHTML = `<div class="card text-danger">⚠️ Kriterlere (12-36s veya Sadece Sahip Olunan) uygun rota bulunamadı.${skipMsg}</div>`;
         }
 
         validDests.sort((a, b) => b.time - a.time);
         let minTime = validDests[validDests.length - 1].time, maxTime = validDests[0].time, combinations = [];
+        let dfsIterations = 0;
 
-        function dfs(startIdx, count, time, cost, indices) {
-            if (combinations.length >= 500) return; 
+        function dfs(startIdx, count, time, cost, indices, targetCount) {
+            if (combinations.length >= 500 || dfsIterations > 2000000) return; 
+            dfsIterations++;
             
-            if (count >= 5 && count <= 7) { 
+            if (count === targetCount) { 
                 if (time >= 10000 && time <= 10080) {
                     let cData = { time, totalCost: cost, indices: [...indices] };
                     let times = indices.map(i => validDests[i].hours);
@@ -1639,23 +1676,42 @@
                         combinations.push(cData);
                     }
                 } 
-                if (count === 7) return;
+                return;
             }
             
-            let rem = 5 - count;
-            if (rem > 0 && (time + rem * minTime > 10080)) return;
+            let rem = targetCount - count;
+            if (rem > 0) {
+                if (time + rem * minTime > 10080) return;
+                if (time + rem * maxTime < 10000) return;
+            }
             
             for (let i = startIdx; i < validDests.length; i++) {
                 let d = validDests[i]; if (time + d.time > 10080) continue;
-                indices.push(i); dfs(i + 1, count + 1, time + d.time, cost + d.cost, indices); indices.pop();
+                indices.push(i); dfs(i + 1, count + 1, time + d.time, cost + d.cost, indices, targetCount); indices.pop();
             }
         }
         
-        dfs(0, 0, 0, 0, []);
+        let foundTarget = selRouteCount;
+        for (let t = selRouteCount; t <= 9; t++) {
+            combinations = [];
+            dfsIterations = 0;
+            dfs(0, 0, 0, 0, [], t);
+            if (combinations.length > 0) {
+                foundTarget = t;
+                break;
+            }
+        }
 
         if (!combinations.length) {
             showToast("❌ Kombinasyon bulunamadı.", "error");
-            return resDiv.innerHTML = '<div class="card text-danger">❌ Kombinasyon bulunamadı. Lütfen uçak tipini veya filtreleri değiştirin.</div>';
+            return resDiv.innerHTML = '<div class="card text-danger">❌ Kombinasyon bulunamadı. Lütfen uçak tipini, rota sayısını veya filtreleri değiştirin.</div>';
+        }
+
+        if (foundTarget !== selRouteCount) {
+            document.getElementById('opt-route-count').value = foundTarget;
+            showToast(`⚠️ ${selRouteCount} rotalı bulunamadı. ${foundTarget} rotalı bulundu!`, "info");
+        } else {
+            showToast(`✅ ${foundTarget} rotalı devre bulundu.`, "success");
         }
 
         let planeCost = cleanNum(ac['purchase price']);
