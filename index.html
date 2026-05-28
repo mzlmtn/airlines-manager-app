@@ -43,7 +43,7 @@
         .db-badge.loaded { border-color: var(--accent); color: var(--accent); }
 
         .tab-container { display: flex; margin-bottom: 12px; background-color: var(--card-bg); border-radius: 8px; overflow: hidden; border: 1px solid var(--border);}
-        .tab-btn { flex: 1; padding: 10px; text-align: center; background: none; border: none; color: var(--text-muted); font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.2s; }
+        .tab-btn { flex: 1; padding: 8px 4px; text-align: center; background: none; border: none; color: var(--text-muted); font-weight: bold; font-size: 11px; cursor: pointer; transition: 0.2s; white-space: nowrap; }
         .tab-btn.active { background: var(--input-bg); color: var(--text-main); border-bottom: 3px solid var(--accent); }
 
         .sub-tab-container { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;}
@@ -188,14 +188,15 @@
 
     <div class="tab-container">
         <button class="tab-btn active" id="btn-tab-opt" onclick="switchTab('opt')">Devre Motoru</button>
+        <button class="tab-btn" id="btn-tab-circuits" onclick="switchTab('circuits')">Devrelerim</button>
         <button class="tab-btn" id="btn-tab-dash" onclick="switchTab('dash')">Kontrol Paneli</button>
+        <button class="tab-btn" id="btn-tab-finance" onclick="switchTab('finance')">Finans</button>
         <button class="tab-btn" id="btn-tab-stats" onclick="switchTab('stats')">Ayarlar</button>
     </div>
 
     <div id="tab-opt">
         <div class="card">
             <h3>🌍 168h DFS Devre Keşif Motoru</h3>
-            <p class="text-muted" style="font-size: 11.5px; margin-top: -5px;">Seçilen merkezden 168 saate yaklaşan, 5-7 benzersiz rotadan oluşan en verimli 5 devreyi hesaplar.</p>
             <label>Başlangıç Havalimanı (Hub)</label>
             <select id="opt-hub"></select>
             <label>Kullanılacak Uçak Modeli</label>
@@ -227,9 +228,23 @@
         <div id="opt-results"></div>
     </div>
 
+    <div id="tab-circuits" style="display: none;">
+        <div id="circuits-breadcrumb" style="margin-bottom:8px;"></div>
+        <div id="circuits-container"></div>
+    </div>
+
+    <div id="tab-finance" style="display: none;">
+        <div class="card" style="text-align:center;padding:40px 20px;border-color:var(--accent-blue);background:rgba(59,130,246,0.05);">
+            <div style="font-size:48px;margin-bottom:16px;">🏗️</div>
+            <h3 style="color:#60a5fa;font-size:18px;margin-bottom:8px;">Finans Modülü</h3>
+            <p class="text-muted" style="font-size:13px;">Bu sayfa yapım aşamasındadır. Gelir-gider analizi, kârlılık raporları ve yatırım takibi gibi finansal araçlar yakında burada yer alacaktır.</p>
+            <div style="margin-top:16px;padding:8px 16px;display:inline-block;border-radius:6px;border:1px dashed var(--accent-blue);color:var(--accent-blue);font-size:12px;font-weight:600;">🚧 Yakında Gelecek</div>
+        </div>
+    </div>
+
     <div id="tab-dash" style="display: none;">
         <div class="sub-tab-container">
-            <button class="sub-tab-btn active" id="btn-sub-hubs" onclick="switchSubTab('hubs')">Merkezlerim</button>
+            <button class="sub-tab-btn active" id="btn-sub-hubs" onclick="switchSubTab('hubs')">HUB'larım</button>
             <button class="sub-tab-btn" id="btn-sub-fleet" onclick="switchSubTab('fleet')">Uçak Filom</button>
         </div>
         <div id="sub-content-hubs">
@@ -238,7 +253,7 @@
                 <div id="hubs-container"></div>
             </div>
             <div id="view-routes" style="display: none;">
-                <button class="back-btn" onclick="navTo('hubs')">⬅ Merkezlere Dön</button>
+                <button class="back-btn" onclick="navTo('hubs')">⬅ HUB'lara Dön</button>
                 <h3 id="current-hub-title" style="margin-bottom: 12px; font-size: 15px;"></h3>
                 <div id="routes-container"></div>
             </div>
@@ -900,12 +915,11 @@
     }
 
     function switchTab(t) {
-        document.getElementById('tab-opt').style.display = t==='opt'?'block':'none';
-        document.getElementById('tab-dash').style.display = t==='dash'?'block':'none';
-        document.getElementById('tab-stats').style.display = t==='stats'?'block':'none';
-        document.getElementById('btn-tab-opt').classList.toggle('active',t==='opt');
-        document.getElementById('btn-tab-dash').classList.toggle('active',t==='dash');
-        document.getElementById('btn-tab-stats').classList.toggle('active',t==='stats');
+        ['opt','circuits','dash','finance','stats'].forEach(id => {
+            document.getElementById('tab-'+id).style.display = t===id?'block':'none';
+            document.getElementById('btn-tab-'+id).classList.toggle('active',t===id);
+        });
+        if (t==='circuits') renderCircuitsView();
     }
     function switchSubTab(s) {
         document.getElementById('sub-content-hubs').style.display = s==='hubs'?'block':'none';
@@ -917,6 +931,340 @@
         document.getElementById('view-hubs').style.display = v==='hubs'?'block':'none';
         document.getElementById('view-routes').style.display = v==='routes'?'block':'none';
         if(v==='hubs') renderHubsList();
+    }
+
+    // === DEVRELERİM (HİYERARŞİK DEVRE GEZGİNİ) ===
+    function parseCircuitName(name) {
+        let m = name.match(/^(\S+)\s+Circuit\s+(\d+)\s+(\d+)\s+(\d+)$/i);
+        if (!m) return null;
+        return { hub: m[1].toUpperCase(), circuit: parseInt(m[2]), wave: parseInt(m[3]), plane: parseInt(m[4]) };
+    }
+
+    function buildCircuitTree() {
+        let tree = {};
+        AIRCRAFT_DB.forEach(a => {
+            if (!a) return;
+            let name = (a['aircraft name'] || '').trim();
+            let p = parseCircuitName(name);
+            if (!p) return;
+            let key = `${p.hub} Circuit ${p.circuit}`;
+            if (!tree[key]) tree[key] = { hub: p.hub, circuitNum: p.circuit, waves: {}, planes: [] };
+            if (!tree[key].waves[p.wave]) tree[key].waves[p.wave] = [];
+            tree[key].waves[p.wave].push({ aircraft: a, parsed: p });
+            tree[key].planes.push({ aircraft: a, parsed: p });
+        });
+        return tree;
+    }
+
+    function getCircuitRoutes(circuitKey, tree) {
+        let node = tree[circuitKey];
+        if (!node || !node.planes.length) return [];
+        let firstPlane = node.planes[0].aircraft;
+        let acName = (firstPlane['aircraft name'] || '').trim();
+        let routeSet = new Set();
+        let routes = [];
+        ROUTES_DB.forEach(r => {
+            if (!r) return;
+            let acStr = r['aircrafts model/aircrafts name on route'] || r['aircrafts_on_route'] || '';
+            node.planes.forEach(pl => {
+                let plName = (pl.aircraft['aircraft name'] || '').trim();
+                if (acStr.includes(plName)) {
+                    let arr = (r['arrival'] || '').trim().toUpperCase();
+                    let dep = (r['departure'] || '').trim().toUpperCase();
+                    let rk = dep + '-' + arr;
+                    if (!routeSet.has(rk)) { routeSet.add(rk); routes.push(r); }
+                }
+            });
+        });
+        return routes;
+    }
+
+    function renderCircuitsView(level, param1, param2) {
+        let bc = document.getElementById('circuits-breadcrumb');
+        let c = document.getElementById('circuits-container');
+        let tree = buildCircuitTree();
+        let keys = Object.keys(tree).sort();
+
+        if (!level || level === 'list') {
+            // Level 0: Circuit listesi
+            if (!window.circuitSortMode) window.circuitSortMode = 'alpha-asc';
+            let sortMode = param1 || window.circuitSortMode;
+            window.circuitSortMode = sortMode;
+
+            bc.innerHTML = `<span style="font-size:13px;font-weight:700;color:#93c5fd;">🔄 Tüm Devreler</span>`;
+            if (!keys.length) { c.innerHTML = '<div class="card text-muted" style="text-align:center;">Henüz kurulmuş devre yok.</div>'; return; }
+
+            let comf = cleanNum(document.getElementById('g_comf').value) || 0;
+            let items = keys.map(key => {
+                let node = tree[key];
+                let waveCount = Object.keys(node.waves).length;
+                let planeCount = node.planes.length;
+                let routes = getCircuitRoutes(key, tree);
+                let model = node.planes[0] ? String(node.planes[0].aircraft['aircraft'] || '').trim() : '?';
+                let totalKm = routes.reduce((s,r) => s + cleanNum(r['distance']), 0);
+                let totalWeekly = 0;
+                routes.forEach(route => {
+                    let dist = cleanNum(route['distance']);
+                    let curP = { e: cleanNum(route['eco ticket']), b: cleanNum(route['bus ticket']), f: cleanNum(route['first ticket']) };
+                    let offer = { e: cleanNum(route['eco offer']), b: cleanNum(route['bus offer']), f: cleanNum(route['first offer']) };
+                    let aud = calcAuditPrices(dist, comf);
+                    let origP = { e: route['_orig_eco_ticket'] !== undefined ? route['_orig_eco_ticket'] : curP.e,
+                                  b: route['_orig_bus_ticket'] !== undefined ? route['_orig_bus_ticket'] : curP.b,
+                                  f: route['_orig_first_ticket']!== undefined ? route['_orig_first_ticket']: curP.f };
+                    let origD = { e: route['_orig_eco_demand'] !== undefined ? route['_orig_eco_demand'] : cleanNum(route['eco demand']),
+                                  b: route['_orig_bus_demand'] !== undefined ? route['_orig_bus_demand'] : cleanNum(route['bus demand']),
+                                  f: route['_orig_first_demand']!== undefined ? route['_orig_first_demand']: cleanNum(route['first demand']) };
+                    let baseD = { e: getBaseDemand(origD.e, origP.e, aud.e), b: getBaseDemand(origD.b, origP.b, aud.b), f: getBaseDemand(origD.f, origP.f, aud.f) };
+                    let dem = { e: (curP.e === origP.e) ? origD.e : calcElasticDemand(baseD.e, curP.e, aud.e),
+                                b: (curP.b === origP.b) ? origD.b : calcElasticDemand(baseD.b, curP.b, aud.b),
+                                f: (curP.f === origP.f) ? origD.f : calcElasticDemand(baseD.f, curP.f, aud.f) };
+                    totalWeekly += (Math.min(dem.e, offer.e) * curP.e + Math.min(dem.b, offer.b) * curP.b + Math.min(dem.f, offer.f) * curP.f) * 7;
+                });
+                let dailyRev = Math.round(totalWeekly / 7);
+                return { key, node, waveCount, planeCount, routes, model, totalKm, dailyRev, weeklyRev: totalWeekly, circuitNum: node.circuitNum };
+            });
+
+            switch(sortMode) {
+                case 'alpha-asc':   items.sort((a,b) => a.key.localeCompare(b.key)); break;
+                case 'alpha-desc':  items.sort((a,b) => b.key.localeCompare(a.key)); break;
+                case 'num-asc':     items.sort((a,b) => a.circuitNum - b.circuitNum); break;
+                case 'num-desc':    items.sort((a,b) => b.circuitNum - a.circuitNum); break;
+                case 'planes-desc': items.sort((a,b) => b.planeCount - a.planeCount); break;
+                case 'planes-asc':  items.sort((a,b) => a.planeCount - b.planeCount); break;
+                case 'routes-desc': items.sort((a,b) => b.routes.length - a.routes.length); break;
+                case 'routes-asc':  items.sort((a,b) => a.routes.length - b.routes.length); break;
+                case 'waves-desc':  items.sort((a,b) => b.waveCount - a.waveCount); break;
+                case 'waves-asc':   items.sort((a,b) => a.waveCount - b.waveCount); break;
+                case 'daily-desc':  items.sort((a,b) => b.dailyRev - a.dailyRev); break;
+                case 'daily-asc':   items.sort((a,b) => a.dailyRev - b.dailyRev); break;
+            }
+
+            let sb = s => sortMode === s ? 'btn-blue' : 'bg-gray';
+            let html = `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px;align-items:center;">
+                <span class="text-muted" style="font-size:10px;font-weight:700;">Sırala:</span>
+                <button class="btn-small ${sb('alpha-asc')}" onclick="renderCircuitsView('list','alpha-asc')">A→Z</button>
+                <button class="btn-small ${sb('alpha-desc')}" onclick="renderCircuitsView('list','alpha-desc')">Z→A</button>
+                <button class="btn-small ${sb('num-asc')}" onclick="renderCircuitsView('list','num-asc')">No ↑</button>
+                <button class="btn-small ${sb('num-desc')}" onclick="renderCircuitsView('list','num-desc')">No ↓</button>
+                <button class="btn-small ${sb('daily-desc')}" onclick="renderCircuitsView('list','daily-desc')">Kâr ↓</button>
+                <button class="btn-small ${sb('daily-asc')}" onclick="renderCircuitsView('list','daily-asc')">Kâr ↑</button>
+                <button class="btn-small ${sb('planes-desc')}" onclick="renderCircuitsView('list','planes-desc')">Uçak ↓</button>
+                <button class="btn-small ${sb('planes-asc')}" onclick="renderCircuitsView('list','planes-asc')">Uçak ↑</button>
+                <button class="btn-small ${sb('routes-desc')}" onclick="renderCircuitsView('list','routes-desc')">Rota ↓</button>
+                <button class="btn-small ${sb('routes-asc')}" onclick="renderCircuitsView('list','routes-asc')">Rota ↑</button>
+                <button class="btn-small ${sb('waves-desc')}" onclick="renderCircuitsView('list','waves-desc')">Dalga ↓</button>
+                <button class="btn-small ${sb('waves-asc')}" onclick="renderCircuitsView('list','waves-asc')">Dalga ↑</button>
+            </div>`;
+
+            items.forEach(({ key, node, waveCount, planeCount, routes, model, totalKm, dailyRev, weeklyRev }) => {
+                let routeNames = routes.map(r => (r['arrival'] || '?').trim().toUpperCase());
+                let firstPlane = node.planes[0] ? node.planes[0].aircraft : {};
+                let eS = cleanNum(firstPlane['eco_seats'] || firstPlane['eco']);
+                let bS = cleanNum(firstPlane['business_seats'] || firstPlane['bus']);
+                let fS = cleanNum(firstPlane['first_seats'] || firstPlane['first']);
+                html += `<div class="list-item" onclick="renderCircuitsView('circuit','${key}')" style="cursor:pointer;padding:12px 14px;">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                        <div style="flex:1;">
+                            <div style="font-size:15px;font-weight:700;color:#93c5fd;margin-bottom:6px;">🔄 ${key}</div>
+                            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;font-size:11px;margin-bottom:6px;">
+                                <div><span class="text-muted">Model:</span> <b style="color:#e2e8f0;">${model}</b></div>
+                                <div><span class="text-muted">Dalga:</span> <b style="color:#fbbf24;">${waveCount}</b></div>
+                                <div><span class="text-muted">Uçak:</span> <b style="color:#60a5fa;">${planeCount}</b></div>
+                                <div><span class="text-muted">Rota:</span> <b style="color:#34d399;">${routes.length}</b></div>
+                                <div><span class="text-muted">Toplam km:</span> <b style="color:#e2e8f0;">${totalKm.toLocaleString()}</b></div>
+                                <div><span class="text-muted">Koltuk:</span> <b style="color:#34d399;">${eS}</b><span class="text-muted">E</span> <b style="color:#60a5fa;">${bS}</b><span class="text-muted">B</span> <b style="color:#c084fc;">${fS}</b><span class="text-muted">F</span></div>
+                            </div>
+                            <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                                ${routeNames.map(n => `<span style="background:rgba(147,197,253,0.1);border:1px solid rgba(147,197,253,0.25);color:#93c5fd;padding:1px 5px;border-radius:3px;font-size:10px;font-weight:600;">${n}</span>`).join('')}
+                            </div>
+                        </div>
+                        <div style="text-align:right;min-width:100px;">
+                            <div style="color:#34d399;font-weight:700;font-size:13px;">💰 ${formatMoney(dailyRev)}/g</div>
+                            <div style="color:#10b981;font-weight:600;font-size:11px;margin-top:2px;">${formatMoney(weeklyRev)}/hf</div>
+                            <span class="btn-small bg-gray" style="margin-top:6px;display:inline-block;">Aç →</span>
+                        </div>
+                    </div>
+                </div>`;
+            });
+            c.innerHTML = html;
+
+        } else if (level === 'circuit') {
+            let key = param1;
+            let node = tree[key];
+            if (!node) { c.innerHTML = '<div class="card text-muted">Devre bulunamadı.</div>'; return; }
+            bc.innerHTML = `<span style="font-size:12px;cursor:pointer;color:#60a5fa;text-decoration:underline;font-weight:600;" onclick="renderCircuitsView('list')">📂 Devreler</span>
+                <span class="text-muted" style="font-size:12px;"> / </span>
+                <span style="font-size:13px;font-weight:700;color:#93c5fd;">${key}</span>`;
+            let routes = getCircuitRoutes(key, tree);
+            let html = `<div style="display:flex;gap:8px;margin-bottom:12px;">
+                <button class="sub-tab-btn active" id="cv-btn-routes" onclick="document.getElementById('cv-routes').style.display='block';document.getElementById('cv-planes').style.display='none';this.classList.add('active');document.getElementById('cv-btn-planes').classList.remove('active');">📍 Rotalar (${routes.length})</button>
+                <button class="sub-tab-btn" id="cv-btn-planes" onclick="document.getElementById('cv-planes').style.display='block';document.getElementById('cv-routes').style.display='none';this.classList.add('active');document.getElementById('cv-btn-routes').classList.remove('active');">✈️ Uçaklar (${node.planes.length})</button>
+            </div>`;
+            // Routes sub-view
+            let comf = cleanNum(document.getElementById('g_comf').value) || 0;
+            html += `<div id="cv-routes">`;
+            if (!routes.length) html += '<div class="card text-muted" style="text-align:center;">Bu devreye atanmış rota yok.</div>';
+            routes.forEach(r => {
+                let dep = (r['departure'] || '').trim().toUpperCase();
+                let arr = (r['arrival'] || '').trim().toUpperCase();
+                let dist = cleanNum(r['distance']);
+                let aud = calcAuditPrices(dist, comf);
+                let curP = { e: cleanNum(r['eco ticket']), b: cleanNum(r['bus ticket']), f: cleanNum(r['first ticket']) };
+                let offer = { e: cleanNum(r['eco offer']), b: cleanNum(r['bus offer']), f: cleanNum(r['first offer']) };
+                let origP = { e: r['_orig_eco_ticket'] !== undefined ? r['_orig_eco_ticket'] : curP.e,
+                              b: r['_orig_bus_ticket'] !== undefined ? r['_orig_bus_ticket'] : curP.b,
+                              f: r['_orig_first_ticket']!== undefined ? r['_orig_first_ticket']: curP.f };
+                let origD = { e: r['_orig_eco_demand'] !== undefined ? r['_orig_eco_demand'] : cleanNum(r['eco demand']),
+                              b: r['_orig_bus_demand'] !== undefined ? r['_orig_bus_demand'] : cleanNum(r['bus demand']),
+                              f: r['_orig_first_demand']!== undefined ? r['_orig_first_demand']: cleanNum(r['first demand']) };
+                let baseD = { e: getBaseDemand(origD.e, origP.e, aud.e), b: getBaseDemand(origD.b, origP.b, aud.b), f: getBaseDemand(origD.f, origP.f, aud.f) };
+                let dem = { e: (curP.e === origP.e) ? origD.e : calcElasticDemand(baseD.e, curP.e, aud.e),
+                            b: (curP.b === origP.b) ? origD.b : calcElasticDemand(baseD.b, curP.b, aud.b),
+                            f: (curP.f === origP.f) ? origD.f : calcElasticDemand(baseD.f, curP.f, aud.f) };
+                let dailyRev = Math.min(dem.e, offer.e) * curP.e + Math.min(dem.b, offer.b) * curP.b + Math.min(dem.f, offer.f) * curP.f;
+                let remE = dem.e - offer.e, remB = dem.b - offer.b, remF = dem.f - offer.f;
+                let remCol = v => v < 0 ? 'color:var(--danger);font-weight:700;' : 'color:#34d399;font-weight:700;';
+                // Find planes on this route from this circuit
+                let planesOnRoute = [];
+                let acStr = r['aircrafts model/aircrafts name on route'] || '';
+                node.planes.forEach(pl => { let pn = (pl.aircraft['aircraft name']||'').trim(); if (acStr.includes(pn)) planesOnRoute.push(pl); });
+                let planeLinks = planesOnRoute.map(pl => {
+                    let pn = (pl.aircraft['aircraft name']||'').trim();
+                    let safePN = pn.replace(/'/g, "\\'");
+                    return `<span onclick="event.stopPropagation();showCircuitAircraftCard('${safePN}')" style="color:#c084fc;cursor:pointer;text-decoration:underline;font-weight:600;">${pn}</span>`;
+                }).join(', ') || '<span class="text-muted">-</span>';
+                html += `<div class="card" style="padding:10px 12px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                        <div style="font-size:14px;font-weight:700;color:#93c5fd;">📍 ${dep} ➔ ${arr}</div>
+                        <span style="color:#34d399;font-weight:700;font-size:12px;">💰 ${formatMoney(dailyRev)}/g</span>
+                    </div>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:6px;font-size:11px;text-align:center;background:var(--bg-dark);padding:6px;border-radius:6px;margin-bottom:6px;">
+                        <div><span class="text-muted">Mesafe</span><br><b style="color:#e2e8f0;">${dist.toLocaleString()} km</b></div>
+                        <div><span class="text-muted">Talep E</span><br><b style="color:#fbbf24;">${dem.e}</b></div>
+                        <div><span class="text-muted">Talep B</span><br><b style="color:#fbbf24;">${dem.b}</b></div>
+                        <div><span class="text-muted">Talep F</span><br><b style="color:#fbbf24;">${dem.f}</b></div>
+                        <div><span class="text-muted">Arz E</span><br><b style="color:#60a5fa;">${offer.e}</b></div>
+                        <div><span class="text-muted">Arz B</span><br><b style="color:#60a5fa;">${offer.b}</b></div>
+                        <div><span class="text-muted">Arz F</span><br><b style="color:#60a5fa;">${offer.f}</b></div>
+                        <div><span class="text-muted">Kalan</span><br><span style="${remCol(remE)}">${remE>0?'+':''}${remE}</span> / <span style="${remCol(remB)}">${remB>0?'+':''}${remB}</span> / <span style="${remCol(remF)}">${remF>0?'+':''}${remF}</span></div>
+                    </div>
+                    <div style="font-size:11px;">
+                        <span class="text-muted" style="font-weight:600;">Uçaklar:</span> ${planeLinks}
+                    </div>
+                    <div id="ac-info-inline-${dep}-${arr}" style="display:none;margin-top:6px;"></div>
+                </div>`;
+            });
+            html += `</div>`;
+            // Planes sub-view
+            html += `<div id="cv-planes" style="display:none;">`;
+            let waveKeys = Object.keys(node.waves).map(Number).sort((a,b)=>a-b);
+            waveKeys.forEach(wNum => {
+                let planes = node.waves[wNum].sort((a,b) => a.parsed.plane - b.parsed.plane);
+                html += `<div class="card" style="padding:12px 14px;margin-bottom:8px;">
+                    <div style="font-size:14px;font-weight:700;color:#fbbf24;margin-bottom:8px;">🌊 Dalga ${wNum} <span class="text-muted" style="font-size:12px;font-weight:500;">(${planes.length} Uçak)</span></div>`;
+                planes.forEach(pl => {
+                    let a = pl.aircraft;
+                    let model = a['aircraft'] ? String(a['aircraft']).trim() : '?';
+                    let name = (a['aircraft name']||'').trim();
+                    let safeName = name.replace(/'/g, "\\'");
+                    let eS = cleanNum(a['eco_seats'] || a['eco']), bS = cleanNum(a['business_seats'] || a['bus']), fS = cleanNum(a['first_seats'] || a['first']);
+                    let cS = cleanNum(a['cargo']);
+                    let hub = a['hub'] ? String(a['hub']).trim().toUpperCase() : '-';
+                    let speed = cleanNum(a['speed']), range = cleanNum(a['range']);
+                    let wear = a['wear'] ? String(a['wear']).trim() : '-';
+                    let price = cleanNum(a['purchase price'] || a['purchase_price']);
+                    html += `<div style="background:var(--bg-dark);border:1px solid var(--border);border-radius:6px;padding:8px 10px;margin-bottom:6px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                            <div>
+                                <span style="color:#e2e8f0;font-weight:700;font-size:13px;">✈️ ${name}</span>
+                                <span style="color:var(--text-muted);font-size:11px;margin-left:6px;">${model}</span>
+                            </div>
+                            <span style="background:rgba(147,197,253,0.12);color:#93c5fd;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:600;">📍 ${hub}</span>
+                        </div>
+                        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;font-size:11px;text-align:center;margin-bottom:6px;">
+                            <div style="background:rgba(52,211,153,0.08);border-radius:4px;padding:4px;">
+                                <span class="text-muted" style="font-size:9px;">Economy</span><br><b style="color:#34d399;font-size:13px;">${eS}</b>
+                            </div>
+                            <div style="background:rgba(96,165,250,0.08);border-radius:4px;padding:4px;">
+                                <span class="text-muted" style="font-size:9px;">Business</span><br><b style="color:#60a5fa;font-size:13px;">${bS}</b>
+                            </div>
+                            <div style="background:rgba(192,132,252,0.08);border-radius:4px;padding:4px;">
+                                <span class="text-muted" style="font-size:9px;">First</span><br><b style="color:#c084fc;font-size:13px;">${fS}</b>
+                            </div>
+                            <div style="background:rgba(148,163,184,0.08);border-radius:4px;padding:4px;">
+                                <span class="text-muted" style="font-size:9px;">Kargo</span><br><b style="color:#94a3b8;font-size:13px;">${cS || '-'}</b>
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:12px;font-size:10px;flex-wrap:wrap;justify-content:space-between;">
+                            <span class="text-muted">Hız: <b style="color:#e2e8f0;">${speed} km/h</b></span>
+                            <span class="text-muted">Menzil: <b style="color:#e2e8f0;">${range ? range.toLocaleString()+' km' : '-'}</b></span>
+                            <span class="text-muted">Yıpranma: <b style="color:#fbbf24;">${wear}</b></span>
+                            ${price ? `<span class="text-muted">Fiyat: <b style="color:#34d399;">$${formatMoney(price)}</b></span>` : ''}
+                        </div>
+                        <div style="margin-top:6px;text-align:right;">
+                            <span onclick="goToAircraft('${safeName}')" style="color:#60a5fa;cursor:pointer;font-size:11px;font-weight:600;text-decoration:underline;">Uçaklarım'da Gör →</span>
+                        </div>
+                    </div>`;
+                });
+                html += `</div>`;
+            });
+            html += `</div>`;
+            c.innerHTML = html;
+        }
+    }
+
+    function showCircuitAircraftCard(acName) {
+        let a = AIRCRAFT_DB.find(x => x && (x['aircraft name']||'').trim() === acName);
+        if (!a) return;
+        let model = a['aircraft'] ? String(a['aircraft']).trim() : '?';
+        let eS = cleanNum(a['eco_seats'] || a['eco']), bS = cleanNum(a['business_seats'] || a['bus']);
+        let fS = cleanNum(a['first_seats'] || a['first']), cS = cleanNum(a['cargo']);
+        let hub = a['hub'] ? String(a['hub']).trim().toUpperCase() : '-';
+        let speed = cleanNum(a['speed']), range = cleanNum(a['range']);
+        let wear = a['wear'] ? String(a['wear']).trim() : '-';
+        let price = cleanNum(a['purchase price'] || a['purchase_price']);
+        let safeName = acName.replace(/'/g, "\\'");
+
+        // Toggle: hide if already showing
+        let existing = document.querySelectorAll('.cv-ac-popup');
+        let alreadyShown = false;
+        existing.forEach(el => { if (el.dataset.acname === acName) { el.remove(); alreadyShown = true; } else el.remove(); });
+        if (alreadyShown) return;
+
+        // Find the closest card's inline container
+        let popup = document.createElement('div');
+        popup.className = 'cv-ac-popup';
+        popup.dataset.acname = acName;
+        popup.style.cssText = 'background:var(--card-bg);border:1px solid #c084fc;border-radius:8px;padding:12px;margin-top:8px;animation:fadeIn 0.2s;';
+        popup.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <span style="font-size:13px;font-weight:700;color:#c084fc;">✈️ ${acName}</span>
+                <button onclick="this.parentElement.parentElement.remove()" class="btn-small" style="background:#475569;font-size:10px;padding:2px 6px;">✕</button>
+            </div>
+            <div style="font-size:11px;margin-bottom:6px;"><span class="text-muted">Model:</span> <b style="color:#e2e8f0;">${model}</b> <span class="text-muted" style="margin-left:8px;">Hub:</span> <b style="color:#93c5fd;">${hub}</b></div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;font-size:11px;text-align:center;margin-bottom:6px;">
+                <div style="background:rgba(52,211,153,0.08);border-radius:4px;padding:3px;"><span class="text-muted" style="font-size:9px;">Eco</span><br><b style="color:#34d399;">${eS}</b></div>
+                <div style="background:rgba(96,165,250,0.08);border-radius:4px;padding:3px;"><span class="text-muted" style="font-size:9px;">Bus</span><br><b style="color:#60a5fa;">${bS}</b></div>
+                <div style="background:rgba(192,132,252,0.08);border-radius:4px;padding:3px;"><span class="text-muted" style="font-size:9px;">First</span><br><b style="color:#c084fc;">${fS}</b></div>
+                <div style="background:rgba(148,163,184,0.08);border-radius:4px;padding:3px;"><span class="text-muted" style="font-size:9px;">Crg</span><br><b style="color:#94a3b8;">${cS||'-'}</b></div>
+            </div>
+            <div style="display:flex;gap:10px;font-size:10px;flex-wrap:wrap;margin-bottom:8px;">
+                <span class="text-muted">Hız: <b style="color:#e2e8f0;">${speed} km/h</b></span>
+                <span class="text-muted">Yıpranma: <b style="color:#fbbf24;">${wear}</b></span>
+                ${price ? `<span class="text-muted">Fiyat: <b style="color:#34d399;">$${formatMoney(price)}</b></span>` : ''}
+            </div>
+            <div style="text-align:right;border-top:1px dashed var(--border);padding-top:6px;">
+                <span onclick="goToAircraft('${safeName}')" style="color:#60a5fa;cursor:pointer;font-size:11px;font-weight:600;text-decoration:underline;">Uçaklarım'da Gör →</span>
+            </div>`;
+
+        // Insert after the clicked link's parent card
+        let allCards = document.querySelectorAll('#cv-routes .card');
+        for (let card of allCards) {
+            if (card.innerHTML.includes(acName)) {
+                card.appendChild(popup);
+                break;
+            }
+        }
     }
 
     function getGroupedHubs() {
@@ -1014,6 +1362,8 @@
         switch(sortMode) {
             case 'alpha-asc':    items.sort((a,b) => a.dName.localeCompare(b.dName)); break;
             case 'alpha-desc':   items.sort((a,b) => b.dName.localeCompare(a.dName)); break;
+            case 'dist-desc':    items.sort((a,b) => b.dDist - a.dDist); break;
+            case 'dist-asc':     items.sort((a,b) => a.dDist - b.dDist); break;
             case 'currem-desc':  items.sort((a,b) => b.curRemEq - a.curRemEq); break;
             case 'currem-asc':   items.sort((a,b) => a.curRemEq - b.curRemEq); break;
             case 'audrem-desc':  items.sort((a,b) => b.audRemEq - a.audRemEq); break;
@@ -1028,10 +1378,17 @@
         html += `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;align-items:center;">
             <span class="text-muted" style="font-size:10px;font-weight:700;">Sırala:</span>
             <button class="btn-small ${sb('alpha-asc')}"   onclick="openHubRoutes('${hubName}','alpha-asc')">A→Z</button>
-            <button class="btn-small ${sb('currem-desc')}" onclick="openHubRoutes('${hubName}','currem-desc')">Güncel Kalan ↓</button>
-            <button class="btn-small ${sb('currem-asc')}"  onclick="openHubRoutes('${hubName}','currem-asc')">Güncel Kalan ↑</button>
-            <button class="btn-small ${sb('audrem-desc')}" onclick="openHubRoutes('${hubName}','audrem-desc')">Audit Kalan ↓</button>
-            <button class="btn-small ${sb('daily-desc')}"  onclick="openHubRoutes('${hubName}','daily-desc')">Günlük Ciro ↓</button>
+            <button class="btn-small ${sb('alpha-desc')}"  onclick="openHubRoutes('${hubName}','alpha-desc')">Z→A</button>
+            <button class="btn-small ${sb('dist-desc')}"   onclick="openHubRoutes('${hubName}','dist-desc')">Mesafe ↓</button>
+            <button class="btn-small ${sb('dist-asc')}"    onclick="openHubRoutes('${hubName}','dist-asc')">Mesafe ↑</button>
+            <button class="btn-small ${sb('currem-desc')}" onclick="openHubRoutes('${hubName}','currem-desc')">G. Kalan ↓</button>
+            <button class="btn-small ${sb('currem-asc')}"  onclick="openHubRoutes('${hubName}','currem-asc')">G. Kalan ↑</button>
+            <button class="btn-small ${sb('audrem-desc')}" onclick="openHubRoutes('${hubName}','audrem-desc')">A. Kalan ↓</button>
+            <button class="btn-small ${sb('audrem-asc')}"  onclick="openHubRoutes('${hubName}','audrem-asc')">A. Kalan ↑</button>
+            <button class="btn-small ${sb('daily-desc')}"  onclick="openHubRoutes('${hubName}','daily-desc')">Günlük ↓</button>
+            <button class="btn-small ${sb('daily-asc')}"   onclick="openHubRoutes('${hubName}','daily-asc')">Günlük ↑</button>
+            <button class="btn-small ${sb('weekly-desc')}" onclick="openHubRoutes('${hubName}','weekly-desc')">Haftalık ↓</button>
+            <button class="btn-small ${sb('weekly-asc')}"  onclick="openHubRoutes('${hubName}','weekly-asc')">Haftalık ↑</button>
         </div>`;
 
         items.forEach((item) => {
@@ -1205,8 +1562,15 @@
 
         switch(sortMode) {
             case 'alpha-asc':   items.sort((x,y) => x.name.localeCompare(y.name)); break;
+            case 'alpha-desc':  items.sort((x,y) => y.name.localeCompare(x.name)); break;
             case 'daily-desc':  items.sort((x,y) => y.rev.daily - x.rev.daily); break;
+            case 'daily-asc':   items.sort((x,y) => x.rev.daily - y.rev.daily); break;
             case 'amort-asc':   items.sort((x,y) => (x.rev.amortWeeks===Infinity?9e9:parseFloat(x.rev.amortWeeks)) - (y.rev.amortWeeks===Infinity?9e9:parseFloat(y.rev.amortWeeks))); break;
+            case 'amort-desc':  items.sort((x,y) => (y.rev.amortWeeks===Infinity?9e9:parseFloat(y.rev.amortWeeks)) - (x.rev.amortWeeks===Infinity?9e9:parseFloat(x.rev.amortWeeks))); break;
+            case 'pax-desc':    items.sort((x,y) => y.totalPax - x.totalPax); break;
+            case 'pax-asc':     items.sort((x,y) => x.totalPax - y.totalPax); break;
+            case 'routes-desc': items.sort((x,y) => y.routes.length - x.routes.length); break;
+            case 'routes-asc':  items.sort((x,y) => x.routes.length - y.routes.length); break;
         }
 
         let hubs = new Set(); AIRCRAFT_DB.forEach(a => { if (a && a['hub']) hubs.add(String(a['hub']).trim().toUpperCase()); });
@@ -1221,8 +1585,15 @@
         html += `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;align-items:center;">
             <span class="text-muted" style="font-size:10px;font-weight:700;">Sırala:</span>
             <button class="btn-small ${sb('alpha-asc')}" onclick="renderFleetList('${hf}','alpha-asc')">A→Z</button>
+            <button class="btn-small ${sb('alpha-desc')}" onclick="renderFleetList('${hf}','alpha-desc')">Z→A</button>
             <button class="btn-small ${sb('daily-desc')}" onclick="renderFleetList('${hf}','daily-desc')">Günlük ↓</button>
-            <button class="btn-small ${sb('amort-asc')}" onclick="renderFleetList('${hf}','amort-asc')">Amorti Hızlısı</button>
+            <button class="btn-small ${sb('daily-asc')}" onclick="renderFleetList('${hf}','daily-asc')">Günlük ↑</button>
+            <button class="btn-small ${sb('amort-asc')}" onclick="renderFleetList('${hf}','amort-asc')">Amorti ↑</button>
+            <button class="btn-small ${sb('amort-desc')}" onclick="renderFleetList('${hf}','amort-desc')">Amorti ↓</button>
+            <button class="btn-small ${sb('pax-desc')}" onclick="renderFleetList('${hf}','pax-desc')">Kapasite ↓</button>
+            <button class="btn-small ${sb('pax-asc')}" onclick="renderFleetList('${hf}','pax-asc')">Kapasite ↑</button>
+            <button class="btn-small ${sb('routes-desc')}" onclick="renderFleetList('${hf}','routes-desc')">Rota ↓</button>
+            <button class="btn-small ${sb('routes-asc')}" onclick="renderFleetList('${hf}','routes-asc')">Rota ↑</button>
         </div>`;
 
         items.forEach(({ a, name, routes, rev }) => {
