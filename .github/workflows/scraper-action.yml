@@ -1,14 +1,7 @@
 name: Airlines Manager Scraper
 
 on:
-  schedule:
-    # 05:15 TRT = 02:15 UTC
-    - cron: '15 2 * * *'
-
-    # 15:30 TRT = 12:30 UTC
-    - cron: '30 12 * * *'
-
-  workflow_dispatch:
+  workflow_dispatch: # Dışarıdan API ile veya manuel tetiklemek için bu kısım kalmalı.
 
 jobs:
   scrape-data:
@@ -22,7 +15,6 @@ jobs:
       run: |
         echo "UTC Saat:"
         date -u
-
         echo "Local Saat:"
         date
 
@@ -39,10 +31,7 @@ jobs:
     - name: 5. Eski Excel Dosyalarını Sil
       run: |
         echo "Eski Excel dosyaları siliniyor..."
-
-        # Sadece ismi 'aircrafts_' ve 'routes_' ile başlayan Excel dosyalarını siler
         rm -f aircrafts*.xlsx routes*.xlsx || true
-
         echo "Silme sonrası kalan xlsx dosyaları:"
         ls -la *.xlsx || echo "xlsx kalmadı"
 
@@ -62,7 +51,6 @@ jobs:
       run: |
         echo "Yeni oluşan dosyalar:"
         ls -la *.xlsx || true
-
         echo "Git status:"
         git status
 
@@ -70,13 +58,7 @@ jobs:
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-
-        # KRİTİK:
-        # Silinen dosyaları da Git'e bildirir
         git add -A
-
         git status
-
         git commit -m "Otomatik Güncelleme: Excel verileri yenilendi" || echo "Değişiklik yok"
-
         git push
