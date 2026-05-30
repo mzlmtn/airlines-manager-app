@@ -853,7 +853,7 @@
         radios.forEach(r => { if (r.checked) tzMode = r.value; });
 
         let html = '<style>.am-table th { position: sticky; top: 0; background: var(--bg-dark); z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.5); } .am-hl-row td { background: rgba(59,130,246,0.15) !important; } .am-hl-col { background: rgba(59,130,246,0.15) !important; } .am-table td, .am-table th { transition: background 0.15s; cursor: pointer; }</style>';
-        html += '<div class="table-responsive"><table class="dashboard-table am-table"><thead><tr>';
+        html += '<table class="dashboard-table am-table"><thead><tr>';
         headers.forEach(h => html += `<th>${h}</th>`);
         html += '</tr></thead><tbody>';
 
@@ -877,7 +877,7 @@
             });
             html += '</tr>';
         });
-        html += '</tbody></table></div>';
+        html += '</tbody></table>';
         c.innerHTML = html;
 
         let table = c.querySelector('.am-table');
