@@ -412,8 +412,19 @@
                 <h3 style="color: var(--accent-blue); margin:0;">🕒 AM Gerçek Saat Tablosu</h3>
                 <button class="btn-small bg-gray" onclick="closeModal('modal-am-hours')" style="padding: 6px 12px;">✖ Kapat</button>
             </div>
-            <div id="am-hours-container" style="max-height: 65vh; overflow-y: auto;">
-                </div>
+            <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
+                <label style="display:flex;align-items:center;gap:4px;cursor:pointer;background:var(--input-bg);border:1px solid var(--border);padding:5px 10px;border-radius:6px;font-size:12px;font-weight:600;color:#fbbf24;" id="lbl-tz-tr">
+                    <input type="radio" name="tz-mode" value="tr" checked onchange="renderAmHours()" style="accent-color:#fbbf24;"> 🇹🇷 Türkiye
+                </label>
+                <label style="display:flex;align-items:center;gap:4px;cursor:pointer;background:var(--input-bg);border:1px solid var(--border);padding:5px 10px;border-radius:6px;font-size:12px;font-weight:600;color:#60a5fa;" id="lbl-tz-utc">
+                    <input type="radio" name="tz-mode" value="utc" onchange="renderAmHours()" style="accent-color:#60a5fa;"> 🌐 UTC
+                </label>
+                <label style="display:flex;align-items:center;gap:4px;cursor:pointer;background:var(--input-bg);border:1px solid var(--border);padding:5px 10px;border-radius:6px;font-size:12px;font-weight:600;color:#34d399;" id="lbl-tz-both">
+                    <input type="radio" name="tz-mode" value="both" onchange="renderAmHours()" style="accent-color:#34d399;"> 🔄 İkisi
+                </label>
+            </div>
+            <div id="am-hours-container" style="max-height: 60vh; overflow-y: auto;">
+            </div>
             <div style="text-align: center; margin-top: 15px;">
                 <button class="btn-main bg-gray" style="width: auto; padding: 10px 30px;" onclick="closeModal('modal-am-hours')">Kapat</button>
             </div>
@@ -825,22 +836,43 @@
         openModal('modal-am-hours');
     }
 
+    function trTimeToUtc(trTime) {
+        if (!trTime || typeof trTime !== 'string') return '';
+        let parts = trTime.split(':');
+        if (parts.length < 2) return trTime;
+        let h = parseInt(parts[0]), m = parts[1];
+        h = ((h - 3) % 24 + 24) % 24;
+        return String(h).padStart(2, '0') + ':' + m;
+    }
+
     function renderAmHours() {
         let c = document.getElementById('am-hours-container');
         let headers = Object.keys(AM_HOURS_STATIC[0]);
-        let html = '<style>.am-table th { position: sticky; top: 0; background: var(--bg-dark); z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.5); } .am-hl-row td { background: rgba(59,130,246,0.2) !important; } .am-hl-col { background: rgba(59,130,246,0.2) !important; } .am-table td, .am-table th { transition: background 0.15s; cursor: pointer; }</style>';
-        html += '<div class="table-responsive" style="max-height: 65vh; overflow-y: auto;"><table class="dashboard-table am-table"><thead><tr>';
+        let tzMode = 'tr';
+        let radios = document.querySelectorAll('input[name="tz-mode"]');
+        radios.forEach(r => { if (r.checked) tzMode = r.value; });
+
+        let html = '<style>.am-table th { position: sticky; top: 0; background: var(--bg-dark); z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.5); } .am-hl-row td { background: rgba(59,130,246,0.15) !important; } .am-hl-col { background: rgba(59,130,246,0.15) !important; } .am-table td, .am-table th { transition: background 0.15s; cursor: pointer; }</style>';
+        html += '<div class="table-responsive"><table class="dashboard-table am-table"><thead><tr>';
         headers.forEach(h => html += `<th>${h}</th>`);
         html += '</tr></thead><tbody>';
-        
+
         AM_HOURS_STATIC.forEach(row => {
             html += '<tr>';
             headers.forEach((h, i) => {
                 let val = row[h] !== undefined ? row[h] : '';
-                if(i === 0) {
-                    html += `<td style="font-weight:bold; color:var(--accent-blue);">${val}</td>`;
+                if (i === 0) {
+                    html += `<td style="font-weight:bold;color:var(--accent-blue);white-space:nowrap;">${val}</td>`;
                 } else {
-                    html += `<td>${val}</td>`;
+                    let trVal = val;
+                    let utcVal = trTimeToUtc(String(val));
+                    if (tzMode === 'tr') {
+                        html += `<td style="color:#fbbf24;font-weight:600;font-size:12px;">${trVal}</td>`;
+                    } else if (tzMode === 'utc') {
+                        html += `<td style="color:#60a5fa;font-weight:600;font-size:12px;">${utcVal}</td>`;
+                    } else {
+                        html += `<td style="font-size:11px;line-height:1.5;white-space:nowrap;"><span style="color:#fbbf24;font-weight:600;">${trVal}</span><br><span style="color:#60a5fa;font-size:10px;">${utcVal}</span></td>`;
+                    }
                 }
             });
             html += '</tr>';
